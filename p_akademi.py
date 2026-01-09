@@ -10,12 +10,11 @@ import os
 # --- 1. SAYFA VE TASARIM AYARLARI ---
 st.set_page_config(layout="wide", page_title="Pito Akademi", initial_sidebar_state="collapsed")
 
-# Sınıfları okulunuza göre güncelleyebilirsiniz
+# Okulunuzdaki sınıflar
 SINIFLAR = ["9-A", "9-B", "10-A", "10-B", "11-A", "11-B"]
 
 st.markdown("""
     <style>
-    /* Pito Konuşma Balonları */
     .pito-bubble {
         position: relative; background: #f0f2f6; border: 2px solid #3a7bd5;
         border-radius: 15px; padding: 20px; margin-bottom: 25px;
@@ -37,7 +36,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. VERİ YÖNETİMİ (GOOGLE SHEETS) ---
+# --- 2. VERİ YÖNETİMİ (MÜKERRER KAYIT ÖNLEYİCİ) ---
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1lat8rO2qm9QnzEUYlzC_fypG3cRkGlJfSfTtwNvs318/edit#gid=0"
 conn = st.connection("gsheets", type=GSheetsConnection)
 
@@ -46,14 +45,18 @@ def get_db():
         df = conn.read(spreadsheet=SHEET_URL, ttl=0)
         if df is None or df.empty:
             return pd.DataFrame(columns=["Okul No", "Öğrencinin Adı", "Sınıf", "Puan", "Rütbe", "Tamamlanan Modüller", "Tarih"])
+        # Okul No sütununu string yaparak karşılaştırma hatalarını önle
+        df["Okul No"] = df["Okul No"].astype(str)
         return df.dropna(subset=["Okul No"])
     except:
         return pd.DataFrame(columns=["Okul No", "Öğrencinin Adı", "Sınıf", "Puan", "Rütbe", "Tamamlanan Modüller", "Tarih"])
 
 def auto_save_score():
-    """Okul No'ya göre verileri günceller."""
+    """Öğrenci verilerini Okul No'ya göre günceller (Mükerrer kaydı siler)."""
     try:
-        no, name, sınıf = st.session_state.student_no, st.session_state.student_name, st.session_state.student_class
+        no = str(st.session_state.student_no)
+        name = st.session_state.student_name
+        sınıf = st.session_state.student_class
         score = st.session_state.total_score
         progress = ",".join(["1" if m else "0" for m in st.session_state.completed_modules])
         
@@ -63,13 +66,20 @@ def auto_save_score():
         else: rank = "🏆 Python Ustası"
         
         df = get_db()
+        
+        # Yeni satırı oluştur
         new_row = pd.DataFrame([[no, name, sınıf, score, rank, progress, datetime.now().strftime("%H:%M:%S")]], 
                                columns=["Okul No", "Öğrencinin Adı", "Sınıf", "Puan", "Rütbe", "Tamamlanan Modüller", "Tarih"])
         
+        # --- TEK GİRİŞ MANTIĞI ---
+        # 1. Eski verinin içine yeni satırı ekle
+        # 2. 'Okul No' sütununa göre en son kaydedileni tut, diğerlerini sil
         updated_df = pd.concat([df, new_row], ignore_index=True)
-        updated_df = updated_df.sort_values(by="Tarih", ascending=False).drop_duplicates(subset=["Okul No"])
+        updated_df = updated_df.drop_duplicates(subset=["Okul No"], keep="last")
+        
         conn.update(spreadsheet=SHEET_URL, data=updated_df)
-    except: pass
+    except:
+        pass
 
 # --- 3. SESSION STATE ---
 if 'student_name' not in st.session_state:
@@ -85,7 +95,7 @@ if st.session_state.student_name == "":
     st.markdown("<br>", unsafe_allow_html=True)
     _, col_mid, _ = st.columns([1, 2, 1])
     with col_mid:
-        st.markdown('<div class="pito-bubble">Merhaba Arkadaşlar! Ben <b>Pito</b>. Haydi sınıfını seç ve Python dünyasında yarışmaya başla!</div>', unsafe_allow_html=True)
+        st.markdown('<div class="pito-bubble">Merhaba Arkadaşlar! Ben <b>Pito</b>. Sınıfını seç ve Python dünyasında yarışmaya başla!</div>', unsafe_allow_html=True)
         if os.path.exists(PITO_IMG): st.image(PITO_IMG, width=150)
         else: st.image("https://img.icons8.com/fluency/150/robot-viewer.png", width=120)
         
@@ -98,7 +108,7 @@ if st.session_state.student_name == "":
             if in_no.strip() and in_name.strip():
                 st.session_state.student_no, st.session_state.student_name, st.session_state.student_class = in_no.strip(), in_name.strip(), in_class
                 df = get_db()
-                user_data = df[df["Okul No"].astype(str) == in_no.strip()]
+                user_data = df[df["Okul No"] == in_no.strip()]
                 if not user_data.empty:
                     st.session_state.total_score = int(user_data.iloc[0]["Puan"])
                     prog_str = str(user_data.iloc[0]["Tamamlanan Modüller"])
@@ -108,18 +118,18 @@ if st.session_state.student_name == "":
             else: st.warning("Tüm alanları doldurmalısın!")
     st.stop()
 
-# --- 5. EKSİKSİZ 8 MODÜL VE ETKİNLİKLER ---
+# --- 5. MÜFREDAT VE ETKİNLİKLER (EKSİKSİZ 8 MODÜL) ---
 training_data = [
     {"module_title": "1. Giriş ve Çıktı", "exercises": [
         {"msg": "Ekrana 'Merhaba Pito' yazdır.", "task": "print('___')", "check": lambda c, o: "Merhaba Pito" in o},
         {"msg": "100 sayısını yazdır.", "task": "print(___)", "check": lambda c, o: "100" in o},
         {"msg": "Puan: 100 yazdır (virgül kullan).", "task": "print('Puan:', ___)", "check": lambda c, o: "Puan: 100" in o},
         {"msg": "Yorum satırı ekle (#).", "task": "___ Bu bir yorumdur", "check": lambda c, o: "#" in c},
-        {"msg": "Alt satır karakterini tırnaklar içinde kullanarak Üst ve Alt kelimelerini ayır.", "task": "print('Üst' + '___' + 'Alt')", "check": lambda c, o: "\n" in o}
+        {"msg": "Alt satır karakterini (\\n) tırnaklar içinde kullanarak Üst ve Alt kelimelerini ayır.", "task": "print('Üst' + '___' + 'Alt')", "check": lambda c, o: "\n" in o}
     ]},
     {"module_title": "2. Değişkenler ve Giriş", "exercises": [
         {"msg": "yas = 15 tanımla ve yazdır.", "task": "yas = ___\nprint(yas)", "check": lambda c, o: "15" in o},
-        {"msg": "isim = 'Pito' ata.", "task": "isim = '___'\nprint(isim)", "check": lambda c, o: "Pito" in o},
+        {"msg": "İsim ata (isim = 'Pito').", "task": "isim = '___'\nprint(isim)", "check": lambda c, o: "Pito" in o},
         {"msg": "Kullanıcıdan veri al (input).", "task": "ad = ___('Adın: ')\nprint(ad)", "check": lambda c, o: "input" in c},
         {"msg": "Sayıyı metne çevir (str).", "task": "s = 10\nprint(___(s))", "check": lambda c, o: "str" in c},
         {"msg": "Girişi tam sayıya çevir (int).", "task": "n = ___(___('S: '))\nprint(n + 5)", "check": lambda c, o: "int" in c}
@@ -183,35 +193,40 @@ st.divider()
 m_idx, e_idx = st.session_state.current_module, st.session_state.current_exercise
 curr_ex = training_data[m_idx]["exercises"][e_idx]
 
-# PİTO KONUŞMA ALANI
-c1, c2 = st.columns([1, 5])
+# PİTO KONUŞMA ALANI (GÖRSEL BÜYÜTÜLDÜ)
+c1, c2 = st.columns([1.5, 5])
 with c1:
-    if os.path.exists(PITO_IMG): st.image(PITO_IMG, width=110)
-    else: st.image("https://img.icons8.com/fluency/110/robot-viewer.png", width=110)
+    if os.path.exists(PITO_IMG): st.image(PITO_IMG, width=180)
+    else: st.image("https://img.icons8.com/fluency/180/robot-viewer.png", width=160)
 with c2:
     st.info(f"##### 🗣️ Pito Diyor Ki:\n\n{curr_ex['msg']}")
     st.caption(f"🎁 Görev Puanı: {st.session_state.current_potential_score}")
 
 code = st_ace(value=curr_ex['task'], language="python", theme="dracula", font_size=14, height=180, wrap=True, key=f"ace_{m_idx}_{e_idx}")
 
+# --- TEKNİK HATA ÇÖZÜMLERİ ---
 if st.button("🔍 Görevi Kontrol Et", use_container_width=True):
     old_stdout = sys.stdout 
     new_stdout = StringIO()
-    sys.stdout = new_stdout
+    sys.stdout = new_stdout # Unpack hatası giderildi
+    
     def mock_input(p=""): return "10"
+    
     try:
         exec(code.replace("___", "None"), {"input": mock_input})
         sys.stdout = old_stdout 
         output = new_stdout.getvalue()
+        
         st.subheader("📟 Çıktı")
         st.code(output if output else "Kod çalıştı!")
+        
         if curr_ex['check'](code, output) and "___" not in code:
             st.session_state.exercise_passed = True
             ex_key = f"{m_idx}_{e_idx}"
             if ex_key not in st.session_state.scored_exercises:
                 st.session_state.total_score += st.session_state.current_potential_score
                 st.session_state.scored_exercises.add(ex_key)
-                auto_save_score()
+                auto_save_score() # Otomatik kayıt
             st.success("Tebrikler! ✅")
         else:
             if not st.session_state.exercise_passed:
@@ -232,10 +247,16 @@ if st.session_state.exercise_passed:
             if m_idx < 7: st.session_state.current_module, st.session_state.current_exercise = m_idx+1, 0
             auto_save_score(); st.balloons(); st.rerun()
 
+# --- SINIF BAZLI LİDERLİK TABLOSU (MÜKERRER KAYITSIZ) ---
 st.divider()
 with st.expander(f"🏆 {st.session_state.student_class} Liderlik Tablosu"):
     df_all = get_db()
+    # Sadece kendi sınıfını filtrele ve mükerrer kayıtları (Okul No'ya göre) temizle
     df_class = df_all[df_all["Sınıf"] == st.session_state.student_class]
+    df_class = df_class.sort_values(by="Puan", ascending=False).drop_duplicates(subset=["Okul No"])
+    
     if not df_class.empty:
-        st.dataframe(df_class[["Öğrencinin Adı", "Puan", "Rütbe"]].sort_values(by="Puan", ascending=False).head(10), use_container_width=True)
-    else: st.write("Henüz kayıt yok.")
+        # Sütunları düzenle ve göster
+        st.dataframe(df_class[["Öğrencinin Adı", "Puan", "Rütbe"]], use_container_width=True)
+    else: 
+        st.write("Henüz bu sınıfta kayıt bulunamadı.")
