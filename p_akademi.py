@@ -70,7 +70,7 @@ if 'is_logged_in' not in st.session_state:
     for k, v in {'student_name': "", 'student_no': "", 'student_class': "", 'completed_modules': [False]*8, 
                  'current_module': 0, 'current_exercise': 0, 'exercise_passed': False, 'total_score': 0, 
                  'scored_exercises': set(), 'db_module': 0, 'db_exercise': 0, 'is_logged_in': False, 
-                 'current_potential_score': 20}.items():
+                 'current_potential_score': 20, 'celebrated': False}.items():
         st.session_state[k] = v
 
 PITO_IMG = "assets/pito.png"
@@ -116,7 +116,7 @@ if not st.session_state.is_logged_in:
                         st.session_state.is_logged_in = True; force_save(); st.rerun()
     st.stop()
 
-# --- 5. DETAYLI KONU ANLATIMLI MÜFREDAT VE ÇÖZÜMLER ---
+# --- 5. DETAYLI KONU ANLATIMLI MÜFREDAT ---
 training_data = [
     {"module_title": "1. Giriş ve Çıktı", "exercises": [
         {"msg": "Programımızın dış dünyayla iletişim kurmasının en temel yolu **print()** fonksiyonudur. Parantez içine yazdığımız her şey terminal ekranında görünür. Metinsel ifadeleri mutlaka **tırnak** içinde yazmalısın. Hadi dene: Ekrana 'Merhaba Pito' yazdır.", "task": "print('___')", "check": lambda c, o: "Merhaba Pito" in o, "solution": "print('Merhaba Pito')"},
@@ -138,7 +138,7 @@ training_data = [
         {"msg": "Listeler birden fazla veriyi saklar. `[]` kullanılır. [10, 20] oluştur.", "task": "L = [___, 20]", "check": lambda c, o: "10" in c, "solution": "L=[10, 20]\nprint(L)"},
         {"msg": "Python'da sayma her zaman **0 (sıfır)**'dan başlar! İlk eleman 0. indekstir. Elemana ulaşmak için `L[0]` yazımı kullanılır. Hadi dene: **L** listesinin ilk elemanına (0. indeks) eriş.", "task": "L=[5,6]\nprint(L[___])", "check": lambda c, o: "5" in o, "solution": "L=[5,6]\nprint(L[0])"},
         {"msg": "len() fonksiyonu listenin kaç elemandan oluştuğunu (boyutunu) verir.", "task": "L=[1,2]\nprint(___(L))", "check": lambda c, o: "2" in o, "solution": "L=[1,2]\nprint(len(L))"},
-        {"msg": "append() ile listeye 30 ekle.", "task": "L=[10]\nL.___(___)\nprint(L)", "check": lambda c, o: "30" in o, "solution": "L=[10]\nL.append(30)\nprint(L)"},
+        {"msg": "append() ile listenin sonuna yeni bir eleman eklenir. 30 ekle.", "task": "L=[10]\nL.___(___)\nprint(L)", "check": lambda c, o: "30" in o, "solution": "L=[10]\nL.append(30)\nprint(L)"},
         {"msg": "pop() metodu listeden bir eleman silmemizi sağlar.", "task": "L=[1,2]\nL.___()\nprint(L)", "check": lambda c, o: "1" in o, "solution": "L=[1,2]\nL.pop()\nprint(L)"}
     ]},
     {"module_title": "6. Fonksiyonlar ve Gelişmiş Veriler", "exercises": [
@@ -153,7 +153,6 @@ training_data = [
         {"msg": "**Nesneler (Object)**, sınıflardan üretilen gerçek somut örneklerdir. Nesne oluşturmak için sınıf adını ve yanına parantezlerini yazarız: `nesne = SınıfAdı()`. Hadi dene: **R** sınıfını kullanarak **p** adında bir nesne oluştur.", "task": "class R: pass\np = ___()", "check": lambda c, o: "R()" in c, "solution": "class R: pass\np = R()"},
         {"msg": "Niteliklere nokta '.' ile erişilir. Robota 'renk' niteliği olarak 'Mavi' ata.", "task": "class R: pass\np=R()\np.___ = 'Mavi'", "check": lambda c, o: "renk" in c, "solution": "class R: pass\np=R()\np.renk = 'Mavi'"},
         {"msg": "**Metotlar**, sınıf içi fonksiyonlardır. İlk parametresi her zaman **self** olmalıdır. Hadi dene: Robota **ses** adında bir metot ekle ve içine print('Bip!') yaz.", "task": "class R:\n def ___(self):\n  print('Bip!')", "check": lambda c, o: "ses" in c, "solution": "class R:\n def ses(self):\n  print('Bip!')"},
-        # KRİTİK FİKS: Syntax hatasını önlemek için newline (\n) eklendi
         {"msg": "Metodu çalıştırmak için **nesne_adi.metot_adi()** kullanılır. 'r' üzerinden 's' metodunu çağır.", "task": "class R:\n def s(self): print('X')\nr=R()\nr.___()", "check": lambda c, o: "s()" in c, "solution": "class R:\n def s(self): print('X')\nr=R()\nr.s()"}
     ]},
     {"module_title": "8. Dosya Yönetimi", "exercises": [
@@ -171,28 +170,39 @@ col_main, col_side = st.columns([3, 1])
 with col_main:
     st.markdown(f"#### 👋 {st.session_state.student_name} | ⭐ Puan: {st.session_state.total_score}")
     
-    # MEZUN MODU
+    # MEZUN MODU KONTROLÜ
     if st.session_state.db_module >= 8:
+        # BALONLAR SADECE BURADA VE SADECE İLK KEZ ÇIKAR
+        if not st.session_state.celebrated:
+            st.balloons()
+            st.session_state.celebrated = True
+            
         st.success("### 🎉 Tebrikler! Eğitimi Başarıyla Tamamladın.")
-        st.markdown('<div class="pito-bubble">Python yolculuğunu bitirdin! Aşağıdan modülleri inceleyebilir veya baştan başlayabilirsin.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="pito-bubble">Harikasın! Python yolculuğunu bitirdin! Aşağıdan modülleri inceleyebilir veya baştan başlayabilirsin.</div>', unsafe_allow_html=True)
+        
         c1, c2 = st.columns(2)
         with c1:
             if st.button("🔄 Eğitimi Tekrar Al (Sıfırla)"):
+                # TÜM KOORDİNATLARIN TAM SIFIRLANMASI GARANTİLENDİ
                 st.session_state.db_module, st.session_state.db_exercise, st.session_state.total_score = 0, 0, 0
                 st.session_state.current_module, st.session_state.current_exercise = 0, 0
                 st.session_state.completed_modules = [False]*8; st.session_state.scored_exercises = set()
+                st.session_state.celebrated = False # Balon hafızasını da sıfırla
                 force_save(); st.rerun()
         with c2:
             if st.button("🏆 Liderlik Listesinde Kal"): st.info("Liderlik listesindesin.")
         st.divider(); st.subheader("📖 İnceleme Modu")
 
+    # MODÜLLER LİSTESİ
     mod_titles = [f"{'✅' if st.session_state.completed_modules[i] else '📖'} Modül {i+1}" for i in range(8)]
     
+    # GÜNCEL GÖREVİME DÖN
     if st.session_state.current_module != st.session_state.db_module and st.session_state.db_module < 8:
         if st.button(f"🔙 Güncel Görevime Dön (Modül {st.session_state.db_module + 1})", use_container_width=True):
             st.session_state.current_module, st.session_state.current_exercise = st.session_state.db_module, st.session_state.db_exercise
             st.rerun()
 
+    # MODÜL SEÇİCİ
     sel_mod = st.selectbox("Modül Seç:", mod_titles, index=st.session_state.current_module)
     m_idx = mod_titles.index(sel_mod)
     
@@ -253,10 +263,12 @@ with col_main:
                 st.session_state.current_potential_score = max(5, st.session_state.current_potential_score - 5)
                 st.warning(f"Hatalı! Puanın düşüyor.")
 
+    # BUTON AKIŞLARI
     c_back, c_next = st.columns(2)
     with c_back:
         if is_locked and e_idx > 0:
             if st.button("⬅️ Önceki Adım"): st.session_state.current_exercise -= 1; st.rerun()
+            
     with c_next:
         if st.session_state.exercise_passed or is_locked:
             if e_idx < 4:
@@ -270,7 +282,7 @@ with col_main:
                         # 8. Modül Sonu Mezuniyet Trigger
                         st.session_state.db_module = 8
                         st.session_state.completed_modules[7] = True
-                        force_save(); st.balloons(); st.rerun()
+                        force_save(); st.rerun()
 
 with col_side:
     st.markdown(f"### 🏆 Sınıf Liderleri")
