@@ -46,21 +46,29 @@ def get_db():
         df = conn.read(spreadsheet=SHEET_URL, ttl=0)
         if df is None or df.empty:
             return pd.DataFrame(columns=["Okul No", "Öğrencinin Adı", "Sınıf", "Puan", "Rütbe", "Tamamlanan Modüller", "Mevcut Modül", "Mevcut Egzersiz", "Tarih"])
+        # Veri tipi uyuşmazlığını önlemek için okul numarasını temizle ve metne çevir
         df["Okul No"] = df["Okul No"].astype(str).str.split('.').str[0].str.strip()
         return df.dropna(subset=["Okul No"])
     except:
         return pd.DataFrame(columns=["Okul No", "Öğrencinin Adı", "Sınıf", "Puan", "Rütbe", "Tamamlanan Modüller", "Mevcut Modül", "Mevcut Egzersiz", "Tarih"])
 
 def force_save():
+    """Öğrenciyi bulur, mükerrerleri temizler ve GÜNCEL KONUMU (yeni adım) kaydeder."""
     try:
         no = str(st.session_state.student_no).strip()
         score = int(st.session_state.total_score)
         df_all = get_db()
         df_clean = df_all[df_all["Okul No"] != no]
+        
         progress = ",".join(["1" if m else "0" for m in st.session_state.completed_modules])
         rank = "🌱 Python Çırağı" if score < 200 else "💻 Kod Yazarı" if score < 500 else "🏆 Python Ustası"
-        new_row = pd.DataFrame([[no, st.session_state.student_name, st.session_state.student_class, score, rank, progress, st.session_state.db_module, st.session_state.db_exercise, datetime.now().strftime("%H:%M:%S")]], 
-                               columns=["Okul No", "Öğrencinin Adı", "Sınıf", "Puan", "Rütbe", "Tamamlanan Modüller", "Mevcut Modül", "Mevcut Egzersiz", "Tarih"])
+        
+        new_row = pd.DataFrame([[
+            no, st.session_state.student_name, st.session_state.student_class,
+            score, rank, progress, st.session_state.db_module,
+            st.session_state.db_exercise, datetime.now().strftime("%H:%M:%S")
+        ]], columns=["Okul No", "Öğrencinin Adı", "Sınıf", "Puan", "Rütbe", "Tamamlanan Modüller", "Mevcut Modül", "Mevcut Egzersiz", "Tarih"])
+        
         conn.update(spreadsheet=SHEET_URL, data=pd.concat([df_clean, new_row], ignore_index=True))
     except: pass
 
@@ -74,30 +82,49 @@ if 'is_logged_in' not in st.session_state:
 
 PITO_IMG = "assets/pito.png"
 
-# --- 4. GİRİŞ EKRANI ---
+# --- 4. GİRİŞ EKRANI (KOORDİNAT HATIRLATMALI) ---
 if not st.session_state.is_logged_in:
     st.markdown("<br>", unsafe_allow_html=True)
     _, col_mid, _ = st.columns([1, 2, 1])
     with col_mid:
-        st.markdown('<div class="pito-bubble">merhaba ben pito! birlikte python\'ın eğlenceli dünyasına dalalım</div>', unsafe_allow_html=True)
+        st.markdown('<div class="pito-bubble">Merhaba ben Pito! Haydi birlikte python\'ın eğlenceli dünyasına dalalım.</div>', unsafe_allow_html=True)
         st.image(PITO_IMG if os.path.exists(PITO_IMG) else "https://img.icons8.com/fluency/180/robot-viewer.png", width=180)
+        
         in_no_raw = st.text_input("Okul Numaran:", key="login_field").strip()
+        
         if in_no_raw:
             df = get_db()
             user_data = df[df["Okul No"] == in_no_raw]
+            
             if not user_data.empty:
                 row = user_data.iloc[0]
+                # BURASI GÜNCELLENDİ: Hem modül hem adım bilgisi artık birlikte gözüküyor
+                mod_bilgi = int(row['Mevcut Modül']) + 1
+                adim_bilgi = int(row['Mevcut Egzersiz']) + 1
+                
                 st.markdown(f"### Hoş geldin, **{row['Öğrencinin Adı']}**! 👋")
-                st.success(f"Puanın: {row['Puan']} | Kaldığın Yer: Modül {int(row['Mevcut Modül'])+1}")
-                if st.button("🚀 Maceraya Devam Et"):
-                    st.session_state.student_no, st.session_state.student_name, st.session_state.student_class = str(row["Okul No"]), row["Öğrencinin Adı"], row["Sınıf"]
-                    st.session_state.total_score, st.session_state.db_module, st.session_state.db_exercise = int(row["Puan"]), int(row["Mevcut Modül"]), int(row["Mevcut Egzersiz"])
-                    st.session_state.current_module, st.session_state.current_exercise = st.session_state.db_module, st.session_state.db_exercise
-                    st.session_state.completed_modules = [True if x == "1" else False for x in str(row["Tamamlanan Modüller"]).split(",")]
-                    st.session_state.is_logged_in = True
-                    st.rerun()
+                st.success(f"Puanın: {row['Puan']} | Kaldığın Yer: Modül {mod_bilgi}, Adım {adim_bilgi}")
+                
+                c1, c2 = st.columns(2)
+                with c1:
+                    if st.button("🚀 Devam Et"):
+                        st.session_state.student_no, st.session_state.student_name, st.session_state.student_class = str(row["Okul No"]), row["Öğrencinin Adı"], row["Sınıf"]
+                        st.session_state.total_score = int(row["Puan"])
+                        st.session_state.db_module, st.session_state.db_exercise = int(row["Mevcut Modül"]), int(row["Mevcut Egzersiz"])
+                        st.session_state.current_module, st.session_state.current_exercise = st.session_state.db_module, st.session_state.db_exercise
+                        st.session_state.completed_modules = [True if x == "1" else False for x in str(row["Tamamlanan Modüller"]).split(",")]
+                        st.session_state.is_logged_in = True
+                        st.rerun()
+                with c2:
+                    if st.button("📚 İncele"):
+                        st.session_state.student_no, st.session_state.student_name, st.session_state.student_class = str(row["Okul No"]), row["Öğrencinin Adı"], row["Sınıf"]
+                        st.session_state.total_score, st.session_state.db_module, st.session_state.db_exercise = int(row["Puan"]), int(row["Mevcut Modül"]), int(row["Mevcut Egzersiz"])
+                        st.session_state.current_module, st.session_state.current_exercise = 0, 0
+                        st.session_state.completed_modules = [True if x == "1" else False for x in str(row["Tamamlanan Modüller"]).split(",")]
+                        st.session_state.is_logged_in = True
+                        st.rerun()
             else:
-                st.info("Seni henüz tanımıyorum. Bilgilerini tamamla:")
+                st.info("Seni henüz tanımıyorum. Lütfen bilgilerini tamamla:")
                 in_name = st.text_input("Adın Soyadın:", key="new_name")
                 in_class = st.selectbox("Sınıfın:", SINIFLAR, key="new_class")
                 if st.button("Maceraya Başla! ✨"):
@@ -107,7 +134,7 @@ if not st.session_state.is_logged_in:
                         force_save(); st.rerun()
     st.stop()
 
-# --- 5. MÜFREDAT (EĞİTİCİ NOTLAR EKLENDİ) ---
+# --- 5. MÜFREDAT VE EĞİTİCİ NOTLAR ---
 training_data = [
     {"module_title": "1. Giriş ve Çıktı", "exercises": [
         {"msg": "print() fonksiyonu ekrana istediğimiz çıktıyı yazdırmamızı sağlar. Hadi dene: Ekrana 'Merhaba Pito' yazdır.", "task": "print('___')", "check": lambda c, o: "Merhaba Pito" in o},
@@ -123,42 +150,43 @@ training_data = [
         {"msg": "Sayısal bir veriyi metne dönüştürmek için str() fonksiyonu kullanılır. 10 sayısını metne çevir.", "task": "s = 10\nprint(___(s))", "check": lambda c, o: "str" in c},
         {"msg": "Kullanıcıdan gelen veriler varsayılan olarak metindir. Matematiksel işlem yapmak için int() ile tam sayıya çevirmelisin.", "task": "n = ___(___('S: '))\nprint(n + 1)", "check": lambda c, o: "int" in c}
     ]},
-    {"module_title": "3. Karar Yapıları", "exercises": [
-        {"msg": "Python'da iki değerin eşitliğini kontrol etmek için == (çift eşittir) kullanılır.", "task": "if 10 ___ 10: print('X')", "check": lambda c, o: "==" in c},
-        {"msg": "Koşul gerçekleşmediğinde çalışacak kodlar else: bloğuna yazılır.", "task": "if 5>10: pass\n___: print('Y')", "check": lambda c, o: "else" in c},
-        {"msg": "Bir değerin diğerinden büyük veya eşit olduğunu >= işaretiyle kontrol ederiz.", "task": "if 5 ___ 5: print('Z')", "check": lambda c, o: ">=" in c},
-        {"msg": "Birden fazla koşulun aynı anda doğru olması için and bağlacı kullanılır.", "task": "if 1==1 ___ 2==2: pass", "check": lambda c, o: "and" in c},
-        {"msg": "Birden fazla koşulu sırayla kontrol etmek için elif (else if) kullanılır.", "task": "if 5>10: pass\n___ 5==5: print('A')", "check": lambda c, o: "elif" in c}
-    ]},
-    # (Diğer modüller 4-8 aynı eğitim formatıyla devam eder...)
+    # Diğer modüller burada devam edecektir...
 ]
 
-# --- 6. ARA YÜZ DÜZENİ ---
+# --- 6. ANA ARA YÜZ ---
 col_main, col_side = st.columns([3, 1])
+
 with col_main:
     st.markdown(f"#### 👋 {st.session_state.student_name} | ⭐ Puan: {st.session_state.total_score}")
+    
     mod_titles = [f"{'✅' if st.session_state.completed_modules[i] else '📖'} {m['module_title']}" for i, m in enumerate(training_data)]
     sel_mod = st.selectbox("Modül Seç:", mod_titles, index=st.session_state.current_module, key=f"sel_{st.session_state.student_no}")
     m_idx = mod_titles.index(sel_mod)
+    
     if m_idx != st.session_state.current_module:
         st.session_state.current_module = m_idx
         st.session_state.current_exercise = st.session_state.db_exercise if m_idx == st.session_state.db_module else 0
         st.session_state.current_potential_score = 20
         st.rerun()
+
     if st.session_state.current_module != st.session_state.db_module:
         if st.button(f"🔙 Güncel Görevime Dön (Modül {st.session_state.db_module + 1})"):
             st.session_state.current_module, st.session_state.current_exercise = st.session_state.db_module, st.session_state.db_exercise
             st.rerun()
+
     st.divider()
     e_idx = st.session_state.current_exercise
     curr_ex = training_data[m_idx]["exercises"][e_idx]
     is_locked = (m_idx < st.session_state.db_module) or (m_idx == st.session_state.db_module and e_idx < st.session_state.db_exercise)
+
     c_img, c_msg = st.columns([1, 4])
     with c_img: st.image(PITO_IMG if os.path.exists(PITO_IMG) else "https://img.icons8.com/fluency/200/robot-viewer.png", width=140)
     with c_msg:
         st.info(f"##### 🗣️ Pito:\n{curr_ex['msg']}")
         st.caption(f"Adım: {e_idx + 1}/5 {'🔒 Tamamlandı' if is_locked else f'🎁 Kazanılacak Puan: {st.session_state.current_potential_score}'}")
+
     code = st_ace(value=curr_ex['task'], language="python", theme="dracula", font_size=14, height=200, readonly=is_locked, key=f"ace_{m_idx}_{e_idx}")
+
     if not is_locked:
         if st.button("🔍 Kontrol Et", use_container_width=True):
             old_stdout, new_stdout = sys.stdout, StringIO()
@@ -173,23 +201,37 @@ with col_main:
                     if f"{m_idx}_{e_idx}" not in st.session_state.scored_exercises:
                         st.session_state.total_score += st.session_state.current_potential_score
                         st.session_state.scored_exercises.add(f"{m_idx}_{e_idx}")
-                        if st.session_state.db_exercise < 4: st.session_state.db_exercise += 1
-                        else: st.session_state.db_module += 1; st.session_state.db_exercise = 0; st.session_state.completed_modules[m_idx] = True
+                        
+                        # KRİTİK: Bir sonraki adımı veri tabanına hemen işle
+                        if st.session_state.db_exercise < 4:
+                            st.session_state.db_exercise += 1
+                        else:
+                            st.session_state.db_module += 1
+                            st.session_state.db_exercise = 0
+                            st.session_state.completed_modules[m_idx] = True
                         force_save()
-                    st.success("Tebrikler! Bir sonraki görev veri tabanına kaydedildi. ✅")
+                    st.success("Tebrikler! Yeni görevin kaydedildi. ✅")
                 else:
                     st.session_state.current_potential_score = max(5, st.session_state.current_potential_score - 5)
-                    st.warning(f"Hatalı! Bir sonraki denemende {st.session_state.current_potential_score} puan alabilirsin.")
+                    st.warning(f"Hatalı! Puanın {st.session_state.current_potential_score}'ye düştü.")
             except Exception as e:
                 sys.stdout = old_stdout
                 st.error(f"Hata: {e}")
+    
     if st.session_state.exercise_passed or is_locked:
         if e_idx < 4:
             if st.button("➡️ Sonraki Adıma Geç"):
-                st.session_state.current_exercise += 1; st.session_state.exercise_passed = False; st.session_state.current_potential_score = 20; st.rerun()
+                st.session_state.current_exercise += 1
+                st.session_state.exercise_passed = False
+                st.session_state.current_potential_score = 20
+                st.rerun()
         else:
             if st.button("🏆 Modülü Bitir"):
-                st.session_state.current_module += 1; st.session_state.current_exercise = 0; st.session_state.current_potential_score = 20; st.balloons(); st.rerun()
+                st.session_state.current_module += 1
+                st.session_state.current_exercise = 0
+                st.session_state.current_potential_score = 20
+                st.balloons(); st.rerun()
+
 with col_side:
     st.markdown(f"### 🏆 Sınıf Liderleri")
     df_lb = get_db()
