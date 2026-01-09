@@ -7,7 +7,7 @@ from datetime import datetime
 from streamlit_gsheets import GSheetsConnection
 import os
 
-# --- 1. SAYFA VE TASARIM AYARLARI ---
+# --- 1. TASARIM AYARLARI ---
 st.set_page_config(layout="wide", page_title="Pito Python Akademi", initial_sidebar_state="collapsed")
 
 SINIFLAR = ["9-A", "9-B", "10-A", "10-B", "11-A", "11-B"]
@@ -19,6 +19,7 @@ st.markdown("""
     .pito-bubble {
         position: relative; background: #f0f2f6; border: 2px solid #3a7bd5;
         border-radius: 15px; padding: 20px; margin-bottom: 20px; color: #1e1e1e;
+        font-weight: 500; font-size: 1.1rem;
     }
     .pito-bubble:after {
         content: ''; position: absolute; bottom: -20px; left: 40px;
@@ -28,6 +29,7 @@ st.markdown("""
         background: linear-gradient(135deg, #1e1e1e, #2d2d2d);
         border: 1px solid #444; border-radius: 12px; padding: 10px; margin-bottom: 8px; color: white;
     }
+    .rank-1 { border: 2px solid #FFD700; box-shadow: 0 0 10px #FFD700; }
     .stButton > button {
         width: 100%; border-radius: 12px; height: 3.5em;
         background: linear-gradient(45deg, #3a7bd5, #00d2ff) !important;
@@ -36,34 +38,34 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. VERİ TABANI YÖNETİMİ ---
+# --- 2. ZIRHLI VERİ TABANI YÖNETİMİ ---
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1lat8rO2qm9QnzEUYlzC_fypG3cRkGlJfSfTtwNvs318/edit#gid=0"
 conn = st.connection("gsheets", type=GSheetsConnection)
 
 def get_db():
     try:
+        # ttl=0 anlık canlı veriyi çeker
         df = conn.read(spreadsheet=SHEET_URL, ttl=0)
         if df is None or df.empty:
             return pd.DataFrame(columns=["Okul No", "Öğrencinin Adı", "Sınıf", "Puan", "Rütbe", "Tamamlanan Modüller", "Mevcut Modül", "Mevcut Egzersiz", "Tarih"])
-        df["Okul No"] = df["Okul No"].astype(str).str.strip()
+        # KRİTİK: Okul No sütununu tamamen metne çevir ve boşlukları sil
+        df["Okul No"] = df["Okul No"].astype(str).str.split('.').str[0].str.strip()
         return df.dropna(subset=["Okul No"])
     except:
-        return pd.DataFrame(columns=["Okul No", "Öğrencinin Adı", "Sınıf", "Puan", "Rütbe", "Tamamlanan Modüller", "Mevcut Modül", "Mevcut Egzersiz", "Tarih"])
+        return pd.DataFrame(columns=["Okul No", "Ö@rencini Adı", "Sınıf", "Puan", "Rütbe", "Tamamlanan Modüller", "Mevcut Modül", "Mevcut Egzersiz", "Tarih"])
 
 def force_save():
-    """Mevcut numaraya ait tüm satırları siler ve güncel tek bir satır ekler."""
+    """Mükerrerliği önler, eskiyi siler ve en güncel durumu tek satıra yazar."""
     try:
         no = str(st.session_state.student_no).strip()
         score = int(st.session_state.total_score)
         
-        # Güncel veri tabanını oku
         df_all = get_db()
-        # KRİTİK: Bu öğrenciye ait her şeyi listeden çıkar (Overwrite simülasyonu)
+        # Bu numaraya ait her şeyi listeden çıkar
         df_clean = df_all[df_all["Okul No"] != no]
         
-        # Rütbe ve ilerleme dizesi
         progress = ",".join(["1" if m else "0" for m in st.session_state.completed_modules])
-        rank = "🌱 Python Çırağı" if score < 200 else "💻 Kod Yazarı" if score < 500 else "🏆 Python Ustası"
+        rank = "🌱 Python Çırağı" if score < 200 else "💻 Kod Yazarı" if score < 500 else "🛠️ Yazılım Geliştirici" if score < 850 else "🏆 Python Ustası"
         
         new_row = pd.DataFrame([[
             no, st.session_state.student_name, st.session_state.student_class,
@@ -71,12 +73,11 @@ def force_save():
             st.session_state.db_exercise, datetime.now().strftime("%H:%M:%S")
         ]], columns=["Okul No", "Öğrencinin Adı", "Sınıf", "Puan", "Rütbe", "Tamamlanan Modüller", "Mevcut Modül", "Mevcut Egzersiz", "Tarih"])
         
-        # Birleştir ve komple güncelle
         updated_df = pd.concat([df_clean, new_row], ignore_index=True)
         conn.update(spreadsheet=SHEET_URL, data=updated_df)
     except: pass
 
-# --- 3. SESSION STATE ---
+# --- 3. SESSION STATE BAŞLATMA ---
 if 'is_logged_in' not in st.session_state:
     for k, v in {'student_name': "", 'student_no': "", 'student_class': "", 'completed_modules': [False]*8, 
                  'current_module': 0, 'current_exercise': 0, 'exercise_passed': False, 'total_score': 0, 
@@ -86,7 +87,7 @@ if 'is_logged_in' not in st.session_state:
 
 PITO_IMG = "assets/pito.png"
 
-# --- 4. GİRİŞ EKRANI (KESİN KURTARMA) ---
+# --- 4. GİRİŞ EKRANI (TAM TANIMA) ---
 if not st.session_state.is_logged_in:
     st.markdown("<br>", unsafe_allow_html=True)
     _, col_mid, _ = st.columns([1, 2, 1])
@@ -94,7 +95,8 @@ if not st.session_state.is_logged_in:
         st.markdown('<div class="pito-bubble">merhaba ben pito! birlikte python\'ın eğlenceli dünyasına dalalım</div>', unsafe_allow_html=True)
         st.image(PITO_IMG if os.path.exists(PITO_IMG) else "https://img.icons8.com/fluency/180/robot-viewer.png", width=180)
         
-        in_no = st.text_input("Okul Numaran:", key="login_field").strip()
+        in_no_raw = st.text_input("Okul Numaran:", key="login_field")
+        in_no = str(in_no_raw).strip()
         
         if in_no:
             df = get_db()
@@ -103,34 +105,28 @@ if not st.session_state.is_logged_in:
             if not user_data.empty:
                 row = user_data.iloc[0]
                 st.markdown(f"### Hoş geldin, **{row['Öğrencinin Adı']}**! 👋")
-                st.success(f"Mevcut Puanın: {row['Puan']} | Kaldığın Yer: Modül {int(row['Mevcut Modül'])+1}")
-                
-                c1, c2 = st.columns(2)
-                with c1:
-                    if st.button("🚀 Devam Et"):
-                        st.session_state.student_no, st.session_state.student_name, st.session_state.student_class = row["Okul No"], row["Öğrencinin Adı"], row["Sınıf"]
-                        st.session_state.total_score = int(row["Puan"])
-                        # DB değerlerini hafızaya kilitle
-                        st.session_state.db_module, st.session_state.db_exercise = int(row["Mevcut Modül"]), int(row["Mevcut Egzersiz"])
-                        st.session_state.current_module, st.session_state.current_exercise = st.session_state.db_module, st.session_state.db_exercise
-                        st.session_state.completed_modules = [True if x == "1" else False for x in str(row["Tamamlanan Modüller"]).split(",")]
-                        st.session_state.is_logged_in = True
-                        st.rerun()
-                with c2:
-                    if st.button("📚 İncele"):
-                        st.session_state.student_no, st.session_state.student_name, st.session_state.student_class = row["Okul No"], row["Öğrencinin Adı"], row["Sınıf"]
-                        st.session_state.total_score, st.session_state.db_module, st.session_state.db_exercise = int(row["Puan"]), int(row["Mevcut Modül"]), int(row["Mevcut Egzersiz"])
-                        st.session_state.current_module, st.session_state.current_exercise = 0, 0
-                        st.session_state.completed_modules = [True if x == "1" else False for x in str(row["Tamamlanan Modüller"]).split(",")]
-                        st.session_state.is_logged_in = True
-                        st.rerun()
+                st.info(f"Puanın: {row['Puan']} | Kaldığın Yer: Modül {int(row['Mevcut Modül'])+1}")
+                if st.button("🚀 Devam Et"):
+                    st.session_state.student_no = str(row["Okul No"])
+                    st.session_state.student_name = row["Öğrencinin Adı"]
+                    st.session_state.student_class = row["Sınıf"]
+                    st.session_state.total_score = int(row["Puan"])
+                    st.session_state.db_module = int(row["Mevcut Modül"])
+                    st.session_state.db_exercise = int(row["Mevcut Egzersiz"])
+                    st.session_state.current_module = st.session_state.db_module
+                    st.session_state.current_exercise = st.session_state.db_exercise
+                    st.session_state.completed_modules = [True if x == "1" else False for x in str(row["Tamamlanan Modüller"]).split(",")]
+                    st.session_state.is_logged_in = True
+                    st.rerun()
             else:
-                st.info("İlk kez giriş yapıyorsun, bilgilerini tamamla:")
-                in_name = st.text_input("Adın Soyadın:", key="new_name")
-                in_class = st.selectbox("Sınıfın:", SINIFLAR, key="new_class")
+                st.warning("Seni henüz tanımıyorum. Lütfen bilgilerini gir:")
+                in_name = st.text_input("Adın Soyadın:", key="reg_name")
+                in_class = st.selectbox("Sınıfın:", SINIFLAR, key="reg_class")
                 if st.button("Maceraya Başla! ✨"):
                     if in_name.strip():
-                        st.session_state.student_no, st.session_state.student_name, st.session_state.student_class = in_no, in_name.strip(), in_class
+                        st.session_state.student_no = in_no
+                        st.session_state.student_name = in_name.strip()
+                        st.session_state.student_class = in_class
                         st.session_state.is_logged_in = True
                         force_save()
                         st.rerun()
@@ -138,7 +134,7 @@ if not st.session_state.is_logged_in:
 
 # --- 5. MÜFREDAT (8 MODÜL EKSİKSİZ) ---
 training_data = [
-    {"module_title": "1. Giriş ve Çıktı", "exercises": [{"msg": "Ekrana 'Merhaba Pito' yazdır.", "task": "print('___')", "check": lambda c, o: "Merhaba Pito" in o}, {"msg": "100 sayısını yazdır.", "task": "print(___)", "check": lambda c, o: "100" in o}, {"msg": "Puan: 100 yazdır.", "task": "print('Puan:', ___)", "check": lambda c, o: "100" in o}, {"msg": "Yorum satırı ekle (#).", "task": "___ Bu yorumdur", "check": lambda c, o: "#" in c}, {"msg": "Alt satır (\\n) kullan.", "task": "print('Üst' + '___' + 'Alt')", "check": lambda c, o: "\n" in o}]},
+    {"module_title": "1. Giriş ve Çıktı", "exercises": [{"msg": "Ekrana 'Merhaba Pito' yazdır.", "task": "print('___')", "check": lambda c, o: "Merhaba Pito" in o}, {"msg": "100 sayısını yazdır.", "task": "print(___)", "check": lambda c, o: "100" in o}, {"msg": "Puan: 100 yazdır.", "task": "print('Puan:', ___)", "check": lambda c, o: "100" in o}, {"msg": "Yorum satırı ekle (#).", "task": "___ Bu yorum", "check": lambda c, o: "#" in c}, {"msg": "Alt satır (\\n) kullan.", "task": "print('Üst' + '___' + 'Alt')", "check": lambda c, o: "\n" in o}]},
     {"module_title": "2. Değişkenler", "exercises": [{"msg": "yas = 15 tanımla.", "task": "yas = ___\nprint(yas)", "check": lambda c, o: "15" in o}, {"msg": "isim = 'Pito' ata.", "task": "isim = '___'\nprint(isim)", "check": lambda c, o: "Pito" in o}, {"msg": "input() al.", "task": "ad = ___('Ad: ')\nprint(ad)", "check": lambda c, o: "input" in c}, {"msg": "Metne çevir.", "task": "s = 10\nprint(___(s))", "check": lambda c, o: "str" in c}, {"msg": "Sayıya çevir.", "task": "n = ___(___('S: '))\nprint(n + 1)", "check": lambda c, o: "int" in c}]},
     {"module_title": "3. Karar Yapıları", "exercises": [{"msg": "Eşitlik (==).", "task": "if 10 ___ 10: print('X')", "check": lambda c, o: "==" in c}, {"msg": "Else yapısı.", "task": "if 5>2: pass\n___: print('Y')", "check": lambda c, o: "else" in c}, {"msg": ">= kullan.", "task": "if 5 ___ 5: print('Z')", "check": lambda c, o: ">=" in c}, {"msg": "And kullan.", "task": "if 1==1 ___ 2==2: pass", "check": lambda c, o: "and" in c}, {"msg": "Elif kullan.", "task": "if 5>2: pass\n___ 5==5: print('A')", "check": lambda c, o: "elif" in c}]},
     {"module_title": "4. Döngüler", "exercises": [{"msg": "3 kez dönen for.", "task": "for i in ___(3): print('X')", "check": lambda c, o: o.count("X")==3}, {"msg": "Sayacı yazdır.", "task": "for i in range(2): print(___)", "check": lambda c, o: "1" in o}, {"msg": "While kur.", "task": "i=0\n___ i<1: print('Y'); i+=1", "check": lambda c, o: "while" in c}, {"msg": "Break kullan.", "task": "for i in range(3): if i==1: ___\n print(i)", "check": lambda c, o: "break" in c}, {"msg": "Continue kullan.", "task": "for i in range(3): if i==1: ___\n print(i)", "check": lambda c, o: "continue" in c}]},
@@ -164,7 +160,6 @@ with col_main:
         st.session_state.current_potential_score = 20
         st.rerun()
 
-    # KONUM DÜZELTME
     if st.session_state.current_module != st.session_state.db_module:
         if st.button(f"🔙 Güncel Görevime Dön (Modül {st.session_state.db_module + 1})"):
             st.session_state.current_module, st.session_state.current_exercise = st.session_state.db_module, st.session_state.db_exercise
@@ -194,16 +189,15 @@ with col_main:
                 st.code(out if out else "Kod başarıyla çalıştı!")
                 if curr_ex['check'](code, out) and "___" not in code:
                     st.session_state.exercise_passed = True
-                    ex_key = f"{m_idx}_{e_idx}"
-                    if ex_key not in st.session_state.scored_exercises:
+                    if f"{m_idx}_{e_idx}" not in st.session_state.scored_exercises:
                         st.session_state.total_score += st.session_state.current_potential_score
-                        st.session_state.scored_exercises.add(ex_key)
+                        st.session_state.scored_exercises.add(f"{m_idx}_{e_idx}")
                         force_save()
                     st.success("Tebrikler! ✅")
                 else:
-                    # YANLIŞ YANIT CEZASI
+                    # YANLIŞ YANIT CEZASI (-5)
                     st.session_state.current_potential_score = max(5, st.session_state.current_potential_score - 5)
-                    st.warning(f"Hatalı! Bir sonraki doğru denemende {st.session_state.current_potential_score} puan kazanabilirsin.")
+                    st.warning(f"Hatalı! Bir sonraki denemende {st.session_state.current_potential_score} puan kazanabilirsin.")
             except Exception as e:
                 sys.stdout = old_stdout
                 st.error(f"Hata: {e}")
@@ -228,7 +222,7 @@ with col_main:
                 force_save(); st.balloons(); st.rerun()
 
 with col_side:
-    st.markdown(f"### 🏆 Liderler")
+    st.markdown(f"### 🏆 Sınıf Liderleri")
     df_lb = get_db()
     df_class = df_lb[df_lb["Sınıf"] == st.session_state.student_class]
     if not df_class.empty:
