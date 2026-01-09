@@ -13,7 +13,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Mobil ve Giriş Ekranı için Özel CSS
+# Mobil uyumluluk için özel CSS
 st.markdown("""
     <style>
     .stButton > button { width: 100%; border-radius: 8px; height: 3.5em; margin-bottom: 5px; font-weight: bold; }
@@ -23,15 +23,14 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # --- 2. GOOGLE SHEETS BAĞLANTISI ---
-# ÖNEMLİ: Kendi Google Sheets linkinizi buraya yapıştırın
+# ÖNEMLİ: Tablonu "Düzenleyici" olarak paylaştığından emin ol!
 SHEET_URL = "https://docs.google.com/spreadsheets/d/BURAYA_KENDI_LINKINIZI_EKLEYIN/edit#gid=0"
 
 conn = st.connection("gsheets", type=GSheetsConnection)
 
 def get_leaderboard():
     try:
-        # Veriyi oku ve temizle
-        df = conn.read(spreadsheet=SHEET_URL, usecols=[0,1,2,3], ttl=0) # ttl=0 anlık veri çekmeyi sağlar
+        df = conn.read(spreadsheet=SHEET_URL, usecols=[0,1,2,3], ttl=0)
         df = df.dropna(subset=["Öğrenci Adı"])
         return df.sort_values(by="Puan", ascending=False).drop_duplicates(subset=["Öğrenci Adı"])
     except:
@@ -42,21 +41,18 @@ def auto_save_score():
     try:
         name = st.session_state.student_name
         score = st.session_state.total_score
-        # Mevcut rütbeyi hesapla
         if score < 200: rank = "🌱 Python Çırağı"
         elif score < 500: rank = "💻 Kod Yazarı"
         elif score < 850: rank = "🛠️ Yazılım Geliştirici"
         else: rank = "🏆 Python Ustası"
         
-        # Güncel tabloyu al ve yeni skoru ekle/güncelle
         df = get_leaderboard()
         new_row = pd.DataFrame([[name, score, rank, datetime.now().strftime("%H:%M:%S")]], 
                                columns=["Öğrenci Adı", "Puan", "Rütbe", "Tarih"])
-        
         updated_df = pd.concat([df, new_row], ignore_index=True)
         conn.update(spreadsheet=SHEET_URL, data=updated_df)
     except:
-        pass # Arka planda hata olsa bile öğrencinin ekranı donmasın
+        pass
 
 # --- 3. SESSION STATE ---
 if 'student_name' not in st.session_state: st.session_state.student_name = ""
@@ -79,62 +75,75 @@ if st.session_state.student_name == "":
         st.title("Pito Akademi")
         st.write("Python yolculuğuna isminle başla!")
         input_name = st.text_input("Adın Soyadın:", placeholder="Örn: Ahmet Yılmaz")
-        if st.button("Eğitimi Başlat 🚀"):
+        if st.button("Atölyeye Gir 🚀"):
             if input_name.strip() != "":
                 st.session_state.student_name = input_name.strip()
                 st.rerun()
-            else: st.warning("İsim girmelisin!")
+            else: st.warning("Lütfen bir isim gir!")
         st.markdown("</div>", unsafe_allow_html=True)
     st.stop()
 
-# --- 5. ANA UYGULAMA ---
+# --- 5. EĞİTİM İÇERİĞİ (Orijinal Modüllerin) ---
 def get_rank(score):
     if score < 200: return "🌱 Python Çırağı"
     if score < 500: return "💻 Kod Yazarı"
     if score < 850: return "🛠️ Yazılım Geliştirici"
     return "🏆 Python Ustası"
 
-# Orijinal Modül Verileri (Kısaltılmıştır, mevcut 8 modülünüzü buraya ekleyin)
 training_data = [
     {"module_title": "1. Giriş ve Çıktı", "exercises": [
-        {"msg": "Ekrana 'Pito' yazdır.", "task": "print('___')", "check": lambda c, o: "Pito" in o},
+        {"msg": "Ekrana 'Merhaba Pito' yazdır.", "task": "print('___')", "check": lambda c, o: "Merhaba Pito" in o},
         {"msg": "100 sayısını yazdır.", "task": "print(___)", "check": lambda c, o: "100" in o},
-        {"msg": "Puan: 100 yazdır.", "task": "print('Puan:', ___)", "check": lambda c, o: "100" in o},
-        {"msg": "Yorum ekle.", "task": "___ Test", "check": lambda c, o: "#" in c},
-        {"msg": "Alt satır (\\n).", "task": "print('A' + '\\n' + 'B')", "check": lambda c, o: "\n" in o}
-    ]}
-    # ... (Diğer 7 modül)
+        {"msg": "Puan: 100 yazdır (virgül kullan).", "task": "print('Puan:', ___)", "check": lambda c, o: "Puan: 100" in o},
+        {"msg": "Yorum satırı ekle (#).", "task": "___ Bu bir yorumdur", "check": lambda c, o: "#" in c},
+        {"msg": "Alt satır karakteri (\\n) kullan.", "task": "print('Üst' + '\\n' + 'Alt')", "check": lambda c, o: "\n" in o}
+    ]},
+    {"module_title": "2. Değişkenler ve Giriş", "exercises": [
+        {"msg": "yas = 15 tanımla ve yazdır.", "task": "yas = ___\nprint(yas)", "check": lambda c, o: "15" in o},
+        {"msg": "İsim ata (isim = 'Pito').", "task": "isim = '___'\nprint(isim)", "check": lambda c, o: "Pito" in o},
+        {"msg": "Kullanıcıdan veri al (input).", "task": "ad = ___('Adın: ')\nprint(ad)", "check": lambda c, o: "input" in c},
+        {"msg": "Sayıyı metne çevir (str).", "task": "s = 10\nprint(___(s))", "check": lambda c, o: "str" in c},
+        {"msg": "Girişi tam sayıya çevir (int).", "task": "sayi = ___(___('S: '))\nprint(sayi + 5)", "check": lambda c, o: "int" in c}
+    ]},
+    # (Diğer modüller de aynı orijinal içerikle buraya eklenir)
 ]
 
-# Üst Bilgi
+# Üst Bilgi Paneli
 st.markdown(f"#### 👋 {st.session_state.student_name} | **{get_rank(st.session_state.total_score)}** | ⭐ Puan: {st.session_state.total_score}")
 st.progress(min(st.session_state.total_score / 1000, 1.0))
 
-# Modül Navigasyonu
+# Modül Seçimi
 mod_titles = [f"{'✅' if st.session_state.completed_modules[i] else '📖'} {m['module_title']}" for i, m in enumerate(training_data)]
-sel_mod = st.selectbox("Modül Değiştir:", mod_titles, index=st.session_state.current_module)
-new_idx = mod_titles.index(sel_mod)
-if new_idx != st.session_state.current_module:
-    st.session_state.current_module, st.session_state.current_exercise, st.session_state.exercise_passed, st.session_state.current_potential_score = new_idx, 0, False, 20
+selected_mod = st.selectbox("Gitmek istediğin Modül:", mod_titles, index=st.session_state.current_module)
+new_mod_idx = mod_titles.index(selected_mod)
+
+if new_mod_idx != st.session_state.current_module:
+    st.session_state.current_module, st.session_state.current_exercise, st.session_state.exercise_passed, st.session_state.current_potential_score = new_mod_idx, 0, False, 20
     st.rerun()
 
 st.divider()
 
-# Egzersiz Alanı
+# Ana Egzersiz Alanı
 m_idx, e_idx = st.session_state.current_module, st.session_state.current_exercise
 curr_ex = training_data[m_idx]["exercises"][e_idx]
 
 st.info(f"**Pito:** {curr_ex['msg']}")
-st.caption(f"🎁 Potansiyel Puan: {st.session_state.current_potential_score}")
+st.caption(f"🎁 Görev Puanı: {st.session_state.current_potential_score}")
 
 code = st_ace(value=curr_ex['task'], language="python", theme="dracula", font_size=14, height=180, wrap=True, key=f"ace_{m_idx}_{e_idx}")
 
+# --- BURASI HATANIN ÇÖZÜLDÜĞÜ KRİTİK ALAN ---
 if st.button("🔍 Görevi Kontrol Et", use_container_width=True):
-    old_stdout, redirected_output = sys.stdout, sys.stdout = StringIO()
+    old_stdout = sys.stdout # Önce mevcut stdout'u yedekle
+    redirected_output = sys.stdout = StringIO() # Sonra yeni bir StringIO'ya yönlendir
     def mock_input(p=""): return "10"
+    
     try:
         exec(code.replace("___", "None"), {"input": mock_input})
-        sys.stdout, output = old_stdout, redirected_output.getvalue()
+        sys.stdout = old_stdout # Çıktıyı hemen sisteme geri ver (ÇÖZÜM BURASI)
+        output = redirected_output.getvalue()
+        st.subheader("📟 Çıktı")
+        st.code(output if output else "Pito: Başarıyla çalıştı!")
         
         if curr_ex['check'](code, output) and "___" not in code:
             st.session_state.exercise_passed = True
@@ -142,17 +151,17 @@ if st.button("🔍 Görevi Kontrol Et", use_container_width=True):
             if ex_key not in st.session_state.scored_exercises:
                 st.session_state.total_score += st.session_state.current_potential_score
                 st.session_state.scored_exercises.add(ex_key)
-                # --- KRİTİK NOKTA: OTOMATİK KAYIT ---
-                auto_save_score() 
-                st.toast(f"Puanın otomatik kaydedildi! (+{st.session_state.current_potential_score})", icon="☁️")
-            st.success("Tebrikler! Doğru cevap. ✅")
+                auto_save_score() # Otomatik kayıt
+                st.toast(f"Puan kaydedildi! (+{st.session_state.current_potential_score})", icon="☁️")
+            st.success("Tebrikler! ✅")
         else:
             if not st.session_state.exercise_passed:
                 st.session_state.current_potential_score = max(0, st.session_state.current_potential_score - 5)
             st.warning(f"Hatalı! Puanın {st.session_state.current_potential_score}'ye düştü.")
-    except:
+    except Exception as e:
         sys.stdout = old_stdout
-        st.error("Kodda hata var, puanın azaldı.")
+        if not st.session_state.exercise_passed: st.session_state.current_potential_score = max(0, st.session_state.current_potential_score - 5)
+        st.error(f"Kod hatası! Puan azaldı.")
 
 if st.session_state.exercise_passed:
     if e_idx < 4:
@@ -165,8 +174,6 @@ if st.session_state.exercise_passed:
             if m_idx < 7: st.session_state.current_module, st.session_state.current_exercise = m_idx + 1, 0
             st.balloons(); st.rerun()
 
-# Liderlik Tablosu
 st.divider()
 with st.expander("🏆 Liderlik Tablosu (Canlı)"):
-    st.subheader("En İyi 10 Öğrenci")
     st.dataframe(get_leaderboard().head(10), use_container_width=True)
