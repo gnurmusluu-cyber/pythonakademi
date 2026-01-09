@@ -41,16 +41,18 @@ conn = st.connection("gsheets", type=GSheetsConnection)
 
 def get_db():
     try:
+        # ttl=0 ile her seferinde en güncel listeyi çekeriz
         df = conn.read(spreadsheet=SHEET_URL, ttl=0)
         if df is None or df.empty:
             return pd.DataFrame(columns=["Okul No", "Öğrencinin Adı", "Sınıf", "Puan", "Rütbe", "Tamamlanan Modüller", "Mevcut Modül", "Mevcut Egzersiz", "Tarih"])
+        # Veri tipi uyuşmazlığı olmaması için her zaman stringe çevir
         df["Okul No"] = df["Okul No"].astype(str)
         return df.dropna(subset=["Okul No"])
     except:
         return pd.DataFrame(columns=["Okul No", "Öğrencinin Adı", "Sınıf", "Puan", "Rütbe", "Tamamlanan Modüller", "Mevcut Modül", "Mevcut Egzersiz", "Tarih"])
 
 def auto_save_progress():
-    """Öğrencinin puanını ve o anki modül/egzersiz konumunu tek satırda günceller."""
+    """Mevcut satırı siler ve en güncel veriyi tek satır olarak ekler."""
     try:
         no = str(st.session_state.student_no)
         name = st.session_state.student_name
@@ -65,13 +67,17 @@ def auto_save_progress():
         elif score < 850: rank = "🛠️ Yazılım Geliştirici"
         else: rank = "🏆 Python Ustası"
         
+        # 1. Mevcut tüm listeyi çek
         df = get_db()
-        # Mükerrer kaydı önle: Eski satırı numara üzerinden filtreleyip at
+        
+        # 2. KRİTİK ADIM: Okul No üzerinden mükerrerliği engelle (Eski kaydı at)
         df = df[df["Okul No"] != no]
         
+        # 3. Yeni veriyi DataFrame yap
         new_row = pd.DataFrame([[no, name, sınıf, score, rank, progress, curr_m, curr_e, datetime.now().strftime("%H:%M:%S")]], 
                                columns=["Okul No", "Öğrencinin Adı", "Sınıf", "Puan", "Rütbe", "Tamamlanan Modüller", "Mevcut Modül", "Mevcut Egzersiz", "Tarih"])
         
+        # 4. Eski (temizlenmiş) liste ile yenisini birleştir ve gönder
         updated_df = pd.concat([df, new_row], ignore_index=True)
         conn.update(spreadsheet=SHEET_URL, data=updated_df)
     except:
@@ -86,7 +92,7 @@ if 'student_name' not in st.session_state:
 
 PITO_IMG = "assets/pito.png"
 
-# --- 4. GİRİŞ EKRANI (RECOVERY / GERİ YÜKLEME) ---
+# --- 4. GİRİŞ EKRANI (OTURUM GERİ YÜKLEME) ---
 if st.session_state.student_name == "":
     st.markdown("<br>", unsafe_allow_html=True)
     _, col_mid, _ = st.columns([1, 2, 1])
@@ -106,22 +112,23 @@ if st.session_state.student_name == "":
                 st.session_state.student_name = in_name.strip()
                 st.session_state.student_class = in_class
                 
-                # --- KRİTİK VERİ YÜKLEME BÖLÜMÜ ---
+                # --- VERİ GERİ YÜKLEME (LOAD DATA) ---
                 df = get_db()
                 user_data = df[df["Okul No"] == in_no.strip()]
                 if not user_data.empty:
+                    # int() dönüşümü ile güvenli yükleme
                     st.session_state.total_score = int(user_data.iloc[0]["Puan"])
                     st.session_state.current_module = int(user_data.iloc[0]["Mevcut Modül"])
                     st.session_state.current_exercise = int(user_data.iloc[0]["Mevcut Egzersiz"])
                     prog_str = str(user_data.iloc[0]["Tamamlanan Modüller"])
                     st.session_state.completed_modules = [True if x == "1" else False for x in prog_str.split(",")]
-                    st.toast(f"Hoş geldin! Modül {st.session_state.current_module + 1}'den devam ediyorsun.", icon="✨")
+                    st.toast(f"Veriler yüklendi! Modül {st.session_state.current_module + 1}, Adım {st.session_state.current_exercise + 1}'den devam ediyorsun.", icon="✨")
                 
-                st.rerun() # Verileri yükledikten sonra sayfayı tazele
-            else: st.warning("Lütfen alanları doldurun!")
+                st.rerun() # Yükleme bitti, sayfayı yenile
+            else: st.warning("Tüm alanları doldurmalısın!")
     st.stop()
 
-# --- 5. EKSİKSİZ MÜFREDAT (8 Modül) ---
+# --- 5. EKSİKSİZ 8 MODÜL VE ETKİNLİKLER ---
 training_data = [
     {"module_title": "1. Giriş ve Çıktı", "exercises": [
         {"msg": "Ekrana 'Merhaba Pito' yazdır.", "task": "print('___')", "check": lambda c, o: "Merhaba Pito" in o},
@@ -145,8 +152,8 @@ st.markdown(f"#### 👋 {st.session_state.student_name} ({st.session_state.stude
 st.progress(min(st.session_state.total_score / 1000, 1.0))
 
 mod_titles = [f"{'✅' if st.session_state.completed_modules[i] else '📖'} {m['module_title']}" for i, m in enumerate(training_data)]
-# selectbox'ın index'ini session_state'den alıyoruz ki recovery çalışsın
-sel_mod = st.selectbox("Gitmek istediğin Modül:", mod_titles, index=st.session_state.current_module)
+# Index'i session_state'e bağlayarak recovery'yi garantiledim
+sel_mod = st.selectbox("Modül Seç:", mod_titles, index=st.session_state.current_module)
 new_idx = mod_titles.index(sel_mod)
 
 if new_idx != st.session_state.current_module:
@@ -157,7 +164,7 @@ st.divider()
 m_idx, e_idx = st.session_state.current_module, st.session_state.current_exercise
 curr_ex = training_data[m_idx]["exercises"][e_idx]
 
-# PİTO ANLATIM ALANI
+# PİTO ANLATIM ALANI (BÜYÜTÜLDÜ)
 c1, c2 = st.columns([1.5, 5])
 with c1:
     if os.path.exists(PITO_IMG): st.image(PITO_IMG, width=180)
@@ -186,7 +193,7 @@ if st.button("🔍 Görevi Kontrol Et", use_container_width=True):
             if ex_key not in st.session_state.scored_exercises:
                 st.session_state.total_score += st.session_state.current_potential_score
                 st.session_state.scored_exercises.add(ex_key)
-                auto_save_progress() # Konumu ve puanı kaydet
+                auto_save_progress() # Konumu ve puanı anlık kaydet
             st.success("Tebrikler! ✅")
         else:
             if not st.session_state.exercise_passed:
@@ -198,17 +205,16 @@ if st.button("🔍 Görevi Kontrol Et", use_container_width=True):
 
 if st.session_state.exercise_passed:
     if e_idx < 4:
-        if st.button("➡️ Sonraki Adım"):
+        if st.button("➡️ Sonraki Adıma Geç"):
             st.session_state.current_exercise = e_idx + 1
             st.session_state.exercise_passed = False
             st.session_state.current_potential_score = 20
-            auto_save_progress() # Bir sonraki egzersize geçtiğini kaydet
+            auto_save_progress() # Bir sonraki egzersize geçtiğini anlık kaydet
             st.rerun()
     else:
         if st.button("🏆 Modülü Bitir"):
             st.session_state.completed_modules[m_idx] = True
             st.session_state.exercise_passed = False
-            st.session_state.current_potential_score = 20
             if m_idx < 7:
                 st.session_state.current_module = m_idx + 1
                 st.session_state.current_exercise = 0
@@ -220,4 +226,6 @@ with st.expander(f"🏆 {st.session_state.student_class} Liderlik Tablosu"):
     df_all = get_db()
     df_class = df_all[df_all["Sınıf"] == st.session_state.student_class]
     if not df_class.empty:
-        st.dataframe(df_class[["Öğrencinin Adı", "Puan", "Rütbe"]].sort_values(by="Puan", ascending=False).head(10), use_container_width=True)
+        # Puan bazlı sıralama
+        df_display = df_class.sort_values(by="Puan", ascending=False).head(10)
+        st.dataframe(df_display[["Öğrencinin Adı", "Puan", "Rütbe"]], use_container_width=True)
