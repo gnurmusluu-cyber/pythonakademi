@@ -25,7 +25,6 @@ st.markdown("""
         border-width: 20px 20px 0; border-style: solid;
         border-color: #3a7bd5 transparent; display: block; width: 0;
     }
-    .stAlert { border: 2px solid #3a7bd5 !important; border-radius: 12px !important; }
     .stButton > button {
         width: 100%; border-radius: 12px; height: 3.5em;
         background: linear-gradient(45deg, #3a7bd5, #00d2ff) !important;
@@ -35,7 +34,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. VERİ YÖNETİMİ (TAM OTURUM KORUMALI) ---
+# --- 2. VERİ YÖNETİMİ ---
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1lat8rO2qm9QnzEUYlzC_fypG3cRkGlJfSfTtwNvs318/edit#gid=0"
 conn = st.connection("gsheets", type=GSheetsConnection)
 
@@ -49,8 +48,8 @@ def get_db():
     except:
         return pd.DataFrame(columns=["Okul No", "Öğrencinin Adı", "Sınıf", "Puan", "Rütbe", "Tamamlanan Modüller", "Mevcut Modül", "Mevcut Egzersiz", "Tarih"])
 
-def auto_save_score():
-    """Öğrencinin hem puanını hem de tam olarak bulunduğu konumu kaydeder."""
+def auto_save_progress():
+    """Öğrencinin konumunu ve puanını anlık olarak günceller (Mükerrer kaydı önler)."""
     try:
         no = str(st.session_state.student_no)
         name = st.session_state.student_name
@@ -69,8 +68,9 @@ def auto_save_score():
         new_row = pd.DataFrame([[no, name, sınıf, score, rank, progress, curr_m, curr_e, datetime.now().strftime("%H:%M:%S")]], 
                                columns=["Okul No", "Öğrencinin Adı", "Sınıf", "Puan", "Rütbe", "Tamamlanan Modüller", "Mevcut Modül", "Mevcut Egzersiz", "Tarih"])
         
+        # Mükerrer kaydı sil ve yenisini en alta ekle
+        df = df[df["Okul No"] != no]
         updated_df = pd.concat([df, new_row], ignore_index=True)
-        updated_df = updated_df.drop_duplicates(subset=["Okul No"], keep="last")
         conn.update(spreadsheet=SHEET_URL, data=updated_df)
     except:
         pass
@@ -84,7 +84,7 @@ if 'student_name' not in st.session_state:
 
 PITO_IMG = "assets/pito.png"
 
-# --- 4. GİRİŞ EKRANI (FULL RECOVERY) ---
+# --- 4. GİRİŞ EKRANI (RECOVERY AKTİF) ---
 if st.session_state.student_name == "":
     st.markdown("<br>", unsafe_allow_html=True)
     _, col_mid, _ = st.columns([1, 2, 1])
@@ -98,11 +98,9 @@ if st.session_state.student_name == "":
         in_name = st.text_input("Adın Soyadın:", placeholder="Örn: Gamzenur Muslu")
         in_class = st.selectbox("Sınıfın:", SINIFLAR)
         
-        if st.button("Kaldığım Yerden Devam Et 🚀"):
+        if st.button("Atölyeye Giriş Yap 🚀"):
             if in_no.strip() and in_name.strip():
                 st.session_state.student_no, st.session_state.student_name, st.session_state.student_class = in_no.strip(), in_name.strip(), in_class
-                
-                # --- VERİ GERİ YÜKLEME (MODÜL VE ADIM DAHİL) ---
                 df = get_db()
                 user_data = df[df["Okul No"] == in_no.strip()]
                 if not user_data.empty:
@@ -111,12 +109,12 @@ if st.session_state.student_name == "":
                     st.session_state.current_exercise = int(user_data.iloc[0]["Mevcut Egzersiz"])
                     prog_str = str(user_data.iloc[0]["Tamamlanan Modüller"])
                     st.session_state.completed_modules = [True if x == "1" else False for x in prog_str.split(",")]
-                    st.toast(f"Hoş geldin! Modül {st.session_state.current_module + 1}, Adım {st.session_state.current_exercise + 1}'den devam ediyorsun.", icon="✨")
+                    st.toast(f"Hoş geldin! Modül {st.session_state.current_module + 1}'den devam ediyorsun.", icon="✨")
                 st.rerun()
             else: st.warning("Tüm alanları doldurmalısın!")
     st.stop()
 
-# --- 5. MÜFREDAT (8 MODÜL EKSİKSİZ) ---
+# --- 5. MÜFREDAT (EKSİKSİZ 8 MODÜL) ---
 training_data = [
     {"module_title": "1. Giriş ve Çıktı", "exercises": [
         {"msg": "Ekrana 'Merhaba Pito' yazdır.", "task": "print('___')", "check": lambda c, o: "Merhaba Pito" in o},
@@ -130,7 +128,7 @@ training_data = [
         {"msg": "isim = 'Pito' ata.", "task": "isim = '___'\nprint(isim)", "check": lambda c, o: "Pito" in o},
         {"msg": "Kullanıcıdan veri al (input).", "task": "ad = ___('Adın: ')\nprint(ad)", "check": lambda c, o: "input" in c},
         {"msg": "Sayıyı metne çevir (str).", "task": "s = 10\nprint(___(s))", "check": lambda c, o: "str" in c},
-        {"msg": "Girişi tam sayıya çevir (int).", "task": "n = ___(___('S: '))\nprint(n + 5)", "check": lambda c, o: "int" in c}
+        {"msg": "Girişi tam sayıya çevir (int).", "task": "sayi = ___(___('S: '))\nprint(sayi + 5)", "check": lambda c, o: "int" in c}
     ]},
     {"module_title": "3. Karar Yapıları", "exercises": [
         {"msg": "Eşitlik kontrolü (==).", "task": "if 10 ___ 10: print('On')", "check": lambda c, o: "==" in c},
@@ -191,7 +189,7 @@ st.divider()
 m_idx, e_idx = st.session_state.current_module, st.session_state.current_exercise
 curr_ex = training_data[m_idx]["exercises"][e_idx]
 
-# PİTO KONUŞMA ALANI (GÖRSEL BÜYÜTÜLDÜ)
+# PİTO KONUŞMA ALANI
 c1, c2 = st.columns([1.5, 5])
 with c1:
     if os.path.exists(PITO_IMG): st.image(PITO_IMG, width=180)
@@ -202,7 +200,6 @@ with c2:
 
 code = st_ace(value=curr_ex['task'], language="python", theme="dracula", font_size=14, height=180, wrap=True, key=f"ace_{m_idx}_{e_idx}")
 
-# --- TEKNİK HATA ÇÖZÜMLERİ ---
 if st.button("🔍 Görevi Kontrol Et", use_container_width=True):
     old_stdout = sys.stdout 
     new_stdout = StringIO()
@@ -220,7 +217,7 @@ if st.button("🔍 Görevi Kontrol Et", use_container_width=True):
             if ex_key not in st.session_state.scored_exercises:
                 st.session_state.total_score += st.session_state.current_potential_score
                 st.session_state.scored_exercises.add(ex_key)
-                auto_save_score() # KONUMU VE PUANI KAYDET
+                auto_save_progress() # DOĞRU CEVAPTA KAYDET
             st.success("Tebrikler! ✅")
         else:
             if not st.session_state.exercise_passed:
@@ -234,15 +231,13 @@ if st.session_state.exercise_passed:
     if e_idx < 4:
         if st.button("➡️ Sonraki Adım"):
             st.session_state.current_exercise, st.session_state.exercise_passed, st.session_state.current_potential_score = e_idx+1, False, 20
-            auto_save_score() # ADIM ATLAYINCA KONUMU KAYDET
+            auto_save_progress() # ADIM ATLAYINCA KONUMU KAYDET
             st.rerun()
     else:
         if st.button("🏆 Modülü Bitir"):
             st.session_state.completed_modules[m_idx], st.session_state.exercise_passed, st.session_state.current_potential_score = True, False, 20
-            if m_idx < 7: 
-                st.session_state.current_module, st.session_state.current_exercise = m_idx+1, 0
-            auto_save_score()
-            st.balloons(); st.rerun()
+            if m_idx < 7: st.session_state.current_module, st.session_state.current_exercise = m_idx+1, 0
+            auto_save_progress(); st.balloons(); st.rerun()
 
 st.divider()
 with st.expander(f"🏆 {st.session_state.student_class} Liderlik Tablosu"):
