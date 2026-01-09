@@ -1,2 +1,4 @@
-streamlit 
+streamlit
 streamlit-ace
+pandas
+st-gsheets-connection
