@@ -19,7 +19,7 @@ st.markdown("""
     .pito-bubble {
         position: relative; background: #f0f2f6; border: 2px solid #3a7bd5;
         border-radius: 15px; padding: 20px; margin-bottom: 20px; color: #1e1e1e;
-        font-weight: 500; font-size: 1.1rem;
+        font-weight: 500; font-size: 1.1rem; box-shadow: 4px 4px 10px rgba(0,0,0,0.1);
     }
     .pito-bubble:after {
         content: ''; position: absolute; bottom: -20px; left: 40px;
@@ -29,6 +29,7 @@ st.markdown("""
         background: linear-gradient(135deg, #1e1e1e, #2d2d2d);
         border: 1px solid #444; border-radius: 12px; padding: 10px; margin-bottom: 8px; color: white;
     }
+    .rank-1 { border: 2px solid #FFD700; box-shadow: 0 0 10px #FFD700; }
     .stButton > button {
         width: 100%; border-radius: 12px; height: 3.5em;
         background: linear-gradient(45deg, #3a7bd5, #00d2ff) !important;
@@ -37,7 +38,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. VERİ TABANI YÖNETİMİ ---
+# --- 2. VERI TABANI YONETIMI ---
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1lat8rO2qm9QnzEUYlzC_fypG3cRkGlJfSfTtwNvs318/edit#gid=0"
 conn = st.connection("gsheets", type=GSheetsConnection)
 
@@ -52,7 +53,7 @@ def get_db():
         return pd.DataFrame(columns=["Okul No", "Öğrencinin Adı", "Sınıf", "Puan", "Rütbe", "Tamamlanan Modüller", "Mevcut Modül", "Mevcut Egzersiz", "Tarih"])
 
 def force_save():
-    """Mükerrer kaydı önler ve GÜNCEL KONUMU (bir sonraki taze adım) kaydeder."""
+    """Oğrenciyi bulur, eskiyi siler ve YENİ KONUMU (taze adım) kaydeder."""
     try:
         no = str(st.session_state.student_no).strip()
         score = int(st.session_state.total_score)
@@ -60,7 +61,7 @@ def force_save():
         df_clean = df_all[df_all["Okul No"] != no]
         
         progress = ",".join(["1" if m else "0" for m in st.session_state.completed_modules])
-        rank = "🌱 Python Çırağı" if score < 200 else "💻 Kod Yazarı" if score < 500 else "🛠️ Yazılım Geliştirici" if score < 850 else "🏆 Python Ustası"
+        rank = "🌱 Python Çırağı" if score < 200 else "💻 Kod Yazarı" if score < 500 else "🏆 Python Ustası"
         
         new_row = pd.DataFrame([[
             no, st.session_state.student_name, st.session_state.student_class,
@@ -81,7 +82,7 @@ if 'is_logged_in' not in st.session_state:
 
 PITO_IMG = "assets/pito.png"
 
-# --- 4. GİRİŞ EKRANI ---
+# --- 4. GIRIS EKRANI ---
 if not st.session_state.is_logged_in:
     st.markdown("<br>", unsafe_allow_html=True)
     _, col_mid, _ = st.columns([1, 2, 1])
@@ -125,26 +126,26 @@ if not st.session_state.is_logged_in:
                         force_save(); st.rerun()
     st.stop()
 
-# --- 5. MÜFREDAT ---
+# --- 5. MUFREDAT ---
 training_data = [
     {"module_title": "1. Giriş ve Çıktı", "exercises": [
         {"msg": "print() fonksiyonu ekrana istediğimiz çıktıyı yazdırmamızı sağlar. Hadi dene: Ekrana 'Merhaba Pito' yazdır.", "task": "print('___')", "check": lambda c, o: "Merhaba Pito" in o},
-        {"msg": "Sayıları ekrana yazdırmak için tırnak işareti kullanmamıza gerek yoktur. Şimdi 100 sayısını yazdır.", "task": "print(___)", "check": lambda c, o: "100" in o},
+        {"msg": "sayıları ekrana yazdırmak için tırnak işareti kullanmamıza gerek yoktur. Şimdi 100 sayısını yazdır.", "task": "print(___)", "check": lambda c, o: "100" in o},
         {"msg": "print() fonksiyonu içerisinde aralarına virgül koyarak birden fazla veriyi sıralayıp ekrana yazdırabiliriz. 'Puan:' metni ile 100 sayısını virgül kullanarak yazdır.", "task": "print('Puan:', ___)", "check": lambda c, o: "100" in o},
-        {"msg": "Kodlarımıza açıklama eklemek için # işaretini kullanırız. Bu satırlar çalıştırılmaz. Bir yorum satırı ekle.", "task": "___ Bu bir yorumdur", "check": lambda c, o: "#" in c},
-        {"msg": "Metin içerisinde alt satıra geçmek için \\n karakterini kullanırız. Üst ve Alt kelimelerini ayır.", "task": "print('Üst' + '___' + 'Alt')", "check": lambda c, o: "\n" in o}
+        {"msg": "Kodlarımıza açıklama eklemek için # (diyez) işaretini kullanırız. Bu satırlar Python tarafından çalıştırılmaz. Bir yorum satırı ekle.", "task": "___ Bu bir yorumdur", "check": lambda c, o: "#" in c},
+        {"msg": "Metin içerisinde alt satıra geçmek için \\n karakterini kullanırız. Üst ve Alt kelimelerini farklı satırlarda yazdır.", "task": "print('Üst' + '___' + 'Alt')", "check": lambda c, o: "\n" in o}
     ]},
     {"module_title": "2. Değişkenler", "exercises": [
         {"msg": "Değişkenler bilgi saklamamıza yarar. yas = 15 yazarak bir tam sayı değişkeni oluştur ve yazdır.", "task": "yas = ___\nprint(yas)", "check": lambda c, o: "15" in o},
         {"msg": "isim = 'Pito' tanımla ve yazdır. Metinsel verilerde tırnak unutma!", "task": "isim = '___'\nprint(isim)", "check": lambda c, o: "Pito" in o},
         {"msg": "input() fonksiyonu kullanıcıdan bilgi alır. 'Adın: ' sorusuyla bir isim al.", "task": "ad = ___('Adın: ')\nprint(ad)", "check": lambda c, o: "input" in c},
-        {"msg": "Sayısal veriyi metne dönüştürmek için str() fonksiyonu kullanılır. 10 sayısını metne çevir.", "task": "s = 10\nprint(___(s))", "check": lambda c, o: "str" in c},
+        {"msg": "str() fonksiyonu sayıları metne dönüştürür. 10 sayısını metne çevir.", "task": "s = 10\nprint(___(s))", "check": lambda c, o: "str" in c},
         {"msg": "Kullanıcıdan gelen veriler metindir. int() ile tam sayıya çevirmelisin.", "task": "n = ___(___('S: '))\nprint(n + 1)", "check": lambda c, o: "int" in c}
     ]}
-    # (Hocam 3-8 modülleri pedagojik notlarla aynı mantıkta buraya ekleyebilirsiniz)
+    # Modüller 3-8 aynı yapıyla buraya eklenebilir.
 ]
 
-# --- 6. ARA YÜZ DÜZENİ ---
+# --- 6. ARA YUZ DUZENI ---
 col_main, col_side = st.columns([3, 1])
 
 with col_main:
@@ -158,6 +159,7 @@ with col_main:
         st.session_state.current_exercise = st.session_state.db_exercise if m_idx == st.session_state.db_module else 0
         st.session_state.current_potential_score = 20; st.rerun()
 
+    # GUNCEL GOREVIME DON BUTONU (ZORLANMIS)
     if st.session_state.current_module != st.session_state.db_module or st.session_state.current_exercise != st.session_state.db_exercise:
         if st.button(f"🔙 Güncel Görevime Dön (Modül {st.session_state.db_module + 1}, Adım {st.session_state.db_exercise + 1})", use_container_width=True):
             st.session_state.current_module, st.session_state.current_exercise = st.session_state.db_module, st.session_state.db_exercise
@@ -176,18 +178,22 @@ with col_main:
 
     code = st_ace(value=curr_ex['task'], language="python", theme="dracula", font_size=14, height=200, readonly=is_locked, key=f"ace_{m_idx}_{e_idx}")
 
+    # GELISTIRILMIS ÇIKTI FONKSIYONU (İNCELEME MODU HATALARI GIDERILDI)
     def run_pito_code(c, user_input=""):
+        # Kritik: Inceleme modunda ___ hatasini onle
+        safe_code = c.replace("___", "#" if "#" in curr_ex['task'] or "yorum" in curr_ex['msg'] else "''")
         old_stdout, new_stdout = sys.stdout, StringIO()
         sys.stdout = new_stdout
         try:
-            exec(c.replace("___", "None"), {"input": lambda p: user_input if user_input else "Pito"})
+            # Mock input: Kullanici terminale ne yazarsa onu dondurur
+            exec(safe_code, {"input": lambda p: user_input if user_input else "Pito"})
             sys.stdout = old_stdout
             return new_stdout.getvalue()
         except Exception as e:
             sys.stdout = old_stdout
-            return f"Hata: {e}"
+            return f"Kodda eksik/hata var: {e}"
 
-    # PİTO TERMİNALİ
+    # PITO TERMINALI (Input varsa cikar)
     u_in = ""
     if "input(" in code and not is_locked:
         u_in = st.text_input("👇 Pito Terminali: Bir değer yaz ve Kontrol Et'e bas:", placeholder="İsim, sayı vb...")
@@ -205,7 +211,7 @@ with col_main:
                 if f"{m_idx}_{e_idx}" not in st.session_state.scored_exercises:
                     st.session_state.total_score += st.session_state.current_potential_score
                     st.session_state.scored_exercises.add(f"{m_idx}_{e_idx}")
-                    # KONUMU BİR SONRAKİ ADIMA GÜNCELLE
+                    # KONUMU ANLIK OLARAK SONRAKI ADIMA AYARLA
                     if st.session_state.db_exercise < 4: st.session_state.db_exercise += 1
                     else:
                         st.session_state.db_module += 1; st.session_state.db_exercise = 0
