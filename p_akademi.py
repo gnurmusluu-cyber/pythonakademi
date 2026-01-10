@@ -78,15 +78,26 @@ def force_save():
         conn.update(spreadsheet=SHEET_URL, data=pd.concat([df_clean, new_row], ignore_index=True))
     except: pass
 
-# --- 3. SESSION STATE ---
+# --- 3. SESSION STATE (HAFIZA) ---
+# pito_emotion: idle (düşünüyor), success (başarı), error (hata), graduate (mezun)
 if 'is_logged_in' not in st.session_state:
     for k, v in {'student_name': "", 'student_no': "", 'student_class': "", 'completed_modules': [False]*8, 
                  'current_module': 0, 'current_exercise': 0, 'exercise_passed': False, 'total_score': 0, 
                  'scored_exercises': set(), 'db_module': 0, 'db_exercise': 0, 'is_logged_in': False, 
-                 'current_potential_score': 20, 'celebrated': False, 'rejected_user': False}.items():
+                 'current_potential_score': 20, 'celebrated': False, 'rejected_user': False,
+                 'pito_emotion': "idle"}.items(): # Yeni duygu durumu değişkeni eklendi
         st.session_state[k] = v
 
-PITO_IMG = "assets/pito.png"
+# GIF Tanımlamaları (Dosya yollarının assets klasöründe olduğundan emin olun)
+GIF_MAP = {
+    "hello": "assets/pito_merhaba.gif",
+    "idle": "assets/pito_dusunuyor.gif",
+    "success": "assets/pito_basari.gif",
+    "error": "assets/pito_hata.gif",
+    "graduate": "assets/pito_mezun.gif"
+}
+# Yedek statik görsel (GIF'ler yüklenemezse)
+PITO_STATIC = "https://img.icons8.com/fluency/200/robot-viewer.png"
 
 # --- 4. GİRİŞ EKRANI ---
 if not st.session_state.is_logged_in:
@@ -94,21 +105,19 @@ if not st.session_state.is_logged_in:
     _, col_mid, _ = st.columns([1, 2, 1])
     with col_mid:
         st.markdown('<div class="pito-bubble">Merhaba! Ben <b>Pito</b>. Python Dünyası\'na hoş geldin.</div>', unsafe_allow_html=True)
-        st.image(PITO_IMG if os.path.exists(PITO_IMG) else "https://img.icons8.com/fluency/180/robot-viewer.png", width=180)
+        # Giriş ekranında Merhaba GIF'i gösteriliyor
+        gif_path = GIF_MAP["hello"]
+        st.image(gif_path if os.path.exists(gif_path) else PITO_STATIC, width=180)
         
-        # Reddedilme uyarısı gösterimi
         if st.session_state.rejected_user:
             st.warning("⚠️ O halde kendi okul numaranı gir!")
-            # Bayrağı hemen indirmiyoruz ki uyarı bir süre kalsın, ancak yeni bir numara girilince temizlenecek
 
         in_no_raw = st.text_input("Okul Numaran (Sadece Rakam):", key="login_field").strip()
         
         if in_no_raw and not in_no_raw.isdigit():
             st.error("⚠️ Hata: Okul numarası sadece rakamlardan oluşmalıdır!")
         elif in_no_raw:
-            # Kullanıcı yeni numara yazdıysa reddedilme uyarısını temizleyelim
-            if st.session_state.rejected_user:
-                st.session_state.rejected_user = False
+            if st.session_state.rejected_user: st.session_state.rejected_user = False
                 
             df = get_db(use_cache=False)
             user_data = df[df["Okul No"] == in_no_raw]
@@ -122,14 +131,12 @@ if not st.session_state.is_logged_in:
                 with c1:
                     if st.button("✅ Evet, Benim"):
                         m_v, e_v = int(row['Mevcut Modül']), int(row['Mevcut Egzersiz'])
-                        st.session_state.update({'student_no': str(row["Okul No"]), 'student_name': row["Öğrencinin Adı"], 'student_class': row["Sınıf"], 'total_score': int(row["Puan"]), 'db_module': m_v, 'db_exercise': e_v, 'current_module': min(m_v, 7), 'current_exercise': e_v, 'completed_modules': [True if x == "1" else False for x in str(row["Tamamlanan Modüller"]).split(",")], 'is_logged_in': True})
+                        st.session_state.update({'student_no': str(row["Okul No"]), 'student_name': row["Öğrencinin Adı"], 'student_class': row["Sınıf"], 'total_score': int(row["Puan"]), 'db_module': m_v, 'db_exercise': e_v, 'current_module': min(m_v, 7), 'current_exercise': e_v, 'completed_modules': [True if x == "1" else False for x in str(row["Tamamlanan Modüller"]).split(",")], 'is_logged_in': True, 'pito_emotion': "idle"})
                         st.rerun()
                 with c2:
                     if st.button("❌ Hayır, Ben Değilim"):
-                        # KRİTİK FİKS: API Hatasını önlemek için anahtarı silip rerun yapıyoruz
                         st.session_state.rejected_user = True
-                        if "login_field" in st.session_state:
-                            del st.session_state["login_field"]
+                        if "login_field" in st.session_state: del st.session_state["login_field"]
                         st.rerun()
             else:
                 st.info("Yeni bir maceracı! Bilgilerini tamamla:")
@@ -137,16 +144,16 @@ if not st.session_state.is_logged_in:
                 in_class = st.selectbox("Sınıfın:", SINIFLAR, key="new_class")
                 if st.button("Maceraya Başla! ✨"):
                     if in_name.strip():
-                        st.session_state.update({'student_no': in_no_raw, 'student_name': in_name.strip(), 'student_class': in_class, 'is_logged_in': True})
+                        st.session_state.update({'student_no': in_no_raw, 'student_name': in_name.strip(), 'student_class': in_class, 'is_logged_in': True, 'pito_emotion': "idle"})
                         force_save(); st.rerun()
     st.stop()
 
-# --- 5. DETAYLANDIRILMIŞ EĞİTİCİ MÜFREDAT ---
+# --- 5. MÜFREDAT (Aynı kalıyor) ---
 training_data = [
     {"module_title": "1. Giriş ve Çıktı", "exercises": [
         {"msg": "Programımızın dış dünyayla iletişim kurmasının en temel yolu **print()** fonksiyonudur. Parantez içine yazdığımız her şey terminal ekranında görünür. Metinsel ifadeleri mutlaka **tırnak** içinde yazmalısın. Hadi dene: Ekrana **'Merhaba Pito'** yazdır.", "task": "print('___')", "check": lambda c, o: "Merhaba Pito" in o, "solution": "print('Merhaba Pito')"},
         {"msg": "Python'da matematiksel değer olan sayıları ekrana yazdırırken **tırnak işareti kullanmayız.** Şimdi ekrana **100** sayısını yazdır.", "task": "print(___)", "check": lambda c, o: "100" in o, "solution": "print(100)"},
-        {"msg": "print() içinde farklı verileri ayırmak için **virgül (,)** kullanırız. Virgül, otomatik olarak araya boşluk bırakır. Hadi dene: **'Puan:'** metni ile **100** sayısını yan yana yazdır.", "task": "print('Puan:', ___)", "check": lambda c, o: "100" in o, "solution": "print('Puan:', 100)"},
+        {"msg": "Farklı verileri ayırmak için **virgül (,)** kullanırız. Virgül, otomatik olarak araya boşluk bırakır. Hadi dene: **'Puan:'** metni ile **100** sayısını yan yana yazdır.", "task": "print('Puan:', ___)", "check": lambda c, o: "100" in o, "solution": "print('Puan:', 100)"},
         {"msg": "**# (Diyez)** işaretiyle başlayan satırlar Python tarafından okunmaz. Buna 'Yorum Satırı' denir. Hadi dene: Bir **yorum satırı** oluştur.", "task": "___ Bu bir yorumdur", "check": lambda c, o: "#" in c, "solution": "# Kodlarımı buraya yazıyorum"},
         {"msg": "Alt satıra geçmek için **'\\n'** karakteri kullanılır. Hadi dene: **'Üst'** ve **'Alt'** kelimelerini tek print içinde farklı satırlarda yazdır.", "task": "print('Üst' + '___' + 'Alt')", "check": lambda c, o: "\n" in o, "solution": "print('Üst' + '\\n' + 'Alt')"}
     ]},
@@ -169,7 +176,7 @@ training_data = [
         {"msg": "**'while'**, şart doğruyken çalışır. Hadi dene: **i<1** şartı doğruyken ekrana 'Y' yazdıran döngüyü kur.", "task": "i=0\n___ i<1: print('Y'); i+=1", "check": lambda c, o: "while" in c, "solution": "i=0\nwhile i<1: print('Y'); i+=1"},
         {"msg": "**'break'** döngüyü bitirir. Hadi dene: i değeri 1 olduğunda döngüyü **bitir**.", "task": "for i in range(3):\n if i==1: ___\n print(i)", "check": lambda c, o: "break" in c, "solution": "for i in range(3):\n    if i==1: break\n    print(i)"},
         {"msg": "**'continue'** o adımı atlar. Hadi dene: i değeri 1 olduğunda o adımı **atla**.", "task": "for i in range(3):\n if i==1: ___\n print(i)", "check": lambda c, o: "continue" in c, "solution": "for i in range(3):\n    if i==1: continue\n    print(i)"},
-        {"msg": "Döngü sayacı olan **i** değişkenini ekrana yazdırarak tur numarasını görebilirsin.", "task": "for i in range(2): print(___)", "check": lambda c, o: "1" in o, "solution": "for i in range(2): print(i)"}
+        {"msg": "Döngü sayacı olan **i** değişkeni tur numarasını tutar. Hadi dene: i sayacını yazdır.", "task": "for i in range(2): print(___)", "check": lambda c, o: "1" in o, "solution": "for i in range(2): print(i)"}
     ]},
     {"module_title": "5. Listeler", "exercises": [
         {"msg": "Listeler `[]` içinde saklanır. Hadi dene: **10** ve **20** sayılarından oluşan bir liste oluştur.", "task": "L = [___, 20]", "check": lambda c, o: "10" in c, "solution": "L=[10, 20]\nprint(L)"},
@@ -213,12 +220,13 @@ with col_main:
     if st.session_state.db_module >= 8:
         if not st.session_state.celebrated:
             st.balloons(); st.session_state.celebrated = True
+            st.session_state.pito_emotion = "graduate" # Mezuniyet GIF'i için
         st.success("### 🎉 Tebrikler! Eğitimi Başarıyla Tamamladın.")
         st.markdown('<div class="pito-bubble">Python yolculuğunu bitirdin! Aşağıdan modülleri inceleyebilir veya baştan başlayabilirsin.</div>', unsafe_allow_html=True)
         c1, c2 = st.columns(2)
         with c1:
             if st.button("🔄 Eğitimi Tekrar Al (Sıfırla)"):
-                st.session_state.update({'db_module': 0, 'db_exercise': 0, 'total_score': 0, 'current_module': 0, 'current_exercise': 0, 'completed_modules': [False]*8, 'scored_exercises': set(), 'celebrated': False})
+                st.session_state.update({'db_module': 0, 'db_exercise': 0, 'total_score': 0, 'current_module': 0, 'current_exercise': 0, 'completed_modules': [False]*8, 'scored_exercises': set(), 'celebrated': False, 'pito_emotion': "idle"})
                 force_save(); st.rerun()
         with c2: st.info("Başarın kaydedildi.")
         st.divider(); st.subheader("📖 İnceleme Modu")
@@ -227,12 +235,14 @@ with col_main:
     if st.session_state.current_module != st.session_state.db_module and st.session_state.db_module < 8:
         if st.button(f"🔙 Güncel Görevime Dön (Modül {st.session_state.db_module + 1})", use_container_width=True):
             st.session_state.current_module, st.session_state.current_exercise = st.session_state.db_module, st.session_state.db_exercise
+            st.session_state.pito_emotion = "idle"
             st.rerun()
 
     sel_mod = st.selectbox("Modül Seç:", mod_titles, index=st.session_state.current_module)
     m_idx = mod_titles.index(sel_mod)
     if m_idx != st.session_state.current_module:
         st.session_state.current_module, st.session_state.current_exercise = m_idx, 0
+        st.session_state.pito_emotion = "idle"
         st.rerun()
 
     st.divider()
@@ -241,7 +251,11 @@ with col_main:
     is_locked = (m_idx < st.session_state.db_module) or (st.session_state.db_module >= 8)
 
     c_img, c_msg = st.columns([1, 4])
-    with c_img: st.image(PITO_IMG if os.path.exists(PITO_IMG) else "https://img.icons8.com/fluency/200/robot-viewer.png", width=140)
+    with c_img:
+        # Duygu durumuna göre GIF seçimi
+        current_gif = GIF_MAP.get(st.session_state.pito_emotion, GIF_MAP["idle"])
+        st.image(current_gif if os.path.exists(current_gif) else PITO_STATIC, width=140)
+        
     with c_msg:
         st.info(f"##### 🗣️ Pito:\n{curr_ex['msg']}")
         st.caption(f"Adım: {e_idx + 1}/5 " + ("🔒 İnceleme Modu" if is_locked else f"🎁 Puan: {st.session_state.current_potential_score}"))
@@ -281,12 +295,14 @@ with col_main:
             out = run_pito_code(code, u_in)
             if out.startswith("⚠️") or out.startswith("Hata:"):
                 st.error(out)
+                st.session_state.pito_emotion = "error" # Hata GIF'i
                 if out.startswith("Hata:"): st.session_state.current_potential_score = max(5, st.session_state.current_potential_score - 5)
             else:
                 st.subheader("📟 Çıktı")
                 st.code(out if out else "Kod çalıştı!")
                 if curr_ex['check'](code, out) and "___" not in code:
                     st.session_state.exercise_passed = True
+                    st.session_state.pito_emotion = "success" # Başarı GIF'i
                     if f"{m_idx}_{e_idx}" not in st.session_state.scored_exercises:
                         st.session_state.total_score += st.session_state.current_potential_score
                         st.session_state.scored_exercises.add(f"{m_idx}_{e_idx}")
@@ -298,21 +314,30 @@ with col_main:
                     st.success("Tebrikler! ✅")
                 else:
                     st.session_state.current_potential_score = max(5, st.session_state.current_potential_score - 5)
+                    st.session_state.pito_emotion = "error" # Hata GIF'i
                     st.warning("Hatalı!")
+            st.rerun()
 
     c_back, c_next = st.columns(2)
     with c_back:
         if is_locked and e_idx > 0:
-            if st.button("⬅️ Önceki Adım"): st.session_state.current_exercise -= 1; st.rerun()
+            if st.button("⬅️ Önceki Adım"):
+                st.session_state.current_exercise -= 1
+                st.session_state.pito_emotion = "idle"
+                st.rerun()
     with c_next:
         if st.session_state.exercise_passed or is_locked:
             if e_idx < 4:
                 if st.button("➡️ Sonraki Adıma Geç"):
-                    st.session_state.current_exercise += 1; st.session_state.exercise_passed = False; st.rerun()
+                    st.session_state.current_exercise += 1; st.session_state.exercise_passed = False
+                    st.session_state.pito_emotion = "idle" # Normale dön
+                    st.rerun()
             else:
                 if st.button("🏆 Modülü Bitir"):
                     if st.session_state.current_module < 7:
-                        st.session_state.current_module += 1; st.session_state.current_exercise = 0; st.rerun()
+                        st.session_state.current_module += 1; st.session_state.current_exercise = 0
+                        st.session_state.pito_emotion = "idle" # Normale dön
+                        st.rerun()
                     else:
                         st.session_state.db_module = 8; st.session_state.completed_modules[7] = True
                         force_save(); st.rerun()
@@ -339,10 +364,4 @@ with col_side:
         class_sums = df_lb.groupby("Sınıf")["Puan"].sum()
         if not class_sums.empty:
             champ_class = class_sums.idxmax(); champ_puan = int(class_sums.max())
-            st.markdown(f"""
-                <div class="champion-card">
-                    <span style="font-size: 1.4rem;">🏆 Şampiyon Sınıf</span><br>
-                    <span style="font-size: 1.1rem;">{champ_class}</span><br>
-                    <span style="font-size: 0.9rem;">Toplam: {champ_puan} Puan</span>
-                </div>
-            """, unsafe_allow_html=True)
+            st.markdown(f'<div class="champion-card">🏆 Şampiyon Sınıf<br>{champ_class}<br>Toplam: {champ_puan} Puan</div>', unsafe_allow_html=True)
