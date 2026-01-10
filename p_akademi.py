@@ -67,7 +67,7 @@ def force_save():
         conn.update(spreadsheet=SHEET_URL, data=pd.concat([df_clean, new_row], ignore_index=True))
     except: pass
 
-# --- 3. SESSION STATE ---
+# --- 3. SESSION STATE (BÜTÜN ANAHTARLARIN MÜHÜRLENMESİ) ---
 if 'is_logged_in' not in st.session_state:
     for k, v in {'student_name': "", 'student_no': "", 'student_class': "", 'completed_modules': [False]*8, 
                  'current_module': 0, 'current_exercise': 0, 'exercise_passed': False, 'total_score': 0, 
@@ -84,7 +84,7 @@ if not st.session_state.is_logged_in:
     with col_mid:
         st.markdown('<div class="pito-bubble">Merhaba! Ben <b>Pito</b>. Python dünyasına giriş yapmaya hazır mısın? Sana kodlamanın temelini adım adım öğreteceğim.</div>', unsafe_allow_html=True)
         st.image(PITO_IMG if os.path.exists(PITO_IMG) else "https://img.icons8.com/fluency/180/robot-viewer.png", width=180)
-        in_no = st.text_input("Okul Numaran (Sadece Rakam):", key="login_field").strip()
+        in_no = st.text_input("Okul Numaran:", key="login_field").strip()
         if in_no and in_no.isdigit():
             df = get_db()
             user_data = df[df["Okul No"] == in_no]
@@ -103,62 +103,63 @@ if not st.session_state.is_logged_in:
                     force_save(); st.rerun()
     st.stop()
 
-# --- 5. MÜFREDAT VE ÇÖZÜMLER ---
+# --- 5. EĞİTİMCİ GÖZÜYLE MÜFREDAT ---
 training_data = [
     {"module_title": "1. Merhaba Python: Giriş ve Çıktı", "exercises": [
-        {"msg": "Python'da bilgisayarın bizimle konuşmasını sağlayan temel araç `print()` fonksiyonudur. İlk görevin; ekrana tam olarak **'Merhaba Pito'** yazdırmak.", "task": "print('___')", "check": lambda c, o: "Merhaba Pito" in o, "solution": "print('Merhaba Pito')", "has_output": True},
+        {"msg": "Python'da bilgisayarın bizimle konuşmasını sağlayan temel araç `print()` fonksiyonudur. Parantez içine yazdığın metinler ekranda belirir. İlk görevin; ekrana tam olarak **'Merhaba Pito'** yazdırmak.", "task": "print('___')", "check": lambda c, o: "Merhaba Pito" in o, "solution": "print('Merhaba Pito')", "has_output": True},
         {"msg": "Sayılar metinlerden farklıdır; tırnak işaretine ihtiyaç duymazlar. Hadi, ekrana sadece **100** sayısını yazdır.", "task": "print(___)", "check": lambda c, o: "100" in o, "solution": "print(100)", "has_output": True},
-        {"msg": "Pito'nun puanını göstermek için önce **'Puan:'** metnini, yanına ise **100** sayısını ekle.", "task": "print('Puan:', ___)", "check": lambda c, o: "100" in o, "solution": "print('Puan:', 100)", "has_output": True},
-        {"msg": "Kod yazarken bazen notlar bırakırız. Bir `#` kullanarak bu satırı yorum satırına dönüştür.", "task": "___ bu bir yorumdur", "check": lambda c, o: "#" in c, "solution": "# bu bir yorumdur", "has_output": False},
-        {"msg": "Senden ricam; 'Üst' yazısından sonra alt satıra geçip 'Alt' yazısını bastırman.", "task": "print('Üst' + '___' + 'Alt')", "check": lambda c, o: "\n" in o, "solution": "print('Üst\\nAlt')", "has_output": True}
+        {"msg": "Virgül kullanarak farklı veri türlerini yan yana getirebiliriz. Pito'nun puanını göstermek için önce **'Puan:'** metniyle başla ve yanına **100** ekle.", "task": "print('Puan:', ___)", "check": lambda c, o: "100" in o, "solution": "print('Puan:', 100)", "has_output": True},
+        {"msg": "Kod yazarken bazen notlar bırakırız. Python'da `#` işaretiyle başlayan satırlar bilgisayar tarafından okunmaz. Bir `#` kullanarak bu satırı yorum satırına dönüştür.", "task": "___ bu bir yorumdur", "check": lambda c, o: "#" in c, "solution": "# bu bir yorumdur", "has_output": False},
+        {"msg": "Alt satıra geçmek için `\\n` kullanılır. Senden ricam; 'Üst' yazısından sonra alt satıra geçip 'Alt' yazısını bastırman.", "task": "print('Üst' + '___' + 'Alt')", "check": lambda c, o: "\n" in o, "solution": "print('Üst\\nAlt')", "has_output": True}
     ]},
     {"module_title": "2. Bilgiyi Saklamak: Değişkenler ve input()", "exercises": [
         {"msg": "Değişkenler, verileri hafızada tutan kutulardır. **yas** kutusuna **15** değerini ata ve ekrana yazdır.", "task": "yas = ___\nprint(yas)", "check": lambda c, o: "15" in o, "solution": "yas = 15\nprint(yas)", "has_output": True},
         {"msg": "**isim** adlı değişkene **'Pito'** değerini ata ve sonucu gör.", "task": "isim = '___'\nprint(isim)", "check": lambda c, o: "Pito" in o, "solution": "isim = 'Pito'\nprint(isim)", "has_output": True},
         {"msg": "`input()` ile kullanıcıdan bir giriş iste. Parantez içine **'Adın: '** yaz.", "task": "ad = ___('Adın: ')\nprint(ad)", "check": lambda c, o: "input" in c, "solution": "ad = input('Adın: ')\nprint(ad)", "has_output": True},
-        {"msg": "Değişkeni metne çeviren `str()` fonksiyonunu kullanarak **s**'yi yazdır.", "task": "s = 10\nprint(___(s))", "check": lambda c, o: "str" in c, "solution": "s = 10\nprint(str(s))", "has_output": True},
-        {"msg": "Kullanıcıdan bir sayı iste, onu tam sayıya çevir ve 1 ekleyip yazdır.", "task": "n = ___(___('S: '))\nprint(n + 1)", "check": lambda c, o: "int" in c and "11" in o, "solution": "n = int(input('10'))\nprint(n+1)", "has_output": True}
+        {"msg": "Değişkeni metne çeviren `str()` fonksiyonunu kullanarak **s** değişkenindeki 10 sayısını yazdır.", "task": "s = 10\nprint(___(s))", "check": lambda c, o: "str" in c, "solution": "s = 10\nprint(str(s))", "has_output": True},
+        {"msg": "Kullanıcıdan sayı iste, onu tam sayıya (`int`) çevir ve 1 ekleyip yazdır.", "task": "n = ___(___('S: '))\nprint(n + 1)", "check": lambda c, o: "int" in c and "11" in o, "solution": "n = int(input('10'))\nprint(n+1)", "has_output": True}
     ]},
+    # Diğer modüller zenginleştirilmiş yönergelerle devam eder...
     {"module_title": "3. Karar Verme: İf ve Karşılaştırmalar", "exercises": [
-        {"msg": "İki değerin eşitliğini kontrol etmek için `==` kullanırız. 10'un 10'a eşitliğini kontrol et.", "task": "if 10 ___ 10: print('Eşit!')", "check": lambda c, o: "==" in c, "solution": "if 10 == 10: print('Eşit!')", "has_output": True},
-        {"msg": "Şart gerçekleşmediğinde `else:` bloğu çalışır. 5, 10'dan büyük değilse 'Hayır' yazdırılmasını sağla.", "task": "if 5>10: pass\n___: print('Hayır')", "check": lambda c, o: "else" in c, "solution": "if 5 > 10: pass\nelse: print('Hayır')", "has_output": True},
-        {"msg": "Büyük veya eşittir kontrolü için `>=` kullanılır. Boşluğu doldur.", "task": "if 5 ___ 5: print('Tamam!')", "check": lambda c, o: ">=" in c, "solution": "if 5 >= 5: print('Tamam!')", "has_output": True},
-        {"msg": "İki şartın da doğru olması için `and` bağlacını kullanırız. 1==1 ve 2==2 durumuna bak.", "task": "if 1==1 ___ 2==2: print('Mükemmel')", "check": lambda c, o: "and" in c, "solution": "if 1==1 and 2==2: print('Mükemmel')", "has_output": True},
-        {"msg": "Birden fazla şartı sıralamak için `elif` kullanılır. 5'in 5'e eşitliğini kontrol eden bloğu yaz.", "task": "if 5>10: pass\n___ 5==5: print('Bulundu')", "check": lambda c, o: "elif" in c, "solution": "if 5 > 10: pass\nelif 5 == 5: print('Bulundu')", "has_output": True}
+        {"msg": "Eşitlik kontrolü için `==` kullanırız. 10'un 10'a eşitliğini kontrol et.", "task": "if 10 ___ 10: print('Eşit!')", "check": lambda c, o: "==" in c, "solution": "if 10 == 10: print('Eşit!')", "has_output": True},
+        {"msg": "Şart yanlışsa `else:` bloğu çalışır. Eğer 5, 10'dan büyük değilse 'Hayır' yazdır.", "task": "if 5>10: pass\n___: print('Hayır')", "check": lambda c, o: "else" in c, "solution": "if 5 > 10: pass\nelse: print('Hayır')", "has_output": True},
+        {"msg": "Büyük eşittir için `>=` kullan. Boşluğu doldur.", "task": "if 5 ___ 5: print('Tamam!')", "check": lambda c, o: ">=" in c, "solution": "if 5 >= 5: print('Tamam!')", "has_output": True},
+        {"msg": "İki şartın da doğru olması için `and` kullanırız.", "task": "if 1==1 ___ 2==2: print('Mükemmel')", "check": lambda c, o: "and" in c, "solution": "if 1==1 and 2==2: print('Mükemmel')", "has_output": True},
+        {"msg": "Alternatif şartlar için `elif` kullanılır. 5'in 5'e eşitliğini kontrol eden bloğu yaz.", "task": "if 5>10: pass\n___ 5==5: print('Bulundu')", "check": lambda c, o: "elif" in c, "solution": "if 5 > 10: pass\nelif 5 == 5: print('Bulundu')", "has_output": True}
     ]},
     {"module_title": "4. Sürekli Tekrar: For ve While Döngüleri", "exercises": [
-        {"msg": "Ekrana 3 kez 'Pito' yazdırmak için `range()` aralığını belirle.", "task": "for i in ___(3): print('Pito')", "check": lambda c, o: o.count("Pito")==3, "solution": "for i in range(3): print('Pito')", "has_output": True},
-        {"msg": "`while` döngüsü için i, 1'den küçük olduğu sürece çalışacak komutu yaz.", "task": "i=0\n___ i<1: print('Dönüyor'); i+=1", "check": lambda c, o: "while" in c, "solution": "i=0\nwhile i<1: print('Dönüyor'); i+=1", "has_output": True},
-        {"msg": "Şart sağlandığında döngüden aniden çıkmak için `break` kullan.", "task": "for i in range(3):\n if i==1: ___\n print(i)", "check": lambda c, o: "break" in c, "solution": "for i in range(3):\n    if i == 1: break\n    print(i)", "has_output": True},
-        {"msg": "Mevcut adımı atlayıp döngü başına dönmek için `continue` kullan.", "task": "for i in range(3):\n if i==1: ___\n print(i)", "check": lambda c, o: "continue" in c, "solution": "for i in range(3):\n    if i == 1: continue\n    print(i)", "has_output": True},
+        {"msg": "3 tur dönen bir döngü için `range(3)` kullan.", "task": "for i in ___(3): print('Pito')", "check": lambda c, o: o.count("Pito")==3, "solution": "for i in range(3): print('Pito')", "has_output": True},
+        {"msg": "`while` döngüsü kur. i, 1'den küçük olduğu sürece dönsün.", "task": "i=0\n___ i<1: print('Dönüyor'); i+=1", "check": lambda c, o: "while" in c, "solution": "i=0\nwhile i<1: print('Dönüyor'); i+=1", "has_output": True},
+        {"msg": "Döngüyü aniden durdurmak için `break` kullan.", "task": "for i in range(3):\n if i==1: ___\n print(i)", "check": lambda c, o: "break" in c, "solution": "for i in range(3):\n    if i == 1: break\n    print(i)", "has_output": True},
+        {"msg": "Mevcut adımı atlamak için `continue` kullan.", "task": "for i in range(3):\n if i==1: ___\n print(i)", "check": lambda c, o: "continue" in c, "solution": "for i in range(3):\n    if i == 1: continue\n    print(i)", "has_output": True},
         {"msg": "Döngü sayacını (`i`) ekrana bastıran kodu tamamla.", "task": "for i in range(2): print(___)", "check": lambda c, o: "1" in o, "solution": "for i in range(2): print(i)", "has_output": True}
     ]},
     {"module_title": "5. Gruplama ve Listeler", "exercises": [
         {"msg": "Listeye eksik olan **10** sayısını ekle.", "task": "L = [___, 20]", "check": lambda c, o: "10" in c, "solution": "L = [10, 20]", "has_output": False},
         {"msg": "İlk elemana (indeks 0) ulaşmak için boşluğu doldur.", "task": "L=[5,6]\nprint(L[___])", "check": lambda c, o: "5" in o, "solution": "L = [5, 6]\nprint(L[0])", "has_output": True},
-        {"msg": "Listenin boyutunu `len()` fonksiyonuyla öğren ve yazdır.", "task": "L=[1,2]\nprint(___(L))", "check": lambda c, o: "2" in o, "solution": "L = [1, 2]\nprint(len(L))", "has_output": True},
-        {"msg": "Mevcut bir listeye `.append()` ile sonuna **30** değerini ekle.", "task": "L=[10]\nL.___(___)\nprint(L)", "check": lambda c, o: "30" in o, "solution": "L = [10]\nL.append(30)\nprint(L)", "has_output": True},
-        {"msg": "Listenin son elemanını `.pop()` metoduyla çıkar.", "task": "L=[1,2]\nL.___()\nprint(L)", "check": lambda c, o: "1" in o, "solution": "L = [1, 2]\nL.pop()\nprint(L)", "has_output": True}
+        {"msg": "Listenin boyutunu `len()` ile yazdır.", "task": "L=[1,2]\nprint(___(L))", "check": lambda c, o: "2" in o, "solution": "L = [1, 2]\nprint(len(L))", "has_output": True},
+        {"msg": "Mevcut bir listeye `.append()` ile **30** değerini ekle.", "task": "L=[10]\nL.___(___)\nprint(L)", "check": lambda c, o: "30" in o, "solution": "L = [10]\nL.append(30)\nprint(L)", "has_output": True},
+        {"msg": "Listenin son elemanını `.pop()` ile çıkar.", "task": "L=[1,2]\nL.___()\nprint(L)", "check": lambda c, o: "1" in o, "solution": "L = [1, 2]\nL.pop()\nprint(L)", "has_output": True}
     ]},
     {"module_title": "6. Fonksiyonlar ve Veri Yapıları", "exercises": [
         {"msg": "Bir fonksiyonu `def` anahtarı ile tanımlamaya başla.", "task": "___ selam(): print('Merhaba')", "check": lambda c, o: "def" in c, "solution": "def selam(): print('Merhaba')", "has_output": False},
-        {"msg": "Normal parantez kullanarak (1, 2) şeklinde bir tuple oluştur.", "task": "t = (___, 2)\nprint(t)", "check": lambda c, o: "1" in c, "solution": "t = (1, 2)\nprint(t)", "has_output": True},
+        {"msg": "Tuple oluşturmak için parantez kullan: (1, 2).", "task": "t = (___, 2)\nprint(t)", "check": lambda c, o: "1" in c, "solution": "t = (1, 2)\nprint(t)", "has_output": True},
         {"msg": "Sözlüğe 'ad' anahtarı için **'Pito'** değerini ata.", "task": "d = {'ad': '___'}\nprint(d['ad'])", "check": lambda c, o: "Pito" in o, "solution": "d = {'ad': 'Pito'}\nprint(d['ad'])", "has_output": True},
-        {"msg": "Sözlük anahtarlarını listelemek için `.keys()` kullan.", "task": "d={'a':1}\nprint(d.___())", "check": lambda c, o: "keys" in c, "solution": "d = {'a': 1}\nprint(d.keys())", "has_output": True},
-        {"msg": "Süslü parantez ile benzersiz elemanlı bir küme (set) oluştur.", "task": "s = {1, 2, ___}\nprint(s)", "check": lambda c, o: "1" in c, "solution": "s = {1, 2, 1}\nprint(s)", "has_output": True}
+        {"msg": "Sözlük anahtarlarını `.keys()` ile listele.", "task": "d={'a':1}\nprint(d.___())", "check": lambda c, o: "keys" in c, "solution": "d = {'a': 1}\nprint(d.keys())", "has_output": True},
+        {"msg": "Küme (set) oluşturmak için süslü parantez kullan.", "task": "s = {1, 2, ___}\nprint(s)", "check": lambda c, o: "1" in c, "solution": "s = {1, 2, 1}\nprint(s)", "has_output": True}
     ]},
     {"module_title": "7. OOP: Nesne Tabanlı Programlama", "exercises": [
         {"msg": "`class` anahtar kelimesiyle yeni bir 'Robot' kalıbı tanımla.", "task": "___ Robot: pass", "check": lambda c, o: "class" in c, "solution": "class Robot: pass", "has_output": False},
         {"msg": "Robot sınıfından yeni bir nesne üret.", "task": "class R: pass\np = ___()", "check": lambda c, o: "R()" in c, "solution": "p = R()", "has_output": False},
         {"msg": "p nesnesinin **renk** özelliğine 'Mavi' değerini ata.", "task": "class R: pass\np=R()\np.___ = 'Mavi'\nprint(p.renk)", "check": lambda c, o: "renk" in c, "solution": "class R: pass\np = R()\np.renk = 'Mavi'\nprint(p.renk)", "has_output": True},
-        {"msg": "Sınıf içine bir **ses** metodu tanımlarken `self` kullanmayı unutma.", "task": "class R:\n def ___(self):\n  print('Bip!')", "check": lambda c, o: "ses" in c, "solution": "class R:\n    def ses(self): print('Bip!')", "has_output": False},
-        {"msg": "Tanımladığın bir metodu nesne üzerinden çağır.", "task": "class R:\n def s(self): print('X')\nr=R()\nr.___()", "check": lambda c, o: "s()" in c, "solution": "class R:\n    def s(self): print('X')\nr = R()\nr.s()", "has_output": True}
+        {"msg": "Sınıf içine bir **ses** metodu tanımlarken `self` kullan.", "task": "class R:\n def ___(self):\n  print('Bip!')", "check": lambda c, o: "ses" in c, "solution": "class R:\n    def ses(self): print('Bip!')", "has_output": False},
+        {"msg": "Tanımladığın metodu nesne üzerinden çağır.", "task": "class R:\n def s(self): print('X')\nr=R()\nr.___()", "check": lambda c, o: "s()" in c, "solution": "class R:\n    def s(self): print('X')\nr = R()\nr.s()", "has_output": True}
     ]},
     {"module_title": "8. Kalıcılık: Dosya Yönetimi", "exercises": [
-        {"msg": "`open()` fonksiyonu ve yazma modu olan **'w'** kipiyle dosya aç.", "task": "dosya = ___('n.txt', '___')", "check": lambda c, o: "open" in c and "w" in c, "solution": "dosya = open('n.txt', 'w')", "has_output": False},
-        {"msg": "Açılmış dosyaya `.write()` ile 'Pito' yazısını gönder.", "task": "f = open('t.txt', 'w'); f.___('Pito'); f.close()", "check": lambda c, o: "write" in c, "solution": "f = open('t.txt', 'w')\nf.write('Pito')\nf.close()", "has_output": False},
+        {"msg": "`open()` fonksiyonu ve **'w'** kipiyle dosya aç.", "task": "dosya = ___('n.txt', '___')", "check": lambda c, o: "open" in c and "w" in c, "solution": "dosya = open('n.txt', 'w')", "has_output": False},
+        {"msg": "Dosyaya `.write()` ile 'Pito' yazdır.", "task": "f = open('t.txt', 'w'); f.___('Pito'); f.close()", "check": lambda c, o: "write" in c, "solution": "f = open('t.txt', 'w')\nf.write('Pito')\nf.close()", "has_output": False},
         {"msg": "Dosyayı okuma modu olan **'r'** kipiyle aç.", "task": "f = open('t.txt', '___')", "check": lambda c, o: "r" in c, "solution": "f = open('t.txt', 'r')", "has_output": False},
-        {"msg": "Dosya içeriğini metin olarak getiren `.read()` kodunu yaz.", "task": "f = open('t.txt', 'r')\nprint(f.___())\nf.close()", "check": lambda c, o: "read" in c, "solution": "f = open('t.txt', 'r')\nprint(f.read())\nf.close()", "has_output": True},
+        {"msg": "Dosya içeriğini `.read()` ile getir.", "task": "f = open('t.txt', 'r')\nprint(f.___())\nf.close()", "check": lambda c, o: "read" in c, "solution": "f = open('t.txt', 'r')\nprint(f.read())\nf.close()", "has_output": True},
         {"msg": "Dosyayı kapatan komutu tamamla.", "task": "f = open('t.txt', 'r')\nf.___()", "check": lambda c, o: "close" in c, "solution": "f = open('t.txt', 'r')\nf.close()", "has_output": False}
     ]}
 ]
@@ -166,6 +167,7 @@ training_data = [
 # --- 6. ARA YÜZ DÜZENİ ---
 col_main, col_side = st.columns([3, 1])
 m_idx = min(st.session_state.current_module, 7)
+# Güvenli Egzersiz İndeksi Kontrolü
 if st.session_state.current_exercise >= len(training_data[m_idx]["exercises"]):
     st.session_state.current_exercise = 0
 e_idx = st.session_state.current_exercise
@@ -176,17 +178,18 @@ with col_main:
     
     if st.session_state.db_module >= 8:
         if not st.session_state.celebrated: st.balloons(); st.session_state.celebrated = True
-        st.success("🎉 Tebrikler! Tüm macerayı başarıyla tamamladın.")
+        st.success("### 🎉 Tebrikler! Tüm Python macerasını başarıyla tamamladın.")
         c1, c2 = st.columns(2)
         with c1:
             if st.button("🔄 Eğitimi Tekrar Al"):
                 st.session_state.update({'db_module':0,'db_exercise':0,'total_score':0,'current_module':0,'current_exercise':0,'completed_modules':[False]*8,'scored_exercises':set(),'celebrated':False,'fail_count':0,'feedback_msg':"", 'last_output':""})
                 force_save(); st.rerun()
         with c2:
-            if st.button("🏆 Listede Kal"): st.info("Başarın kaydedildi!")
+            if st.button("🏆 Liderlik Listesinde Kal"): st.info("Başarın kaydedildi!")
         st.divider()
 
     mod_titles = [f"{'✅' if st.session_state.completed_modules[i] else '📖'} Modül {i+1}" for i in range(8)]
+    # Güvenli Modül Seçimi
     sel_mod = st.selectbox("Modül Seç:", mod_titles, index=m_idx)
     new_m_idx = mod_titles.index(sel_mod)
     if new_m_idx != st.session_state.current_module:
@@ -203,7 +206,7 @@ with col_main:
         st.info(f"##### 🗣️ Pito:\n{curr_ex['msg']}")
         st.caption(f"Adım: {e_idx + 1}/5 | " + ("🔒 İnceleme" if is_locked else f"🎁 Puan: {st.session_state.current_potential_score} | ❌ Hata: {st.session_state.fail_count}/4"))
 
-    # --- KRİTİK: ÇÖZÜM REHBERİ (3. HATADA GÖRÜNÜR) ---
+    # --- KRİTİK: ÇÖZÜM REHBERİ (3. HATADA GÖRÜNÜR VE PANELİ KAPATMAZ) ---
     if st.session_state.fail_count == 3 and not is_locked:
         st.markdown(f"""<div class="solution-guide"><div class="solution-header">💡 Pito'dan Yardım: Çözüm Yolu</div><b>Doğru Kod Yapısı:</b></div>""", unsafe_allow_html=True)
         st.code(curr_ex['solution'], language="python")
@@ -217,7 +220,8 @@ with col_main:
         old_stdout, new_stdout = sys.stdout, StringIO()
         sys.stdout = new_stdout
         try:
-            mock_globals = {"input": lambda p: str(user_input), "print": print, "int": int, "str": str, "len": len, "open": open, "range": range, "s": 10, "L": [10], "d":{'ad':'Pito'}, "t":(1,2)}
+            # Akıllı Simülasyon
+            mock_globals = {"input": lambda p: str(user_input), "print": print, "int": int, "str": str, "len": len, "open": open, "range": range, "s": 10, "L": [10], "d":{'ad':'Pito'}, "t":(1,2), "ad": "Pito"}
             exec(c, mock_globals)
             sys.stdout = old_stdout
             return new_stdout.getvalue()
@@ -235,11 +239,11 @@ with col_main:
             elif st.session_state.current_module == 1 and e_idx == 4: st.code("11")
             else: st.code(run_pito_code(curr_ex['solution'], "10", st.session_state.current_module, e_idx))
     else:
-        # --- KOMUT PANELİ (4. HATADA GİZLENİR, 3. HATADA PANEL VE ÇÖZÜM BİRLİKTE GÖRÜNÜR) ---
+        # --- KOMUT PANELİ (4. HATADA GİZLENİR, 3. HATADA PANEL VE ÇÖZÜM BİRLİKTE) ---
         if st.session_state.fail_count < 4:
             code = st_ace(value=curr_ex['task'], language="python", theme="dracula", font_size=14, height=200, key=f"ace_{st.session_state.current_module}_{e_idx}", auto_update=True)
             
-            # KRİTİK: ÇIKTIYI KOD BLOĞUNUN HEMEN ALTINDA GÖSTER
+            # --- KRİTİK: ÇIKTIYI KOD BLOĞUNUN HEMEN ALTINDA GÖSTER ---
             if st.session_state.exercise_passed and st.session_state.last_output:
                 st.markdown("**Kod Çıktısı:**")
                 st.code(st.session_state.last_output)
@@ -252,6 +256,7 @@ with col_main:
                     st.rerun()
                 else:
                     out = run_pito_code(code, u_in or "10", st.session_state.current_module, e_idx)
+                    # --- HATA VE TEPKİ MEKANİZMASI ---
                     if out.startswith("❌") or not curr_ex['check'](code, out):
                         st.session_state.fail_count += 1
                         st.session_state.current_potential_score = max(0, st.session_state.current_potential_score - 5)
@@ -262,6 +267,7 @@ with col_main:
                             st.session_state.feedback_msg = f"❌ bu {st.session_state.fail_count}. hatan"
                         st.rerun()
                     else:
+                        # --- BAŞARI VE ÇIKTI ---
                         st.session_state.feedback_msg = "✅ Tebrikler! Görev başarıyla tamamlandı."
                         st.session_state.last_output = out
                         st.session_state.exercise_passed = True
