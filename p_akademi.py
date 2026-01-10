@@ -31,7 +31,7 @@ st.markdown("""
         border-width: 20px 20px 0; border-style: solid; border-color: #3a7bd5 transparent;
     }
     
-    /* Çözüm Rehberi Kutusu (Titiz Tasarım) */
+    /* Çözüm Rehberi Kutusu (Sadece İnceleme Modunda) */
     .solution-guide {
         background-color: #f8fafc !important;
         border: 2px solid #3a7bd5 !important;
@@ -108,19 +108,26 @@ if not st.session_state.is_logged_in:
     with col_mid:
         st.markdown('<div class="pito-bubble">Merhaba! Ben <b>Pito</b>. Python Dünyası\'na hoş geldin.</div>', unsafe_allow_html=True)
         st.image(PITO_IMG if os.path.exists(PITO_IMG) else "https://img.icons8.com/fluency/180/robot-viewer.png", width=180)
+        
         if st.session_state.rejected_user:
             st.warning("⚠️ O halde kendi okul numaranı gir!")
+
         in_no_raw = st.text_input("Okul Numaran (Sadece Rakam):", key="login_field").strip()
+        
         if in_no_raw and not in_no_raw.isdigit():
             st.error("⚠️ Hata: Okul numarası sadece rakamlardan oluşmalıdır!")
         elif in_no_raw:
-            if st.session_state.rejected_user: st.session_state.rejected_user = False
+            if st.session_state.rejected_user:
+                st.session_state.rejected_user = False
+                
             df = get_db(use_cache=False)
             user_data = df[df["Okul No"] == in_no_raw]
+            
             if not user_data.empty:
                 row = user_data.iloc[0]
                 st.info(f"🔍 Bu numara **{row['Öğrencinin Adı']}** adına kayıtlı.")
                 st.markdown("### Sen bu kişi misin? 🤔")
+                
                 c1, c2 = st.columns(2)
                 with c1:
                     if st.button("✅ Evet, Benim"):
@@ -130,7 +137,8 @@ if not st.session_state.is_logged_in:
                 with c2:
                     if st.button("❌ Hayır, Ben Değilim"):
                         st.session_state.rejected_user = True
-                        if "login_field" in st.session_state: del st.session_state["login_field"]
+                        if "login_field" in st.session_state:
+                            del st.session_state["login_field"]
                         st.rerun()
             else:
                 st.info("Yeni bir maceracı! Bilgilerini tamamla:")
@@ -142,13 +150,13 @@ if not st.session_state.is_logged_in:
                         force_save(); st.rerun()
     st.stop()
 
-# --- 5. MÜFREDAT ---
+# --- 5. DETAYLANDIRILMIŞ EĞİTİCİ MÜFREDAT ---
 training_data = [
     {"module_title": "1. Giriş ve Çıktı", "exercises": [
-        {"msg": "Programımızın dış dünyayla iletişim kurmasının en temel yolu **print()** fonksiyonudur. Metinsel ifadeleri mutlaka **tırnak** içinde yazmalısın. Hadi dene: Ekrana **'Merhaba Pito'** yazdır.", "task": "print('___')", "check": lambda c, o: "Merhaba Pito" in o, "solution": "print('Merhaba Pito')"},
+        {"msg": "Programımızın dış dünyayla iletişim kurmasının en temel yolu **print()** fonksiyonudur. Parantez içine yazdığımız her şey terminal ekranında görünür. Metinsel ifadeleri mutlaka **tırnak** içinde yazmalısın. Hadi dene: Ekrana **'Merhaba Pito'** yazdır.", "task": "print('___')", "check": lambda c, o: "Merhaba Pito" in o, "solution": "print('Merhaba Pito')"},
         {"msg": "Python'da matematiksel değer olan sayıları ekrana yazdırırken **tırnak işareti kullanmayız.** Şimdi ekrana **100** sayısını yazdır.", "task": "print(___)", "check": lambda c, o: "100" in o, "solution": "print(100)"},
-        {"msg": "print() içinde farklı verileri ayırmak için **virgül (,)** kullanırız. Hadi dene: **'Puan:'** metni ile **100** sayısını yan yana yazdır.", "task": "print('Puan:', ___)", "check": lambda c, o: "100" in o, "solution": "print('Puan:', 100)"},
-        {"msg": "**# (Diyez)** işaretiyle başlayan satırlar Python tarafından okunmaz. Hadi dene: Bir **yorum satırı** oluştur.", "task": "___ Bu bir yorumdur", "check": lambda c, o: "#" in c, "solution": "# Kodlarımı buraya yazıyorum"},
+        {"msg": "print() içinde farklı verileri ayırmak için **virgül (,)** kullanırız. Virgül, otomatik olarak araya boşluk bırakır. Hadi dene: **'Puan:'** metni ile **100** sayısını yan yana yazdır.", "task": "print('Puan:', ___)", "check": lambda c, o: "100" in o, "solution": "print('Puan:', 100)"},
+        {"msg": "**# (Diyez)** işaretiyle başlayan satırlar Python tarafından okunmaz. Buna 'Yorum Satırı' denir. Hadi dene: Bir **yorum satırı** oluştur.", "task": "___ Bu bir yorumdur", "check": lambda c, o: "#" in c, "solution": "# Kodlarımı buraya yazıyorum"},
         {"msg": "Alt satıra geçmek için **'\\n'** karakteri kullanılır. Hadi dene: **'Üst'** ve **'Alt'** kelimelerini tek print içinde farklı satırlarda yazdır.", "task": "print('Üst' + '___' + 'Alt')", "check": lambda c, o: "\n" in o, "solution": "print('Üst' + '\\n' + 'Alt')"}
     ]},
     {"module_title": "2. Değişkenler", "exercises": [
@@ -217,12 +225,14 @@ with col_main:
     st.markdown(f"#### 👋 {student_rank} {st.session_state.student_name} | ⭐ Puan: {int(st.session_state.total_score)}")
     
     if st.session_state.db_module >= 8:
-        if not st.session_state.celebrated: st.balloons(); st.session_state.celebrated = True
+        if not st.session_state.celebrated:
+            st.balloons(); st.session_state.celebrated = True
         st.success("### 🎉 Tebrikler! Eğitimi Başarıyla Tamamladın.")
         st.markdown('<div class="pito-bubble">Python yolculuğunu bitirdin! Aşağıdan modülleri inceleyebilir veya baştan başlayabilirsin.</div>', unsafe_allow_html=True)
         if st.button("🔄 Eğitimi Tekrar Al (Sıfırla)"):
             st.session_state.update({'db_module': 0, 'db_exercise': 0, 'total_score': 0, 'current_module': 0, 'current_exercise': 0, 'completed_modules': [False]*8, 'scored_exercises': set(), 'celebrated': False})
             force_save(); st.rerun()
+        st.divider(); st.subheader("📖 İnceleme Modu")
 
     mod_titles = [f"{'✅' if st.session_state.completed_modules[i] else '📖'} Modül {i+1}" for i in range(8)]
     if st.session_state.current_module != st.session_state.db_module and st.session_state.db_module < 8:
@@ -231,15 +241,14 @@ with col_main:
             st.rerun()
 
     sel_mod = st.selectbox("Modül Seç:", mod_titles, index=st.session_state.current_module)
-    m_idx = mod_titles.index(sel_mod)
-    if m_idx != st.session_state.current_module:
-        st.session_state.current_module, st.session_state.current_exercise = m_idx, 0
+    if mod_titles.index(sel_mod) != st.session_state.current_module:
+        st.session_state.current_module, st.session_state.current_exercise = mod_titles.index(sel_mod), 0
         st.rerun()
 
     st.divider()
     e_idx = st.session_state.current_exercise
-    curr_ex = training_data[m_idx]["exercises"][e_idx]
-    is_locked = (m_idx < st.session_state.db_module) or (st.session_state.db_module >= 8)
+    curr_ex = training_data[st.session_state.current_module]["exercises"][e_idx]
+    is_locked = (st.session_state.current_module < st.session_state.db_module) or (st.session_state.db_module >= 8)
 
     c_img, c_msg = st.columns([1, 4])
     with c_img: st.image(PITO_IMG if os.path.exists(PITO_IMG) else "https://img.icons8.com/fluency/200/robot-viewer.png", width=140)
@@ -247,55 +256,62 @@ with col_main:
         st.info(f"##### 🗣️ Pito:\n{curr_ex['msg']}")
         st.caption(f"Adım: {e_idx + 1}/5 " + ("🔒 İnceleme Modu" if is_locked else f"🎁 Puan: {st.session_state.current_potential_score}"))
 
-    code = st_ace(value=curr_ex['task'], language="python", theme="dracula", font_size=14, height=200, readonly=is_locked, key=f"ace_{m_idx}_{e_idx}", auto_update=True)
+    code = st_ace(value=curr_ex['task'], language="python", theme="dracula", font_size=14, height=200, readonly=is_locked, key=f"ace_{st.session_state.current_module}_{e_idx}", auto_update=True)
 
-    def run_pito_code(c, user_input="Pito"):
+    def run_pito_code(c, user_input=""):
         old_stdout, new_stdout = sys.stdout, StringIO()
         sys.stdout = new_stdout
         try:
             safe_code = c.replace("___", "None")
-            exec(safe_code, {"input": lambda p: str(user_input), "print": print, "int": int, "str": str, "len": len, "open": open, "range": range})
+            exec_globals = {"input": lambda p: str(user_input), "print": print, "int": int, "str": str, "len": len, "open": open, "range": range}
+            exec(safe_code, exec_globals)
             sys.stdout = old_stdout
             return new_stdout.getvalue()
         except Exception as e:
             sys.stdout = old_stdout
             return f"Hata: {e}"
 
-    # --- İNCELEME REHBERİ ALANI ---
+    # --- İNCELEME MODU ÇÖZÜM REHBERİ ---
     if is_locked:
         st.markdown(f"""
             <div class="solution-guide">
                 <div class="solution-header">✅ Pito'nun Çözüm Rehberi</div>
-                <b>Nasıl Yapılır?</b><br>{curr_ex['msg']}<br><br>
-                <b>Egzersizin Doğru Kodu:</b>
+                <b>Nasıl Yapılır?</b><br>
+                {curr_ex['msg']}<br><br>
+                <b>Doğru Kod Yapısı:</b>
             </div>
         """, unsafe_allow_html=True)
         st.code(curr_ex['solution'], language="python")
-        sol_out = run_pito_code(curr_ex['solution'], "Pito") 
+        
+        # --- MUHTEMEL ÇIKTI DÜZELTMESİ (11) ---
+        mock_val = "10" if "int(" in curr_ex['solution'] else "Pito"
+        sol_out = run_pito_code(curr_ex['solution'], mock_val) 
         st.markdown("<b>Muhtemel Çıktı:</b>", unsafe_allow_html=True)
         st.code(sol_out if sol_out else "Kod başarıyla çalıştırıldı.")
     else:
-        u_in = st.text_input("Giriş yap:", key=f"term_{m_idx}_{e_idx}") if "input(" in code else ""
+        u_in = ""
+        if "input(" in code:
+            st.warning("👇 **Pito Terminali:** Aşağıya bir değer yaz ve 'Kontrol Et' butonuna bas!")
+            u_in = st.text_input("Giriş yap:", key=f"term_{st.session_state.current_module}_{e_idx}")
+
         if st.button("🔍 Kontrol Et", use_container_width=True):
-            out = run_pito_code(code, u_in or "Pito")
+            out = run_pito_code(code, u_in)
             if out.startswith("Hata:"): st.error(out)
             else:
                 st.subheader("📟 Çıktı")
                 st.code(out if out else "Kod çalıştı!")
                 if curr_ex['check'](code, out) and "___" not in code:
                     st.session_state.exercise_passed = True
-                    if f"{m_idx}_{e_idx}" not in st.session_state.scored_exercises:
+                    if f"{st.session_state.current_module}_{e_idx}" not in st.session_state.scored_exercises:
                         st.session_state.total_score += st.session_state.current_potential_score
-                        st.session_state.scored_exercises.add(f"{m_idx}_{e_idx}")
+                        st.session_state.scored_exercises.add(f"{st.session_state.current_module}_{e_idx}")
                         if st.session_state.db_exercise < 4: st.session_state.db_exercise += 1
                         else:
                             st.session_state.db_module += 1; st.session_state.db_exercise = 0
-                            st.session_state.completed_modules[m_idx] = True
+                            st.session_state.completed_modules[st.session_state.current_module] = True
                         force_save()
                     st.success("Tebrikler! ✅")
-                else:
-                    st.session_state.current_potential_score = max(5, st.session_state.current_potential_score - 5)
-                    st.warning("Hatalı!")
+                else: st.warning("Hatalı!")
 
     c_back, c_next = st.columns(2)
     with c_back:
@@ -331,14 +347,3 @@ with col_side:
             for i, (_, r) in enumerate(df_school_sort.iterrows()):
                 medal = "🏆" if i == 0 else "🥈" if i == 1 else "🥉" if i == 2 else "⭐"
                 st.markdown(f'<div class="leaderboard-card"><b>{medal} {r["Rütbe"]} {r["Öğrencinin Adı"]} ({r["Sınıf"]})</b><br>{int(r["Puan"])} Puan</div>', unsafe_allow_html=True)
-    if not df_lb.empty:
-        class_sums = df_lb.groupby("Sınıf")["Puan"].sum()
-        if not class_sums.empty:
-            champ_class = class_sums.idxmax(); champ_puan = int(class_sums.max())
-            st.markdown(f"""
-                <div class="champion-card">
-                    <span style="font-size: 1.4rem;">🏆 Şampiyon Sınıf</span><br>
-                    <span style="font-size: 1.1rem;">{champ_class}</span><br>
-                    <span style="font-size: 0.9rem;">Toplam: {champ_puan} Puan</span>
-                </div>
-            """, unsafe_allow_html=True)
