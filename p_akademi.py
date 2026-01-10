@@ -57,11 +57,9 @@ def get_db(use_cache=True):
         df = conn.read(spreadsheet=SHEET_URL, ttl=60 if use_cache else 0)
         if df is None or df.empty:
             return pd.DataFrame(columns=["Okul No", "Öğrencinin Adı", "Sınıf", "Puan", "Rütbe", "Tamamlanan Modüller", "Mevcut Modül", "Mevcut Egzersiz", "Tarih"])
-        
         df["Okul No"] = df["Okul No"].astype(str).str.split('.').str[0].str.strip()
         df = df[df["Okul No"].str.isdigit()] 
         df["Puan"] = pd.to_numeric(df["Puan"], errors='coerce').fillna(0).astype(int)
-        
         return df.dropna(subset=["Okul No"])
     except:
         return pd.DataFrame(columns=["Okul No", "Öğrencinin Adı", "Sınıf", "Puan", "Rütbe", "Tamamlanan Modüller", "Mevcut Modül", "Mevcut Egzersiz", "Tarih"])
@@ -72,11 +70,9 @@ def force_save():
         score = int(st.session_state.total_score)
         df_all = get_db(use_cache=False)
         if df_all.empty and st.session_state.db_module > 0: return 
-            
         df_clean = df_all[df_all["Okul No"] != no]
         progress = ",".join(["1" if m else "0" for m in st.session_state.completed_modules])
         rank = RUTBELER[sum(st.session_state.completed_modules)]
-        
         new_row = pd.DataFrame([[no, st.session_state.student_name, st.session_state.student_class, score, rank, progress, st.session_state.db_module, st.session_state.db_exercise, datetime.now().strftime("%H:%M:%S")]], 
                                columns=["Okul No", "Öğrencinin Adı", "Sınıf", "Puan", "Rütbe", "Tamamlanan Modüller", "Mevcut Modül", "Mevcut Egzersiz", "Tarih"])
         conn.update(spreadsheet=SHEET_URL, data=pd.concat([df_clean, new_row], ignore_index=True))
@@ -87,18 +83,24 @@ if 'is_logged_in' not in st.session_state:
     for k, v in {'student_name': "", 'student_no': "", 'student_class': "", 'completed_modules': [False]*8, 
                  'current_module': 0, 'current_exercise': 0, 'exercise_passed': False, 'total_score': 0, 
                  'scored_exercises': set(), 'db_module': 0, 'db_exercise': 0, 'is_logged_in': False, 
-                 'current_potential_score': 20, 'celebrated': False}.items():
+                 'current_potential_score': 20, 'celebrated': False, 'rejected_user': False}.items():
         st.session_state[k] = v
 
 PITO_IMG = "assets/pito.png"
 
-# --- 4. GİRİŞ EKRANI ---
+# --- 4. GİRİŞ EKRANI (GELİŞTİRİLMİŞ DOĞRULAMA) ---
 if not st.session_state.is_logged_in:
     st.markdown("<br>", unsafe_allow_html=True)
     _, col_mid, _ = st.columns([1, 2, 1])
     with col_mid:
         st.markdown('<div class="pito-bubble">Merhaba! Ben <b>Pito</b>. Python Dünyası\'na hoş geldin.</div>', unsafe_allow_html=True)
         st.image(PITO_IMG if os.path.exists(PITO_IMG) else "https://img.icons8.com/fluency/180/robot-viewer.png", width=180)
+        
+        # Reddedilme uyarısı
+        if st.session_state.rejected_user:
+            st.warning("⚠️ O halde kendi okul numaranı gir!")
+            st.session_state.rejected_user = False # Uyarıyı bir kez göster
+
         in_no_raw = st.text_input("Okul Numaran (Sadece Rakam):", key="login_field").strip()
         
         if in_no_raw and not in_no_raw.isdigit():
@@ -116,14 +118,23 @@ if not st.session_state.is_logged_in:
                 with c1:
                     if st.button("✅ Evet, Benim"):
                         m_v, e_v = int(row['Mevcut Modül']), int(row['Mevcut Egzersiz'])
-                        st.session_state.student_no, st.session_state.student_name, st.session_state.student_class = str(row["Okul No"]), row["Öğrencinin Adı"], row["Sınıf"]
-                        st.session_state.total_score, st.session_state.db_module, st.session_state.db_exercise = int(row["Puan"]), m_v, e_v
-                        st.session_state.current_module, st.session_state.current_exercise = min(m_v, 7), e_v
+                        st.session_state.student_no = str(row["Okul No"])
+                        st.session_state.student_name = row["Öğrencinin Adı"]
+                        st.session_state.student_class = row["Sınıf"]
+                        st.session_state.total_score = int(row["Puan"])
+                        st.session_state.db_module = m_v
+                        st.session_state.db_exercise = e_v
+                        st.session_state.current_module = min(m_v, 7)
+                        st.session_state.current_exercise = e_v
                         st.session_state.completed_modules = [True if x == "1" else False for x in str(row["Tamamlanan Modüller"]).split(",")]
-                        st.session_state.is_logged_in = True; st.rerun()
+                        st.session_state.is_logged_in = True
+                        st.rerun()
                 with c2:
-                    if st.button("❌ Hayır, Farklı Bir Numara Gireceğim"):
-                        st.warning("O halde lütfen kendi okul numaranı gir!")
+                    if st.button("❌ Hayır, Ben Değilim"):
+                        # Hafızayı temizle ve uyaruyu aktif et
+                        st.session_state.login_field = ""
+                        st.session_state.rejected_user = True
+                        st.rerun()
             else:
                 st.info("Yeni bir maceracı! Bilgilerini tamamla:")
                 in_name = st.text_input("Adın Soyadın:", key="new_name")
@@ -139,7 +150,7 @@ training_data = [
     {"module_title": "1. Giriş ve Çıktı", "exercises": [
         {"msg": "Programımızın dış dünyayla iletişim kurmasının en temel yolu **print()** fonksiyonudur. Parantez içine yazdığımız her şey terminal ekranında görünür. Metinsel ifadeleri mutlaka **tırnak** içinde yazmalısın. Hadi dene: Ekrana **'Merhaba Pito'** yazdır.", "task": "print('___')", "check": lambda c, o: "Merhaba Pito" in o, "solution": "print('Merhaba Pito')"},
         {"msg": "Python'da matematiksel değer olan sayıları ekrana yazdırırken **tırnak işareti kullanmayız.** Şimdi ekrana **100** sayısını yazdır.", "task": "print(___)", "check": lambda c, o: "100" in o, "solution": "print(100)"},
-        {"msg": "Farklı verileri ayırmak için **virgül (,)** kullanırız. Virgül, otomatik olarak araya boşluk bırakır. Hadi dene: **'Puan:'** metni ile **100** sayısını yan yana yazdır.", "task": "print('Puan:', ___)", "check": lambda c, o: "100" in o, "solution": "print('Puan:', 100)"},
+        {"msg": "print() içinde farklı verileri ayırmak için **virgül (,)** kullanırız. Virgül, otomatik olarak araya boşluk bırakır. Hadi dene: **'Puan:'** metni ile **100** sayısını yan yana yazdır.", "task": "print('Puan:', ___)", "check": lambda c, o: "100" in o, "solution": "print('Puan:', 100)"},
         {"msg": "**# (Diyez)** işaretiyle başlayan satırlar Python tarafından okunmaz. Buna 'Yorum Satırı' denir. Hadi dene: Bir **yorum satırı** oluştur.", "task": "___ Bu bir yorumdur", "check": lambda c, o: "#" in c, "solution": "# Kodlarımı buraya yazıyorum"},
         {"msg": "Alt satıra geçmek için **'\\n'** karakteri kullanılır. Hadi dene: **'Üst'** ve **'Alt'** kelimelerini tek print içinde farklı satırlarda yazdır.", "task": "print('Üst' + '___' + 'Alt')", "check": lambda c, o: "\n" in o, "solution": "print('Üst' + '\\n' + 'Alt')"}
     ]},
