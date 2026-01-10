@@ -43,7 +43,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. VERİ TABANI YÖNETİMİ ---
+# --- 2. VERİ TABANI ---
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1lat8rO2qm9QnzEUYlzC_fypG3cRkGlJfSfTtwNvs318/edit#gid=0"
 conn = st.connection("gsheets", type=GSheetsConnection)
 
@@ -66,7 +66,7 @@ def force_save():
         conn.update(spreadsheet=SHEET_URL, data=pd.concat([df_clean, new_row], ignore_index=True))
     except: pass
 
-# --- 3. SESSION STATE (TAM İSİMLENDİRME) ---
+# --- 3. SESSION STATE (ATTRIBUTE ERROR ÖNLEMEK İÇİN BAŞTA TANIMLAMA) ---
 if 'is_logged_in' not in st.session_state:
     for k, v in {'student_name': "", 'student_no': "", 'student_class': "", 'completed_modules': [False]*8, 
                  'current_module': 0, 'current_exercise': 0, 'exercise_passed': False, 'total_score': 0, 
@@ -82,7 +82,6 @@ if not st.session_state.is_logged_in:
     with col_mid:
         st.markdown('<div class="pito-bubble">Merhaba! Ben <b>Pito</b>. Python Dünyası\'na hoş geldin.</div>', unsafe_allow_html=True)
         st.image(PITO_IMG if os.path.exists(PITO_IMG) else "https://img.icons8.com/fluency/180/robot-viewer.png", width=180)
-        if st.session_state.rejected_user: st.warning("⚠️ Lütfen kendi okul numaranı gir!")
         in_no = st.text_input("Okul Numaran (Sadece Rakam):", key="login_field").strip()
         if in_no and in_no.isdigit():
             df = get_db()
@@ -106,7 +105,7 @@ if not st.session_state.is_logged_in:
 training_data = [
     {"module_title": "1. Giriş ve Çıktı", "exercises": [
         {"msg": "Ekrana **'Merhaba Pito'** yazdır.", "task": "print('___')", "check": lambda c, o: "Merhaba Pito" in o, "solution": "print('Merhaba Pito')", "has_output": True},
-        {"msg": "Ekrana sadece **100** sayısını yazdır.", "task": "print(___)", "check": lambda c, o: "100" in o, "solution": "print(100)", "has_output": True},
+        {"msg": "Sadece **100** sayısını yazdır.", "task": "print(___)", "check": lambda c, o: "100" in o, "solution": "print(100)", "has_output": True},
         {"msg": "**'Puan:'** metni ile **100** yazdır.", "task": "print('Puan:', ___)", "check": lambda c, o: "100" in o, "solution": "print('Puan:', 100)", "has_output": True},
         {"msg": "Bir **#** kullanarak yorum satırı oluştur.", "task": "___ bu bir yorumdur", "check": lambda c, o: "#" in c, "solution": "# bu bir yorumdur", "has_output": True},
         {"msg": "Alt alta **'Üst'** ve **'Alt'** yazdır.", "task": "print('Üst' + '___' + 'Alt')", "check": lambda c, o: "\n" in o, "solution": "print('Üst\\nAlt')", "has_output": True}
@@ -116,11 +115,11 @@ training_data = [
         {"msg": "**isim** değişkenine 'Pito' ata.", "task": "isim = '___'\nprint(isim)", "check": lambda c, o: "Pito" in o, "solution": "isim = 'Pito'\nprint(isim)", "has_output": True},
         {"msg": "**input()** ile isim al.", "task": "ad = ___('Adın: ')\nprint(ad)", "check": lambda c, o: "input" in c, "solution": "ad = input('Adın: ')\nprint(ad)", "has_output": True},
         {"msg": "Sayıyı metne çevir: s=10.", "task": "s = 10\nprint(___(s))", "check": lambda c, o: "str" in c, "solution": "s = 10\nprint(str(s))", "has_output": True},
-        {"msg": "Girdiyi tam sayıya çevirip 1 ekle.", "task": "n = ___(___('S: '))\nprint(n + 1)", "check": lambda c, o: "int" in c and "11" in o, "solution": "n = int(input('10'))\nprint(n + 1)", "has_output": True}
+        {"msg": "Girdiyi tam sayıya çevirip 1 ekle.", "task": "n = ___(___('S: '))\nprint(n + 1)", "check": lambda c, o: "int" in c and "11" in o, "solution": "n = int(input('10'))\nprint(n+1)", "has_output": True}
     ]},
     {"module_title": "3. Karar Yapıları", "exercises": [
         {"msg": "Eşitlik için **==** kullan.", "task": "if 10 ___ 10: print('X')", "check": lambda c, o: "==" in c, "solution": "if 10 == 10: print('X')", "has_output": True},
-        {"msg": "Şart yanlışsa **else:** çalıştır.", "task": "if 5>10: pass\n___: print('Y')", "check": lambda c, o: "else" in c, "solution": "else: print('Y')", "has_output": True},
+        {"msg": "Şart yanlışsa **else:** bloğu.", "task": "if 5>10: pass\n___: print('Y')", "check": lambda c, o: "else" in c, "solution": "else: print('Y')", "has_output": True},
         {"msg": "Büyük eşittir: **>=**", "task": "if 5 ___ 5: print('Z')", "check": lambda c, o: ">=" in c, "solution": "if 5 >= 5: print('Z')", "has_output": True},
         {"msg": "**and** bağlacını kullan.", "task": "if 1==1 ___ 2==2: print('OK')", "check": lambda c, o: "and" in c, "solution": "if 1==1 and 2==2: print('OK')", "has_output": True},
         {"msg": "**elif** ile şart ekle.", "task": "if 5>10: pass\n___ 5==5: print('A')", "check": lambda c, o: "elif" in c, "solution": "elif 5==5: print('A')", "has_output": True}
@@ -141,12 +140,12 @@ training_data = [
     ]},
     {"module_title": "6. Fonksiyonlar", "exercises": [
         {"msg": "**def** ile tanımla.", "task": "___ f(): print('X')", "check": lambda c, o: "def" in c, "solution": "def f(): print('X')", "has_output": False},
-        {"msg": "**Tuple** oluştur.", "task": "t = (___, 2)\nprint(t)", "check": lambda c, o: "1" in c, "solution": "1", "has_output": True},
+        {"msg": "**Tuple** (1, 2) oluştur.", "task": "t = (___, 2)\nprint(t)", "check": lambda c, o: "1" in c, "solution": "1", "has_output": True},
         {"msg": "Sözlük 'ad': 'Pito' ata.", "task": "d = {'ad': '___'}\nprint(d['ad'])", "check": lambda c, o: "Pito" in o, "solution": "Pito", "has_output": True},
         {"msg": "**keys()** anahtarları getirir.", "task": "d={'a':1}\nprint(d.___())", "check": lambda c, o: "keys" in c, "solution": "keys", "has_output": True},
         {"msg": "**Set** ile küme oluştur.", "task": "s = {1, 2, ___}\nprint(s)", "check": lambda c, o: "1" in c, "solution": "1", "has_output": True}
     ]},
-    {"module_title": "7. OOP (Nesne Tabanlı)", "exercises": [
+    {"module_title": "7. OOP", "exercises": [
         {"msg": "**class** ile sınıf oluştur.", "task": "___ Robot: pass", "check": lambda c, o: "class" in c, "solution": "class Robot: pass", "has_output": False},
         {"msg": "**Robot()** ile nesne üret.", "task": "class R: pass\np = ___()", "check": lambda c, o: "R()" in c, "solution": "R()", "has_output": False},
         {"msg": "Nitelik ata: `p.renk`.", "task": "class R: pass\np=R()\np.___ = 'Mavi'\nprint(p.renk)", "check": lambda c, o: "renk" in c, "solution": "renk", "has_output": True},
@@ -173,8 +172,7 @@ with col_main:
     
     if st.session_state.db_module >= 8:
         if not st.session_state.celebrated: st.balloons(); st.session_state.celebrated = True
-        st.success("### 🎉 Tebrikler! Tüm macerayı başarıyla tamamladın.")
-        st.markdown('<div class="pito-bubble">Harika bir iş çıkardın! Puanın ve başarın liderlik listesinde kaydedildi.</div>', unsafe_allow_html=True)
+        st.success("### 🎉 Tebrikler! Tüm macerayı tamamladın.")
         c1, c2 = st.columns(2)
         with c1:
             if st.button("🔄 Eğitimi Tekrar Al (Puan Sıfırlanır)"):
@@ -201,16 +199,18 @@ with col_main:
         st.info(f"##### 🗣️ Pito:\n{curr_ex['msg']}")
         st.caption(f"Adım: {e_idx + 1}/5 | " + ("🔒 İnceleme" if is_locked else f"🎁 Puan: {st.session_state.current_potential_score} | ❌ Hata: {st.session_state.fail_count}/4"))
 
-    # --- KRİTİK: ÇÖZÜM REHBERİ (SADECE 3. HATADA GÖRÜNÜR) ---
+    # --- KRİTİK: ÇÖZÜM REHBERİ VE MESAJ YÖNETİMİ (Kalıcı Çözüm) ---
     if st.session_state.fail_count == 3 and not is_locked:
         st.markdown(f"""<div class="solution-guide"><div class="solution-header">💡 Pito'dan Yardım: Çözüm Yolu</div><b>Doğru Kod Yapısı:</b></div>""", unsafe_allow_html=True)
         st.code(curr_ex['solution'], language="python")
         st.warning("⚠️ Çözüm açıldı! Şimdi son bir deneme hakkın var.")
+    elif st.session_state.fail_count >= 4 and not is_locked:
+        st.error("❌ Son hakkında da olmadı bu egzersizden puan alamadın şimdi sonraki adıma ilerle.")
 
     code = st_ace(value=curr_ex['task'], language="python", theme="dracula", font_size=14, height=200, readonly=is_locked, key=f"ace_{st.session_state.current_module}_{e_idx}", auto_update=True)
 
     def run_pito_code(c, user_input="Pito", mod=0, step=0):
-        if "___" in c: return "⚠️ Boşluk Hatası: Lütfen kodun içindeki '___' alanlarını doldur!"
+        if "___" in c: return "⚠️ Boşluk Hatası"
         if mod == 0 and step == 3: return "# bu bir yorumdur"
         old_stdout, new_stdout = sys.stdout, StringIO()
         sys.stdout = new_stdout
@@ -234,29 +234,26 @@ with col_main:
     else:
         u_in = st.text_input("Giriş yap:", key=f"term_{st.session_state.current_module}_{e_idx}") if "input(" in code else ""
         if st.button("🔍 Kontrol Et", use_container_width=True):
-            out = run_pito_code(code, u_in or "10", st.session_state.current_module, e_idx)
-            
-            if out.startswith("⚠️"): st.error(out)
-            elif out.startswith("❌") or not curr_ex['check'](code, out):
-                st.session_state.fail_count += 1
-                st.session_state.current_potential_score = max(0, st.session_state.current_potential_score - 5)
-                # 4. HATA VE SON MESAJ
-                if st.session_state.fail_count >= 4:
-                    st.session_state.exercise_passed = True
-                st.rerun() # SAYFAYI YENİLE Kİ ÇÖZÜM KUTUSU/FİNAL MESAJI ANINDA GÖRÜNSÜN
+            if "___" in code:
+                st.warning("⚠️ Lütfen önce kodun içindeki '___' alanlarını doldur!")
             else:
-                st.success("Tebrikler! ✅"); st.code(out)
-                st.session_state.exercise_passed = True
-                if f"{st.session_state.current_module}_{e_idx}" not in st.session_state.scored_exercises:
-                    st.session_state.total_score += st.session_state.current_potential_score
-                    st.session_state.scored_exercises.add(f"{st.session_state.current_module}_{e_idx}")
-                    if st.session_state.db_exercise < 4: st.session_state.db_exercise += 1
-                    else: st.session_state.db_module += 1; st.session_state.db_exercise = 0; st.session_state.completed_modules[st.session_state.current_module] = True
-                    force_save()
-        
-        # 4. HATA YAPILDIYSA SON MESAJI GÖSTER (BUTONUN ALTINDA)
-        if st.session_state.fail_count >= 4:
-            st.error("❌ Son hakkında da olmadı bu egzersizden puan alamadın şimdi sonraki adıma ilerle.")
+                out = run_pito_code(code, u_in or "10", st.session_state.current_module, e_idx)
+                if out.startswith("❌") or not curr_ex['check'](code, out):
+                    st.session_state.fail_count += 1
+                    st.session_state.current_potential_score = max(0, st.session_state.current_potential_score - 5)
+                    if st.session_state.fail_count >= 4:
+                        st.session_state.exercise_passed = True
+                    st.rerun() # SAYFAYI YENİLE Kİ ÇÖZÜM/MESAJ ANINDA GÜNCELLEŞSİN
+                else:
+                    st.success("Tebrikler! ✅"); st.code(out)
+                    st.session_state.exercise_passed = True
+                    if f"{st.session_state.current_module}_{e_idx}" not in st.session_state.scored_exercises:
+                        st.session_state.total_score += st.session_state.current_potential_score
+                        st.session_state.scored_exercises.add(f"{st.session_state.current_module}_{e_idx}")
+                        if st.session_state.db_exercise < 4: st.session_state.db_exercise += 1
+                        else: st.session_state.db_module += 1; st.session_state.db_exercise = 0; st.session_state.completed_modules[st.session_state.current_module] = True
+                        force_save()
+                    st.rerun()
 
     c_b, c_n = st.columns(2)
     with c_b:
@@ -265,9 +262,13 @@ with col_main:
     with c_n:
         if st.session_state.exercise_passed or is_locked:
             if e_idx < 4:
-                if st.button("➡️ Sonraki"): st.session_state.update({'current_exercise': e_idx + 1, 'exercise_passed': False, 'fail_count': 0, 'current_potential_score': 20}); st.rerun()
+                if st.button("➡️ Sonraki"): 
+                    st.session_state.update({'current_exercise': e_idx + 1, 'exercise_passed': False, 'fail_count': 0, 'current_potential_score': 20})
+                    st.rerun()
             elif st.session_state.current_module < 7:
-                if st.button("🏆 Modülü Bitir"): st.session_state.update({'current_module': st.session_state.current_module + 1, 'current_exercise': 0, 'fail_count': 0, 'exercise_passed': False, 'current_potential_score': 20}); st.rerun()
+                if st.button("🏆 Modülü Bitir"): 
+                    st.session_state.update({'current_module': st.session_state.current_module + 1, 'current_exercise': 0, 'fail_count': 0, 'exercise_passed': False, 'current_potential_score': 20})
+                    st.rerun()
 
 with col_side:
     st.markdown("### 🏆 Liderlik Tablosu")
