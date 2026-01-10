@@ -11,7 +11,8 @@ import base64
 # --- 1. TASARIM VE SAYFA AYARLARI ---
 st.set_page_config(layout="wide", page_title="Pito Python Akademi", initial_sidebar_state="collapsed")
 
-# --- 2. TÜM HAFIZA DEĞİŞKENLERİNİ BAŞLAT (HATA ÖNLEYİCİ) ---
+# --- 2. TÜM HAFIZA DEĞİŞKENLERİNİ BAŞLAT (KRİTİK HATA ÖNLEYİCİ) ---
+# - Değişkenlerin tanımlanmadan çağrılmasını engeller.
 initial_states = {
     'is_logged_in': False, 'student_name': "", 'student_no': "", 'student_class': "",
     'completed_modules': [False]*8, 'current_module': 0, 'current_exercise': 0,
@@ -52,7 +53,7 @@ st.markdown("""
         border-width: 20px 20px 0; border-style: solid; border-color: #3a7bd5 transparent;
     }
     .leaderboard-card { background: linear-gradient(135deg, #1e1e1e, #2d2d2d); border-radius: 12px; padding: 10px; margin-bottom: 8px; color: white; border: 1px solid #444; }
-    .champion-card { background: linear-gradient(135deg, #FFD700, #FFA500); border-radius: 15px; padding: 15px; margin-top: 20px; color: #1e1e1e; text-align: center; font-weight: bold; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3); }
+    .champion-card { background: linear-gradient(135deg, #FFD700, #FFA500); border-radius: 15px; padding: 15px; margin-top: 20px; color: #1e1e1e; text-align: center; font-weight: bold; }
     .stButton > button { width: 100%; border-radius: 12px; height: 3.5em; background: linear-gradient(45deg, #3a7bd5, #00d2ff) !important; color: white !important; font-weight: bold; border: none; }
     .retrain-btn > button { background: linear-gradient(45deg, #e53935, #e35d5b) !important; }
     </style>
@@ -84,7 +85,7 @@ def force_save():
         conn.update(spreadsheet=SHEET_URL, data=pd.concat([df_clean, new_row], ignore_index=True))
     except: pass
 
-# --- 5. GİRİŞ EKRANI (KİMLİK DOĞRULAMALI) ---
+# --- 5. GİRİŞ EKRANI ---
 if not st.session_state.is_logged_in:
     _, col_mid, _ = st.columns([1, 2, 1])
     with col_mid:
@@ -127,7 +128,7 @@ if not st.session_state.is_logged_in:
                     force_save(); st.rerun()
     st.stop()
 
-# --- 6. MÜFREDAT VERİSİ ---
+# --- 6. MÜFREDAT ---
 training_data = [
     {"module_title": "1. Giriş ve Çıktı", "exercises": [
         {"msg": "Ekrana **'Merhaba Pito'** yazdır.", "task": "print('___')", "check": lambda c, o: "Merhaba Pito" in o, "solution": "print('Merhaba Pito')"},
@@ -152,14 +153,19 @@ training_data = [
 ]
 
 # --- 7. KOD ÇALIŞTIRMA FONKSİYONU ---
-def run_pito_code(c, user_input=""):
+def run_pito_code(c, user_input="10"): # [Düzeltme] Varsayılan girdi '10' yapıldı
     old_stdout, new_stdout = sys.stdout, StringIO()
     sys.stdout = new_stdout
     if "input(" in c and not user_input: return "⚠️ Terminale veri gir!"
     try:
-        exec(c.replace("___", "None"), {"input": lambda p: str(user_input), "print": print, "int": int, "str": str, "len": len, "open": open})
+        # Kodun içindeki placeholder'ları temizle
+        safe_code = c.replace("___", "None")
+        exec(safe_code, {"input": lambda p: str(user_input), "print": print, "int": int, "str": str, "len": len, "open": open, "range": range})
+        sys.stdout = old_stdout
         return new_stdout.getvalue()
-    except Exception as e: return f"Hata: {e}"
+    except Exception as e: 
+        sys.stdout = old_stdout
+        return f"Hata: {e}"
 
 # --- 8. ARA YÜZ DÜZENİ ---
 col_main, col_side = st.columns([3, 1])
@@ -173,7 +179,7 @@ with col_main:
             st.balloons(); st.session_state.celebrated = True
             st.session_state.pito_emotion = "pito_mezun"
         st.success("### 🎉 Tebrikler! Eğitimi Başarıyla Tamamladın.")
-        st.markdown('<div class="pito-bubble">Python yolculuğunu bitirdin! Aşağıdan modülleri inceleyebilir veya sıfırdan başlayabilirsin.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="pito-bubble">Python yolculuğunu bitirdin! Puanın kaydedildi. Aşağıdan içerikleri inceleyebilir veya sıfırdan başlayabilirsin.</div>', unsafe_allow_html=True)
         c1, c2 = st.columns(2)
         with c1:
             st.markdown('<div class="retrain-btn">', unsafe_allow_html=True)
@@ -204,11 +210,11 @@ with col_main:
 
     code = st_ace(value=curr_ex['task'], language="python", theme="dracula", font_size=14, height=180, readonly=is_locked, key=f"ace_{m_idx}_{e_idx}", auto_update=True)
 
-    # İNCELEME MODU ÇÖZÜM GÖSTERİMİ [Yeni Özellik]
     if is_locked:
         st.success(f"**✅ Pito'nun Çözümü:**")
         st.code(curr_ex['solution'], language="python")
-        sol_out = run_pito_code(curr_ex['solution'], "Örnek Veri")
+        # - 'Örnek Veri' yerine '10' göndererek int() hatası giderildi.
+        sol_out = run_pito_code(curr_ex['solution'], "10") 
         st.markdown(f"**📟 Beklenen Çıktı:**")
         st.code(sol_out if sol_out else "Kod çalıştı!")
     else:
