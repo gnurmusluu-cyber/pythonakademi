@@ -72,8 +72,8 @@ if 'is_logged_in' not in st.session_state:
     for k, v in {'student_name': "", 'student_no': "", 'student_class': "", 'completed_modules': [False]*8, 
                  'current_module': 0, 'current_exercise': 0, 'exercise_passed': False, 'total_score': 0, 
                  'scored_exercises': set(), 'db_module': 0, 'db_exercise': 0, 'is_logged_in': False, 
-                 'current_potential_score': 20, 'celebrated': False, 'fail_count': 0, 
-                 'feedback_msg': "", 'last_output': ""}.items():
+                 'current_potential_score': 20, 'celebrated': False, 'rejected_user': False, 
+                 'fail_count': 0, 'feedback_msg': "", 'last_output': ""}.items():
         st.session_state[k] = v
 
 PITO_IMG = "assets/pito.png"
@@ -106,60 +106,60 @@ if not st.session_state.is_logged_in:
 # --- 5. MÜFREDAT VE ÇÖZÜMLER ---
 training_data = [
     {"module_title": "1. Merhaba Python: Giriş ve Çıktı", "exercises": [
-        {"msg": "Python'da bilgisayarın bizimle konuşmasını sağlayan temel araç `print()` fonksiyonudur. Parantez içine yazdığın metinler ekranda belirir. İlk görevin; ekrana tam olarak **'Merhaba Pito'** yazdırmak.", "task": "print('___')", "check": lambda c, o: "Merhaba Pito" in o, "solution": "print('Merhaba Pito')", "has_output": True},
-        {"msg": "Sayılar metinlerden farklıdır; tırnak işaretine ihtiyaç duymazlar. Doğrudan matematiksel değer olarak algılanırlar. Hadi, ekrana sadece **100** sayısını yazdır.", "task": "print(___)", "check": lambda c, o: "100" in o, "solution": "print(100)", "has_output": True},
-        {"msg": "Virgül kullanarak farklı veri türlerini yan yana getirebiliriz. Pito'nun puanını göstermek için önce **'Puan:'** metnini, yanına ise **100** sayısını ekle.", "task": "print('Puan:', ___)", "check": lambda c, o: "100" in o, "solution": "print('Puan:', 100)", "has_output": True},
-        {"msg": "Kod yazarken bazen kendimize notlar bırakırız. Python'da `#` işaretiyle başlayan satırlar bilgisayar tarafından okunmaz. Bir `#` kullanarak bu satırı yorum satırına dönüştür.", "task": "___ bu bir yorumdur", "check": lambda c, o: "#" in c, "solution": "# bu bir yorumdur", "has_output": False},
-        {"msg": "Kodun içinde alt satıra geçmek için özel bir kaçış karakteri olan `\\n` kullanılır. Senden ricam; 'Üst' yazısından sonra alt satıra geçip 'Alt' yazısını bastırman.", "task": "print('Üst' + '___' + 'Alt')", "check": lambda c, o: "\n" in o, "solution": "print('Üst\\nAlt')", "has_output": True}
+        {"msg": "Python'da bilgisayarın bizimle konuşmasını sağlayan temel araç `print()` fonksiyonudur. İlk görevin; ekrana tam olarak **'Merhaba Pito'** yazdırmak.", "task": "print('___')", "check": lambda c, o: "Merhaba Pito" in o, "solution": "print('Merhaba Pito')", "has_output": True},
+        {"msg": "Sayılar metinlerden farklıdır; tırnak işaretine ihtiyaç duymazlar. Hadi, ekrana sadece **100** sayısını yazdır.", "task": "print(___)", "check": lambda c, o: "100" in o, "solution": "print(100)", "has_output": True},
+        {"msg": "Pito'nun puanını göstermek için önce **'Puan:'** metnini, yanına ise **100** sayısını ekle.", "task": "print('Puan:', ___)", "check": lambda c, o: "100" in o, "solution": "print('Puan:', 100)", "has_output": True},
+        {"msg": "Kod yazarken bazen notlar bırakırız. Bir `#` kullanarak bu satırı yorum satırına dönüştür.", "task": "___ bu bir yorumdur", "check": lambda c, o: "#" in c, "solution": "# bu bir yorumdur", "has_output": False},
+        {"msg": "Senden ricam; 'Üst' yazısından sonra alt satıra geçip 'Alt' yazısını bastırman.", "task": "print('Üst' + '___' + 'Alt')", "check": lambda c, o: "\n" in o, "solution": "print('Üst\\nAlt')", "has_output": True}
     ]},
     {"module_title": "2. Bilgiyi Saklamak: Değişkenler ve input()", "exercises": [
-        {"msg": "Değişkenler, verileri hafızada tutan kutulardır. `=` işareti ile kutuya bir değer koyarız. **yas** adındaki kutuya **15** değerini ata ve ekrana yazdır.", "task": "yas = ___\nprint(yas)", "check": lambda c, o: "15" in o, "solution": "yas = 15\nprint(yas)", "has_output": True},
-        {"msg": "Metinleri değişkenlerde saklarken tırnak kullanmayı unutma! **isim** adlı değişkene **'Pito'** değerini ata ve sonucu gör.", "task": "isim = '___'\nprint(isim)", "check": lambda c, o: "Pito" in o, "solution": "isim = 'Pito'\nprint(isim)", "has_output": True},
-        {"msg": "`input()` fonksiyonu, kullanıcının klavyeden veri girmesini sağlar. Gelen veri her zaman metin (string) olarak gelir. Parantez içine **'Adın: '** yazarak bir giriş iste.", "task": "ad = ___('Adın: ')\nprint(ad)", "check": lambda c, o: "input" in c, "solution": "ad = input('Adın: ')\nprint(ad)", "has_output": True},
-        {"msg": "Bazen bir sayıyı metne birleştirmek için onu `str()` fonksiyonuyla metne dönüştürmemiz gerekir. **s** değişkenindeki 10 sayısını metne çevirip ekrana bas.", "task": "s = 10\nprint(___(s))", "check": lambda c, o: "str" in c, "solution": "s = 10\nprint(str(s))", "has_output": True},
-        {"msg": "Dışarıdan gelen sayıları matematiksel işleme sokmak için `int()` ile tam sayıya çevirmeliyiz. Kullanıcıdan bir sayı iste, onu sayıya çevir ve 1 ekleyip yazdır.", "task": "n = ___(___('S: '))\nprint(n + 1)", "check": lambda c, o: "int" in c and "11" in o, "solution": "n = int(input('10'))\nprint(n+1)", "has_output": True}
+        {"msg": "Değişkenler, verileri hafızada tutan kutulardır. **yas** kutusuna **15** değerini ata ve ekrana yazdır.", "task": "yas = ___\nprint(yas)", "check": lambda c, o: "15" in o, "solution": "yas = 15\nprint(yas)", "has_output": True},
+        {"msg": "**isim** adlı değişkene **'Pito'** değerini ata ve sonucu gör.", "task": "isim = '___'\nprint(isim)", "check": lambda c, o: "Pito" in o, "solution": "isim = 'Pito'\nprint(isim)", "has_output": True},
+        {"msg": "`input()` ile kullanıcıdan bir giriş iste. Parantez içine **'Adın: '** yaz.", "task": "ad = ___('Adın: ')\nprint(ad)", "check": lambda c, o: "input" in c, "solution": "ad = input('Adın: ')\nprint(ad)", "has_output": True},
+        {"msg": "Değişkeni metne çeviren `str()` fonksiyonunu kullanarak **s**'yi yazdır.", "task": "s = 10\nprint(___(s))", "check": lambda c, o: "str" in c, "solution": "s = 10\nprint(str(s))", "has_output": True},
+        {"msg": "Kullanıcıdan bir sayı iste, onu tam sayıya çevir ve 1 ekleyip yazdır.", "task": "n = ___(___('S: '))\nprint(n + 1)", "check": lambda c, o: "int" in c and "11" in o, "solution": "n = int(input('10'))\nprint(n+1)", "has_output": True}
     ]},
     {"module_title": "3. Karar Verme: İf ve Karşılaştırmalar", "exercises": [
-        {"msg": "Programın bir şartın doğruluğuna göre karar vermesini sağlarız. İki değerin eşitliğini kontrol etmek için `==` kullanırız. 10'un 10'a eşitliğini kontrol et.", "task": "if 10 ___ 10: print('Eşit!')", "check": lambda c, o: "==" in c, "solution": "if 10 == 10: print('Eşit!')", "has_output": True},
-        {"msg": "Şart yanlışsa `else:` bloğu çalışır. Eğer 5, 10'dan büyük değilse ekrana 'Hayır' yazdırılmasını sağlayan bloğu tamamla.", "task": "if 5>10: pass\n___: print('Hayır')", "check": lambda c, o: "else" in c, "solution": "if 5 > 10: pass\nelse: print('Hayır')", "has_output": True},
-        {"msg": "Büyük veya eşittir kontrolü için `>=` kullanılır. Bir sayının limit değerine ulaşıp ulaşmadığını bu şekilde anlarız. Boşluğu doldur.", "task": "if 5 ___ 5: print('Tamam!')", "check": lambda c, o: ">=" in c, "solution": "if 5 >= 5: print('Tamam!')", "has_output": True},
-        {"msg": "İki şartın da aynı anda doğru olmasını istiyorsak `and` bağlacını kullanırız. Hem 1'in 1'e, hem 2'nin 2'ye eşit olduğu durumu kontrol et.", "task": "if 1==1 ___ 2==2: print('Mükemmel')", "check": lambda c, o: "and" in c, "solution": "if 1==1 and 2==2: print('Mükemmel')", "has_output": True},
-        {"msg": "Birden fazla şartı sıralamak için `elif` (else if) kullanılır. İlk if yanlışsa bu şarta bakılır. 5'in 5'e eşitliğini kontrol eden alternatif şartı ekle.", "task": "if 5>10: pass\n___ 5==5: print('Bulundu')", "check": lambda c, o: "elif" in c, "solution": "if 5 > 10: pass\nelif 5 == 5: print('Bulundu')", "has_output": True}
+        {"msg": "İki değerin eşitliğini kontrol etmek için `==` kullanırız. 10'un 10'a eşitliğini kontrol et.", "task": "if 10 ___ 10: print('Eşit!')", "check": lambda c, o: "==" in c, "solution": "if 10 == 10: print('Eşit!')", "has_output": True},
+        {"msg": "Şart gerçekleşmediğinde `else:` bloğu çalışır. 5, 10'dan büyük değilse 'Hayır' yazdırılmasını sağla.", "task": "if 5>10: pass\n___: print('Hayır')", "check": lambda c, o: "else" in c, "solution": "if 5 > 10: pass\nelse: print('Hayır')", "has_output": True},
+        {"msg": "Büyük veya eşittir kontrolü için `>=` kullanılır. Boşluğu doldur.", "task": "if 5 ___ 5: print('Tamam!')", "check": lambda c, o: ">=" in c, "solution": "if 5 >= 5: print('Tamam!')", "has_output": True},
+        {"msg": "İki şartın da doğru olması için `and` bağlacını kullanırız. 1==1 ve 2==2 durumuna bak.", "task": "if 1==1 ___ 2==2: print('Mükemmel')", "check": lambda c, o: "and" in c, "solution": "if 1==1 and 2==2: print('Mükemmel')", "has_output": True},
+        {"msg": "Birden fazla şartı sıralamak için `elif` kullanılır. 5'in 5'e eşitliğini kontrol eden bloğu yaz.", "task": "if 5>10: pass\n___ 5==5: print('Bulundu')", "check": lambda c, o: "elif" in c, "solution": "if 5 > 10: pass\nelif 5 == 5: print('Bulundu')", "has_output": True}
     ]},
     {"module_title": "4. Sürekli Tekrar: For ve While Döngüleri", "exercises": [
-        {"msg": "Belirli bir sayıda işlem yapmak için `for` döngüsü ve `range()` kullanılır. Ekrana 3 kez 'Pito' yazdırmak için döngü aralığını belirle.", "task": "for i in ___(3): print('Pito')", "check": lambda c, o: o.count("Pito")==3, "solution": "for i in range(3): print('Pito')", "has_output": True},
-        {"msg": "`while` döngüsü, bir şart doğru olduğu sürece çalışmaya devam eder. i değişkeni 1'den küçük olduğu sürece dönecek döngü komutunu yaz.", "task": "i=0\n___ i<1: print('Dönüyor'); i+=1", "check": lambda c, o: "while" in c, "solution": "i=0\nwhile i<1: print('Dönüyor'); i+=1", "has_output": True},
-        {"msg": "Döngüyü aniden durdurmak gerekirse `break` anahtar kelimesini kullanırız. Şart sağlandığında döngüden çıkılmasını sağla.", "task": "for i in range(3):\n if i==1: ___\n print(i)", "check": lambda c, o: "break" in c, "solution": "for i in range(3):\n    if i == 1: break\n    print(i)", "has_output": True},
-        {"msg": "`continue` komutu, o andaki adımı atlayıp döngünün başına dönmemizi sağlar. 1 değerini atlayarak döngüye devam et.", "task": "for i in range(3):\n if i==1: ___\n print(i)", "check": lambda c, o: "continue" in c, "solution": "for i in range(3):\n    if i == 1: continue\n    print(i)", "has_output": True},
-        {"msg": "Döngü içindeki sayacı (`i`) yazdırarak kaçıncı turda olduğumuzu takip edebiliriz. Sayacı ekrana bastıran kodu tamamla.", "task": "for i in range(2): print(___)", "check": lambda c, o: "1" in o, "solution": "for i in range(2): print(i)", "has_output": True}
+        {"msg": "Ekrana 3 kez 'Pito' yazdırmak için `range()` aralığını belirle.", "task": "for i in ___(3): print('Pito')", "check": lambda c, o: o.count("Pito")==3, "solution": "for i in range(3): print('Pito')", "has_output": True},
+        {"msg": "`while` döngüsü için i, 1'den küçük olduğu sürece çalışacak komutu yaz.", "task": "i=0\n___ i<1: print('Dönüyor'); i+=1", "check": lambda c, o: "while" in c, "solution": "i=0\nwhile i<1: print('Dönüyor'); i+=1", "has_output": True},
+        {"msg": "Şart sağlandığında döngüden aniden çıkmak için `break` kullan.", "task": "for i in range(3):\n if i==1: ___\n print(i)", "check": lambda c, o: "break" in c, "solution": "for i in range(3):\n    if i == 1: break\n    print(i)", "has_output": True},
+        {"msg": "Mevcut adımı atlayıp döngü başına dönmek için `continue` kullan.", "task": "for i in range(3):\n if i==1: ___\n print(i)", "check": lambda c, o: "continue" in c, "solution": "for i in range(3):\n    if i == 1: continue\n    print(i)", "has_output": True},
+        {"msg": "Döngü sayacını (`i`) ekrana bastıran kodu tamamla.", "task": "for i in range(2): print(___)", "check": lambda c, o: "1" in o, "solution": "for i in range(2): print(i)", "has_output": True}
     ]},
     {"module_title": "5. Gruplama ve Listeler", "exercises": [
-        {"msg": "Listeler, birden fazla veriyi tek bir isim altında toplar. Köşeli parantez `[]` kullanılır. Listeye eksik olan **10** sayısını ekle.", "task": "L = [___, 20]", "check": lambda c, o: "10" in c, "solution": "L = [10, 20]", "has_output": False},
-        {"msg": "Listenin elemanlarına erişmek için indeks numaraları kullanılır. Python'da saymaya 0'dan başlarız. İlk elemana (5) ulaşmak için indeksi yaz.", "task": "L=[5,6]\nprint(L[___])", "check": lambda c, o: "5" in o, "solution": "L = [5, 6]\nprint(L[0])", "has_output": True},
-        {"msg": "Bir listenin içinde toplam kaç eleman olduğunu `len()` fonksiyonuyla öğreniriz. L listesinin boyutunu ekrana yazdır.", "task": "L=[1,2]\nprint(___(L))", "check": lambda c, o: "2" in o, "solution": "L = [1, 2]\nprint(len(L))", "has_output": True},
-        {"msg": "Mevcut bir listeye yeni bir eleman eklemek için `.append()` metodu kullanılır. Listeye sonuna **30** değerini ilave et.", "task": "L=[10]\nL.___(___)\nprint(L)", "check": lambda c, o: "30" in o, "solution": "L = [10]\nL.append(30)\nprint(L)", "has_output": True},
-        {"msg": "Listenin son elemanını çıkarmak için `.pop()` kullanılır. Listeden son elemanı silen komutu yaz.", "task": "L=[1,2]\nL.___()\nprint(L)", "check": lambda c, o: "1" in o, "solution": "L = [1, 2]\nL.pop()\nprint(L)", "has_output": True}
+        {"msg": "Listeye eksik olan **10** sayısını ekle.", "task": "L = [___, 20]", "check": lambda c, o: "10" in c, "solution": "L = [10, 20]", "has_output": False},
+        {"msg": "İlk elemana (indeks 0) ulaşmak için boşluğu doldur.", "task": "L=[5,6]\nprint(L[___])", "check": lambda c, o: "5" in o, "solution": "L = [5, 6]\nprint(L[0])", "has_output": True},
+        {"msg": "Listenin boyutunu `len()` fonksiyonuyla öğren ve yazdır.", "task": "L=[1,2]\nprint(___(L))", "check": lambda c, o: "2" in o, "solution": "L = [1, 2]\nprint(len(L))", "has_output": True},
+        {"msg": "Mevcut bir listeye `.append()` ile sonuna **30** değerini ekle.", "task": "L=[10]\nL.___(___)\nprint(L)", "check": lambda c, o: "30" in o, "solution": "L = [10]\nL.append(30)\nprint(L)", "has_output": True},
+        {"msg": "Listenin son elemanını `.pop()` metoduyla çıkar.", "task": "L=[1,2]\nL.___()\nprint(L)", "check": lambda c, o: "1" in o, "solution": "L = [1, 2]\nL.pop()\nprint(L)", "has_output": True}
     ]},
     {"module_title": "6. Fonksiyonlar ve Veri Yapıları", "exercises": [
-        {"msg": "Fonksiyonlar, tekrar eden kodları paketleyip `def` ile tanımladığımız yapılardır. Bir fonksiyonun başlangıç anahtarını yaz.", "task": "___ selam(): print('Merhaba')", "check": lambda c, o: "def" in c, "solution": "def selam(): print('Merhaba')", "has_output": False},
-        {"msg": "Değiştirilemez listelere **Tuple** denir ve normal parantez `()` kullanılır. (1, 2) şeklinde bir tuple oluştur.", "task": "t = (___, 2)\nprint(t)", "check": lambda c, o: "1" in c, "solution": "t = (1, 2)\nprint(t)", "has_output": True},
-        {"msg": "Sözlükler (Dictionary), anahtar-değer çiftleriyle çalışır. 'ad' anahtarına karşılık gelen **'Pito'** değerini sözlüğe yerleştir.", "task": "d = {'ad': '___'}\nprint(d['ad'])", "check": lambda c, o: "Pito" in o, "solution": "d = {'ad': 'Pito'}\nprint(d['ad'])", "has_output": True},
-        {"msg": "Bir sözlükteki tüm anahtarları listelemek için `.keys()` metodu kullanılır. Sözlüğün anahtarlarını çağıran kodu tamamla.", "task": "d={'a':1}\nprint(d.___())", "check": lambda c, o: "keys" in c, "solution": "d = {'a': 1}\nprint(d.keys())", "has_output": True},
-        {"msg": "Kümeler (Set), her elemandan sadece bir tane barındırır. Benzersiz elemanlar topluluğu oluşturmak için süslü parantez kullanılır.", "task": "s = {1, 2, ___}\nprint(s)", "check": lambda c, o: "1" in c, "solution": "s = {1, 2, 1}\nprint(s)", "has_output": True}
+        {"msg": "Bir fonksiyonu `def` anahtarı ile tanımlamaya başla.", "task": "___ selam(): print('Merhaba')", "check": lambda c, o: "def" in c, "solution": "def selam(): print('Merhaba')", "has_output": False},
+        {"msg": "Normal parantez kullanarak (1, 2) şeklinde bir tuple oluştur.", "task": "t = (___, 2)\nprint(t)", "check": lambda c, o: "1" in c, "solution": "t = (1, 2)\nprint(t)", "has_output": True},
+        {"msg": "Sözlüğe 'ad' anahtarı için **'Pito'** değerini ata.", "task": "d = {'ad': '___'}\nprint(d['ad'])", "check": lambda c, o: "Pito" in o, "solution": "d = {'ad': 'Pito'}\nprint(d['ad'])", "has_output": True},
+        {"msg": "Sözlük anahtarlarını listelemek için `.keys()` kullan.", "task": "d={'a':1}\nprint(d.___())", "check": lambda c, o: "keys" in c, "solution": "d = {'a': 1}\nprint(d.keys())", "has_output": True},
+        {"msg": "Süslü parantez ile benzersiz elemanlı bir küme (set) oluştur.", "task": "s = {1, 2, ___}\nprint(s)", "check": lambda c, o: "1" in c, "solution": "s = {1, 2, 1}\nprint(s)", "has_output": True}
     ]},
     {"module_title": "7. OOP: Nesne Tabanlı Programlama", "exercises": [
-        {"msg": "Sınıflar (Class), nesneler için birer kalıptır. `class` anahtar kelimesiyle yeni bir 'Robot' kalıbı tanımlamaya başla.", "task": "___ Robot: pass", "check": lambda c, o: "class" in c, "solution": "class Robot: pass", "has_output": False},
-        {"msg": "Kalıptan gerçek bir nesne üretmek için sınıf ismini fonksiyon gibi çağırırız. Robot sınıfından bir nesne üret.", "task": "class R: pass\np = ___()", "check": lambda c, o: "R()" in c, "solution": "p = R()", "has_output": False},
-        {"msg": "Nesnelerin özellikleri (nitelik) olabilir. p nesnesinin **renk** özelliğine 'Mavi' değerini atayan boşluğu doldur.", "task": "class R: pass\np=R()\np.___ = 'Mavi'\nprint(p.renk)", "check": lambda c, o: "renk" in c, "solution": "class R: pass\np = R()\np.renk = 'Mavi'\nprint(p.renk)", "has_output": True},
-        {"msg": "Nesnelerin yapabildiği işlere 'Metot' denir. Sınıf içine bir **ses** metodu tanımlarken her zaman `self` parametresini kullanırız.", "task": "class R:\n def ___(self):\n  print('Bip!')", "check": lambda c, o: "ses" in c, "solution": "class R:\n    def ses(self): print('Bip!')", "has_output": False},
-        {"msg": "Tanımladığın bir metodu çağırmak için nesne isminden sonra nokta koyarsın. r nesnesinin s() metodunu çalıştır.", "task": "class R:\n def s(self): print('X')\nr=R()\nr.___()", "check": lambda c, o: "s()" in c, "solution": "class R:\n    def s(self): print('X')\nr = R()\nr.s()", "has_output": True}
+        {"msg": "`class` anahtar kelimesiyle yeni bir 'Robot' kalıbı tanımla.", "task": "___ Robot: pass", "check": lambda c, o: "class" in c, "solution": "class Robot: pass", "has_output": False},
+        {"msg": "Robot sınıfından yeni bir nesne üret.", "task": "class R: pass\np = ___()", "check": lambda c, o: "R()" in c, "solution": "p = R()", "has_output": False},
+        {"msg": "p nesnesinin **renk** özelliğine 'Mavi' değerini ata.", "task": "class R: pass\np=R()\np.___ = 'Mavi'\nprint(p.renk)", "check": lambda c, o: "renk" in c, "solution": "class R: pass\np = R()\np.renk = 'Mavi'\nprint(p.renk)", "has_output": True},
+        {"msg": "Sınıf içine bir **ses** metodu tanımlarken `self` kullanmayı unutma.", "task": "class R:\n def ___(self):\n  print('Bip!')", "check": lambda c, o: "ses" in c, "solution": "class R:\n    def ses(self): print('Bip!')", "has_output": False},
+        {"msg": "Tanımladığın bir metodu nesne üzerinden çağır.", "task": "class R:\n def s(self): print('X')\nr=R()\nr.___()", "check": lambda c, o: "s()" in c, "solution": "class R:\n    def s(self): print('X')\nr = R()\nr.s()", "has_output": True}
     ]},
     {"module_title": "8. Kalıcılık: Dosya Yönetimi", "exercises": [
-        {"msg": "Bilgileri kalıcı olarak kaydetmek için dosyaları açmalıyız. `open()` fonksiyonu ve yazma modu olan **'w'** kipiyle bir dosya aç.", "task": "dosya = ___('n.txt', '___')", "check": lambda c, o: "open" in c and "w" in c, "solution": "dosya = open('n.txt', 'w')", "has_output": False},
-        {"msg": "Açılmış bir dosyanın içine yazı yazmak için `.write()` kullanılır. Dosyaya veriyi gönderen komutu tamamla.", "task": "f = open('t.txt', 'w'); f.___('Pito'); f.close()", "check": lambda c, o: "write" in c, "solution": "f = open('t.txt', 'w')\nf.write('Pito')\nf.close()", "has_output": False},
-        {"msg": "Bir dosyanın içindekileri okumak için onu okuma modu olan **'r'** kipiyle açmalısın. Boşluğu doldur.", "task": "f = open('t.txt', '___')", "check": lambda c, o: "r" in c, "solution": "f = open('t.txt', 'r')", "has_output": False},
-        {"msg": "**read()** metodu dosyanın tüm içeriğini metin olarak getirir. İçeriği çeken kodu yaz.", "task": "f = open('t.txt', 'r')\nprint(f.___())\nf.close()", "check": lambda c, o: "read" in c, "solution": "f = open('t.txt', 'r')\nprint(f.read())\nf.close()", "has_output": True},
-        {"msg": "Dosyalarla işimiz bittiğinde mutlaka kapatmalıyız. Kapatma komutunu yaz.", "task": "f = open('t.txt', 'r')\nf.___()", "check": lambda c, o: "close" in c, "solution": "f = open('t.txt', 'r')\nf.close()", "has_output": False}
+        {"msg": "`open()` fonksiyonu ve yazma modu olan **'w'** kipiyle dosya aç.", "task": "dosya = ___('n.txt', '___')", "check": lambda c, o: "open" in c and "w" in c, "solution": "dosya = open('n.txt', 'w')", "has_output": False},
+        {"msg": "Açılmış dosyaya `.write()` ile 'Pito' yazısını gönder.", "task": "f = open('t.txt', 'w'); f.___('Pito'); f.close()", "check": lambda c, o: "write" in c, "solution": "f = open('t.txt', 'w')\nf.write('Pito')\nf.close()", "has_output": False},
+        {"msg": "Dosyayı okuma modu olan **'r'** kipiyle aç.", "task": "f = open('t.txt', '___')", "check": lambda c, o: "r" in c, "solution": "f = open('t.txt', 'r')", "has_output": False},
+        {"msg": "Dosya içeriğini metin olarak getiren `.read()` kodunu yaz.", "task": "f = open('t.txt', 'r')\nprint(f.___())\nf.close()", "check": lambda c, o: "read" in c, "solution": "f = open('t.txt', 'r')\nprint(f.read())\nf.close()", "has_output": True},
+        {"msg": "Dosyayı kapatan komutu tamamla.", "task": "f = open('t.txt', 'r')\nf.___()", "check": lambda c, o: "close" in c, "solution": "f = open('t.txt', 'r')\nf.close()", "has_output": False}
     ]}
 ]
 
@@ -176,7 +176,7 @@ with col_main:
     
     if st.session_state.db_module >= 8:
         if not st.session_state.celebrated: st.balloons(); st.session_state.celebrated = True
-        st.success("🎉 Tebrikler! Tüm macerayı tamamladın.")
+        st.success("🎉 Tebrikler! Tüm macerayı başarıyla tamamladın.")
         c1, c2 = st.columns(2)
         with c1:
             if st.button("🔄 Eğitimi Tekrar Al"):
@@ -203,7 +203,7 @@ with col_main:
         st.info(f"##### 🗣️ Pito:\n{curr_ex['msg']}")
         st.caption(f"Adım: {e_idx + 1}/5 | " + ("🔒 İnceleme" if is_locked else f"🎁 Puan: {st.session_state.current_potential_score} | ❌ Hata: {st.session_state.fail_count}/4"))
 
-    # --- ÇÖZÜM REHBERİ ---
+    # --- KRİTİK: ÇÖZÜM REHBERİ (3. HATADA GÖRÜNÜR) ---
     if st.session_state.fail_count == 3 and not is_locked:
         st.markdown(f"""<div class="solution-guide"><div class="solution-header">💡 Pito'dan Yardım: Çözüm Yolu</div><b>Doğru Kod Yapısı:</b></div>""", unsafe_allow_html=True)
         st.code(curr_ex['solution'], language="python")
@@ -235,11 +235,11 @@ with col_main:
             elif st.session_state.current_module == 1 and e_idx == 4: st.code("11")
             else: st.code(run_pito_code(curr_ex['solution'], "10", st.session_state.current_module, e_idx))
     else:
-        # --- KOMUT PANELİ VE ÇIKTI ALANI (4. HATADA GİZLENİR) ---
+        # --- KOMUT PANELİ (4. HATADA GİZLENİR, 3. HATADA PANEL VE ÇÖZÜM BİRLİKTE GÖRÜNÜR) ---
         if st.session_state.fail_count < 4:
             code = st_ace(value=curr_ex['task'], language="python", theme="dracula", font_size=14, height=200, key=f"ace_{st.session_state.current_module}_{e_idx}", auto_update=True)
             
-            # --- KRİTİK: ÇIKTIYI KOD BLOĞUNUN HEMEN ALTINDA GÖSTER ---
+            # KRİTİK: ÇIKTIYI KOD BLOĞUNUN HEMEN ALTINDA GÖSTER
             if st.session_state.exercise_passed and st.session_state.last_output:
                 st.markdown("**Kod Çıktısı:**")
                 st.code(st.session_state.last_output)
