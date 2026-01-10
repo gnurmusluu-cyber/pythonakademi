@@ -57,8 +57,14 @@ def get_db(use_cache=True):
         df = conn.read(spreadsheet=SHEET_URL, ttl=60 if use_cache else 0)
         if df is None or df.empty:
             return pd.DataFrame(columns=["Okul No", "Öğrencinin Adı", "Sınıf", "Puan", "Rütbe", "Tamamlanan Modüller", "Mevcut Modül", "Mevcut Egzersiz", "Tarih"])
+        
+        # Sütun tiplerini temizle ve zorla
         df["Okul No"] = df["Okul No"].astype(str).str.split('.').str[0].str.strip()
         df = df[df["Okul No"].str.isdigit()] 
+        
+        # KRİTİK: Puan sütununu tam sayıya çevir (Float görünümünü engeller)
+        df["Puan"] = pd.to_numeric(df["Puan"], errors='coerce').fillna(0).astype(int)
+        
         return df.dropna(subset=["Okul No"])
     except:
         return pd.DataFrame(columns=["Okul No", "Öğrencinin Adı", "Sınıf", "Puan", "Rütbe", "Tamamlanan Modüller", "Mevcut Modül", "Mevcut Egzersiz", "Tarih"])
@@ -96,7 +102,6 @@ if not st.session_state.is_logged_in:
     with col_mid:
         st.markdown('<div class="pito-bubble">Merhaba! Ben <b>Pito</b>. Python Dünyası\'na hoş geldin.</div>', unsafe_allow_html=True)
         st.image(PITO_IMG if os.path.exists(PITO_IMG) else "https://img.icons8.com/fluency/180/robot-viewer.png", width=180)
-        
         in_no_raw = st.text_input("Okul Numaran (Sadece Rakam):", key="login_field").strip()
         
         if in_no_raw and not in_no_raw.isdigit():
@@ -108,7 +113,7 @@ if not st.session_state.is_logged_in:
                 row = user_data.iloc[0]
                 m_v, e_v = int(row['Mevcut Modül']), int(row['Mevcut Egzersiz'])
                 st.markdown(f"### Hoş geldin, **{row['Öğrencinin Adı']}**! 👋")
-                st.success(f"Puanın: {row['Puan']} | " + (f"Eğitimi Tamamladın! 🏆" if m_v >= 8 else f"Kaldığın Yer: Modül {m_v+1}"))
+                st.success(f"Puanın: {int(row['Puan'])} | " + (f"Eğitimi Tamamladın! 🏆" if m_v >= 8 else f"Kaldığın Yer: Modül {m_v+1}"))
                 c1, c2 = st.columns(2)
                 with c1:
                     if st.button("🚀 Devam Et"):
@@ -125,7 +130,7 @@ if not st.session_state.is_logged_in:
                         st.session_state.completed_modules = [True if x == "1" else False for x in str(row["Tamamlanan Modüller"]).split(",")]
                         st.session_state.is_logged_in = True; st.rerun()
             else:
-                st.info("Yeni bir öğrenci! Bilgilerini tamamla:")
+                st.info("Yeni bir maceracı! Bilgilerini tamamla:")
                 in_name = st.text_input("Adın Soyadın:", key="new_name")
                 in_class = st.selectbox("Sınıfın:", SINIFLAR, key="new_class")
                 if st.button("Maceraya Başla! ✨"):
@@ -137,10 +142,10 @@ if not st.session_state.is_logged_in:
 # --- 5. DETAYLANDIRILMIŞ EĞİTİCİ MÜFREDAT ---
 training_data = [
     {"module_title": "1. Giriş ve Çıktı", "exercises": [
-        {"msg": "Programın dış dünyayla iletişim kurmasının en temel yolu **print()** fonksiyonudur. Parantez içine yazdığımız her şey terminal ekranında görünür. Metinsel ifadeleri mutlaka **tırnak** içinde yazmalısın. Hadi dene: Ekrana **'Merhaba Pito'** yazdır.", "task": "print('___')", "check": lambda c, o: "Merhaba Pito" in o, "solution": "print('Merhaba Pito')"},
+        {"msg": "Programımızın dış dünyayla iletişim kurmasının en temel yolu **print()** fonksiyonudur. Parantez içine yazdığımız her şey terminal ekranında görünür. Metinsel ifadeleri mutlaka **tırnak** içinde yazmalısın. Hadi dene: Ekrana **'Merhaba Pito'** yazdır.", "task": "print('___')", "check": lambda c, o: "Merhaba Pito" in o, "solution": "print('Merhaba Pito')"},
         {"msg": "Python'da matematiksel değer olan sayıları ekrana yazdırırken **tırnak işareti kullanmayız.** Şimdi ekrana **100** sayısını yazdır.", "task": "print(___)", "check": lambda c, o: "100" in o, "solution": "print(100)"},
-        {"msg": "print() içinde farklı verileri ayırmak için **virgül (,)** kullanırız. Virgül, otomatik olarak araya boşluk bırakır. Hadi dene: **'Puan:'** metni ile **100** sayısını yan yana yazdır.", "task": "print('Puan:', ___)", "check": lambda c, o: "100" in o, "solution": "print('Puan:', 100)"},
-        {"msg": "**# (Diyez)** işaretiyle başlayan satırlar Python tarafından okunmaz. Buna 'Yorum Satırı' denir. Bir yorum satırı ekle.", "task": "___ Bu bir yorumdur", "check": lambda c, o: "#" in c, "solution": "# Kodlarımı buraya yazıyorum"},
+        {"msg": "Farklı verileri ayırmak için **virgül (,)** kullanırız. Virgül, otomatik olarak araya boşluk bırakır. Hadi dene: **'Puan:'** metni ile **100** sayısını yan yana yazdır.", "task": "print('Puan:', ___)", "check": lambda c, o: "100" in o, "solution": "print('Puan:', 100)"},
+        {"msg": "**# (Diyez)** işaretiyle başlayan satırlar Python tarafından okunmaz. Buna 'Yorum Satırı' denir. Hadi dene: Bir **yorum satırı** oluştur.", "task": "___ Bu bir yorumdur", "check": lambda c, o: "#" in c, "solution": "# Kodlarımı buraya yazıyorum"},
         {"msg": "Alt satıra geçmek için **'\\n'** karakteri kullanılır. Hadi dene: **'Üst'** ve **'Alt'** kelimelerini tek print içinde farklı satırlarda yazdır.", "task": "print('Üst' + '___' + 'Alt')", "check": lambda c, o: "\n" in o, "solution": "print('Üst' + '\\n' + 'Alt')"}
     ]},
     {"module_title": "2. Değişkenler", "exercises": [
@@ -201,13 +206,13 @@ completed_count = sum(st.session_state.completed_modules)
 student_rank = RUTBELER[completed_count]
 
 with col_main:
-    st.markdown(f"#### 👋 {student_rank} {st.session_state.student_name} | ⭐ Puan: {st.session_state.total_score}")
+    st.markdown(f"#### 👋 {student_rank} {st.session_state.student_name} | ⭐ Puan: {int(st.session_state.total_score)}")
     
     if st.session_state.db_module >= 8:
         if not st.session_state.celebrated:
             st.balloons(); st.session_state.celebrated = True
         st.success("### 🎉 Tebrikler! Eğitimi Başarıyla Tamamladın.")
-        st.markdown('<div class="pito-bubble">Harikasın! Python yolculuğunu bitirdin! Aşağıdan modülleri inceleyebilir veya baştan başlayabilirsin.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="pito-bubble">Python yolculuğunu bitirdin! Aşağıdan modülleri inceleyebilir veya baştan başlayabilirsin.</div>', unsafe_allow_html=True)
         c1, c2 = st.columns(2)
         with c1:
             if st.button("🔄 Eğitimi Tekrar Al (Sıfırla)"):
@@ -259,7 +264,7 @@ with col_main:
             return new_stdout.getvalue()
         except ValueError:
             sys.stdout = old_stdout
-            return f"Hata: Sayı beklenirken hatalı veri girildi veya fonksiyonlar yanlış sırada kullanıldı."
+            return "Hata: Sayı beklenirken hatalı veri girildi veya fonksiyonlar yanlış sırada kullanıldı."
         except Exception as e:
             sys.stdout = old_stdout
             return f"Hata: {e}"
@@ -275,13 +280,9 @@ with col_main:
     else:
         if st.button("🔍 Kontrol Et", use_container_width=True):
             out = run_pito_code(code, u_in)
-            
-            # --- KRİTİK FİKS: Hata Çıktısı Alınırsa Puan Vermeyi Engelle ---
-            if "⚠️ Pito Terminali boş!" in out:
+            if out.startswith("⚠️") or out.startswith("Hata:"):
                 st.error(out)
-            elif out.startswith("Hata:"):
-                st.error(out)
-                st.session_state.current_potential_score = max(5, st.session_state.current_potential_score - 5)
+                if out.startswith("Hata:"): st.session_state.current_potential_score = max(5, st.session_state.current_potential_score - 5)
             else:
                 st.subheader("📟 Çıktı")
                 st.code(out if out else "Kod çalıştı!")
@@ -298,7 +299,7 @@ with col_main:
                     st.success("Tebrikler! ✅")
                 else:
                     st.session_state.current_potential_score = max(5, st.session_state.current_potential_score - 5)
-                    st.warning(f"Hatalı!")
+                    st.warning("Hatalı!")
 
     c_back, c_next = st.columns(2)
     with c_back:
@@ -327,16 +328,16 @@ with col_side:
             df_sort = df_class_lb.sort_values(by="Puan", ascending=False).drop_duplicates(subset=["Okul No"]).head(10)
             for i, (_, r) in enumerate(df_sort.iterrows()):
                 medal = "🥇" if i == 0 else "🥈" if i == 1 else "🥉" if i == 2 else "⭐"
-                st.markdown(f'<div class="leaderboard-card"><b>{medal} {r["Rütbe"]} {r["Öğrencinin Adı"]} ({r["Sınıf"]})</b><br>{r["Puan"]} Puan</div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="leaderboard-card"><b>{medal} {r["Rütbe"]} {r["Öğrencinin Adı"]} ({r["Sınıf"]})</b><br>{int(r["Puan"])} Puan</div>', unsafe_allow_html=True)
         else: st.info("Henüz veri yok...")
     with tab_school:
         if not df_lb.empty:
             df_school_sort = df_lb.sort_values(by="Puan", ascending=False).drop_duplicates(subset=["Okul No"]).head(10)
             for i, (_, r) in enumerate(df_school_sort.iterrows()):
                 medal = "🏆" if i == 0 else "🥈" if i == 1 else "🥉" if i == 2 else "⭐"
-                st.markdown(f'<div class="leaderboard-card"><b>{medal} {r["Rütbe"]} {r["Öğrencinin Adı"]} ({r["Sınıf"]})</b><br>{r["Puan"]} Puan</div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="leaderboard-card"><b>{medal} {r["Rütbe"]} {r["Öğrencinin Adı"]} ({r["Sınıf"]})</b><br>{int(r["Puan"])} Puan</div>', unsafe_allow_html=True)
     if not df_lb.empty:
         class_sums = df_lb.groupby("Sınıf")["Puan"].sum()
         if not class_sums.empty:
-            champ_class = class_sums.idxmax(); champ_puan = class_sums.max()
+            champ_class = class_sums.idxmax(); champ_puan = int(class_sums.max())
             st.markdown(f'<div class="champion-card">🏆 Şampiyon Sınıf<br>{champ_class}<br>Toplam: {champ_puan} Puan</div>', unsafe_allow_html=True)
