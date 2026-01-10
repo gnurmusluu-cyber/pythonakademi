@@ -58,11 +58,8 @@ def get_db(use_cache=True):
         if df is None or df.empty:
             return pd.DataFrame(columns=["Okul No", "Öğrencinin Adı", "Sınıf", "Puan", "Rütbe", "Tamamlanan Modüller", "Mevcut Modül", "Mevcut Egzersiz", "Tarih"])
         
-        # Sütun tiplerini temizle ve zorla
         df["Okul No"] = df["Okul No"].astype(str).str.split('.').str[0].str.strip()
         df = df[df["Okul No"].str.isdigit()] 
-        
-        # KRİTİK: Puan sütununu tam sayıya çevir (Float görünümünü engeller)
         df["Puan"] = pd.to_numeric(df["Puan"], errors='coerce').fillna(0).astype(int)
         
         return df.dropna(subset=["Okul No"])
@@ -109,26 +106,24 @@ if not st.session_state.is_logged_in:
         elif in_no_raw:
             df = get_db(use_cache=False)
             user_data = df[df["Okul No"] == in_no_raw]
+            
             if not user_data.empty:
                 row = user_data.iloc[0]
-                m_v, e_v = int(row['Mevcut Modül']), int(row['Mevcut Egzersiz'])
-                st.markdown(f"### Hoş geldin, **{row['Öğrencinin Adı']}**! 👋")
-                st.success(f"Puanın: {int(row['Puan'])} | " + (f"Eğitimi Tamamladın! 🏆" if m_v >= 8 else f"Kaldığın Yer: Modül {m_v+1}"))
+                st.info(f"🔍 Bu numara **{row['Öğrencinin Adı']}** adına kayıtlı.")
+                st.markdown("### Sen bu kişi misin? 🤔")
+                
                 c1, c2 = st.columns(2)
                 with c1:
-                    if st.button("🚀 Devam Et"):
+                    if st.button("✅ Evet, Benim"):
+                        m_v, e_v = int(row['Mevcut Modül']), int(row['Mevcut Egzersiz'])
                         st.session_state.student_no, st.session_state.student_name, st.session_state.student_class = str(row["Okul No"]), row["Öğrencinin Adı"], row["Sınıf"]
                         st.session_state.total_score, st.session_state.db_module, st.session_state.db_exercise = int(row["Puan"]), m_v, e_v
                         st.session_state.current_module, st.session_state.current_exercise = min(m_v, 7), e_v
                         st.session_state.completed_modules = [True if x == "1" else False for x in str(row["Tamamlanan Modüller"]).split(",")]
                         st.session_state.is_logged_in = True; st.rerun()
                 with c2:
-                    if st.button("📚 İncele"):
-                        st.session_state.student_no, st.session_state.student_name, st.session_state.student_class = str(row["Okul No"]), row["Öğrencinin Adı"], row["Sınıf"]
-                        st.session_state.total_score, st.session_state.db_module, st.session_state.db_exercise = int(row["Puan"]), m_v, e_v
-                        st.session_state.current_module, st.session_state.current_exercise = 0, 0
-                        st.session_state.completed_modules = [True if x == "1" else False for x in str(row["Tamamlanan Modüller"]).split(",")]
-                        st.session_state.is_logged_in = True; st.rerun()
+                    if st.button("❌ Hayır, Farklı Bir Numara Gireceğim"):
+                        st.warning("O halde lütfen kendi okul numaranı gir!")
             else:
                 st.info("Yeni bir maceracı! Bilgilerini tamamla:")
                 in_name = st.text_input("Adın Soyadın:", key="new_name")
@@ -216,12 +211,9 @@ with col_main:
         c1, c2 = st.columns(2)
         with c1:
             if st.button("🔄 Eğitimi Tekrar Al (Sıfırla)"):
-                st.session_state.db_module, st.session_state.db_exercise, st.session_state.total_score = 0, 0, 0
-                st.session_state.current_module, st.session_state.current_exercise = 0, 0
-                st.session_state.completed_modules = [False]*8; st.session_state.scored_exercises = set()
-                st.session_state.celebrated = False; force_save(); st.rerun()
-        with c2:
-            if st.button("🏆 Liderlik Listesinde Kal"): st.info("Başarın kaydedildi.")
+                st.session_state.update({'db_module': 0, 'db_exercise': 0, 'total_score': 0, 'current_module': 0, 'current_exercise': 0, 'completed_modules': [False]*8, 'scored_exercises': set(), 'celebrated': False})
+                force_save(); st.rerun()
+        with c2: st.info("Başarın kaydedildi.")
         st.divider(); st.subheader("📖 İnceleme Modu")
 
     mod_titles = [f"{'✅' if st.session_state.completed_modules[i] else '📖'} Modül {i+1}" for i in range(8)]
