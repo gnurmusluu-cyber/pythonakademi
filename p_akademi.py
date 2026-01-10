@@ -15,71 +15,70 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. TUM CIHAZLARA VE BEYAZ ZEMINE UYGUN GELISMIS TASARIM (CSS) ---
+# --- 2. BEYAZ ZEMINE VE TÜM TEMALARA UYGUN KESIN TASARIM (CSS) ---
+# 
 st.markdown("""
     <style>
-    /* Uygulama Arka Planını Beyaz Yap */
-    [data-testid="stAppViewContainer"] { background-color: #FFFFFF !important; }
-    [data-testid="stHeader"] { background-color: rgba(0,0,0,0) !important; }
+    /* 1. Uygulama Arka Planını Beyaz Yap */
+    [data-testid="stAppViewContainer"], [data-testid="stHeader"], [data-testid="stToolbar"] {
+        background-color: #FFFFFF !important;
+    }
     header {visibility: hidden;}
-    
-    /* Global Metin Rengi ve Görünürlük (Koyu Lacivert) */
+
+    /* 2. Tüm Metinleri Koyu Lacivert Yap (Okunabilirlik İçin) */
     html, body, [class*="st-"] {
         color: #1E293B !important;
-        font-family: 'Inter', sans-serif;
     }
-    
-    /* Başlıkların ve Etiketlerin Görünmesini Sağla */
-    h1, h2, h3, h4, h5, h6, p, span, label, .stMarkdown, [data-testid="stWidgetLabel"] p {
+    h1, h2, h3, h4, h5, h6, p, span, label, .stMarkdown {
         color: #1E293B !important;
     }
 
-    /* Widget (Selectbox, Input) Görünürlük Ayarları - HATA GİDERİCİ */
+    /* 3. Açılır Menü (Selectbox) ve Giriş Kutularını Sabitle */
+    /* Bu kısım image_978150.png'deki siyah kutu sorununu çözer */
     div[data-baseweb="select"] > div {
-        background-color: #F8FAFC !important;
+        background-color: #F1F5F9 !important;
         color: #1E293B !important;
         border: 2px solid #E2E8F0 !important;
     }
-    
-    /* Giriş Kutuları ve Metinler */
-    div[data-baseweb="base-input"] input {
-        color: #1E293B !important;
-        background-color: #F8FAFC !important;
-    }
-    
-    /* Açılır Menü İçindeki Seçeneklerin Rengi */
     div[role="listbox"] ul li {
         color: #1E293B !important;
         background-color: #FFFFFF !important;
     }
+    div[data-baseweb="base-input"] {
+        background-color: #F1F5F9 !important;
+        border: 2px solid #E2E8F0 !important;
+        border-radius: 8px !important;
+    }
+    input {
+        color: #1E293B !important;
+    }
 
-    /* Sekme (Tabs) Görünürlüğü */
+    /* 4. Sekmelerin (Tabs) Görünürlüğü */
     button[data-baseweb="tab"] { color: #64748B !important; }
     button[data-baseweb="tab"][aria-selected="true"] {
         color: #3a7bd5 !important;
         border-bottom-color: #3a7bd5 !important;
     }
 
-    /* Pito Konuşma Balonu */
+    /* 5. Pito Konuşma Balonu */
     .pito-bubble {
-        position: relative; background: #F1F5F9; border: 2px solid #3a7bd5;
-        border-radius: 20px; padding: 20px; margin: 0 auto 30px auto; 
-        color: #1E293B !important; font-weight: 500; font-size: 1.1rem; 
+        position: relative; background: #F8FAFC; border: 2px solid #3a7bd5;
+        border-radius: 20px; padding: 25px; margin: 0 auto 30px auto; 
+        color: #1E293B !important; font-weight: 500; font-size: 1.2rem; 
         text-align: center; box-shadow: 0 10px 25px rgba(58, 123, 213, 0.08);
-        max-width: 850px;
+        max-width: 800px;
     }
     .pito-bubble:after {
         content: ''; position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%);
         border-width: 20px 20px 0; border-style: solid; border-color: #3a7bd5 transparent;
     }
 
-    /* Liderlik Tablosu Kartları */
+    /* 6. Liderlik Tablosu Kartları */
     .leaderboard-card { 
         background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; 
         padding: 12px; margin-bottom: 8px; color: #1E293B !important;
         box-shadow: 0 2px 4px rgba(0,0,0,0.02);
     }
-    .leaderboard-card b { color: #3a7bd5 !important; }
     
     .champion-card { 
         background: linear-gradient(135deg, #FFD700, #F59E0B); 
@@ -87,14 +86,14 @@ st.markdown("""
         color: #FFFFFF !important; text-align: center; font-weight: bold;
     }
 
-    /* Buton Tasarımı */
+    /* 7. Buton Tasarımı */
     .stButton > button { 
         width: 100%; border-radius: 12px; height: 3.5em; 
         background: linear-gradient(45deg, #3a7bd5, #00d2ff) !important; 
         color: white !important; font-weight: 600; border: none;
     }
-    
-    /* Mobil Düzenleme */
+
+    /* 8. Mobil ve PC Optimizasyonu */
     @media (max-width: 768px) {
         .main .block-container { padding: 1rem !important; }
         .pito-bubble { font-size: 1rem !important; padding: 15px !important; }
@@ -156,7 +155,7 @@ def force_save():
 SINIFLAR = ["9-A", "9-B", "10-A", "10-B", "11-A", "11-B"]
 RUTBELER = ["🥚 Yeni Başlayan", "🌱 Python Çırağı", "🪵 Kod Oduncusu", "🧱 Mantık Mimarı", "🌀 Döngü Ustası", "📋 Liste Uzmanı", "📦 Fonksiyon Kaptanı", "🤖 OOP Robotu", "🏆 Python Kahramanı"]
 
-# --- 6. GİRİŞ EKRANI ---
+# --- 6. GİRİŞ EKRANI (DOĞRULAMALI) ---
 if not st.session_state.is_logged_in:
     _, col_mid, _ = st.columns([1, 2, 1])
     with col_mid:
@@ -179,7 +178,7 @@ if not st.session_state.is_logged_in:
                         st.session_state.update({'student_no': in_no_raw, 'student_name': row["Öğrencinin Adı"], 'student_class': row["Sınıf"], 'total_score': int(row["Puan"]), 'db_module': m_v, 'db_exercise': e_v, 'current_module': min(m_v, 7), 'current_exercise': e_v if m_v < 8 else 0, 'completed_modules': [True if x == "1" else False for x in str(row["Tamamlanan Modüller"]).split(",")], 'is_logged_in': True, 'pito_emotion': "pito_dusunuyor" if m_v < 8 else "pito_mezun"})
                         st.rerun()
                 with c2:
-                    if st.button("❌ Hayır, Değilim"):
+                    if st.button("❌ Hayır, Ben Değilim"):
                         st.session_state.rejected_user = True
                         if "login_field" in st.session_state: del st.session_state["login_field"]
                         st.rerun()
@@ -246,7 +245,7 @@ with col_main:
             st.session_state.update({'db_module': 0, 'db_exercise': 0, 'total_score': 0, 'current_module': 0, 'current_exercise': 0, 'completed_modules': [False]*8, 'scored_exercises': set(), 'celebrated': False, 'pito_emotion': "pito_dusunuyor", 'feedback_type': None})
             force_save(); st.rerun()
 
-    # MODUL SECIMI - GÖRÜNÜRLÜK ETİKETİ DÜZELTİLDİ
+    # MODUL SECIMI - CSS ILE GORUNURLUK GARANTILENMIS ALAN
     st.markdown("**Ders Programı:**")
     mod_titles = [f"{'✅' if st.session_state.completed_modules[i] else '📖'} Modül {i+1}" for i in range(8)]
     sel_mod = st.selectbox("mod_sel", mod_titles, index=st.session_state.current_module, label_visibility="collapsed")
@@ -270,7 +269,7 @@ with col_main:
     # Editor
     code = st_ace(value=curr_ex['task'], language="python", theme="dracula", font_size=15, height=200, readonly=is_locked, key=f"ace_{m_idx}_{e_idx}", auto_update=True)
 
-    # Geri Bildirim Alani (DİNAMİK)
+    # Geri Bildirim Alani (DİNAMİK VE KOYU YAZILI)
     if st.session_state.feedback_type == "error":
         st.error(f"**❌ Hatalı Yanıt!** {st.session_state.feedback_msg}")
     elif st.session_state.feedback_type == "success":
@@ -280,7 +279,7 @@ with col_main:
         st.success("**✅ Pito'nun Çözüm Örneği:**")
         st.code(curr_ex['solution'], language="python")
         sol_out = run_pito_code(curr_ex['solution'], "10") 
-        st.markdown("**📟 Beklenen Çıktı:**")
+        st.markdown("**📟 Kodun Üreteceği Çıktı:**")
         st.code(sol_out if sol_out else "Kod çalıştı.")
     else:
         u_in = st.text_input("👇 Terminal:", key=f"t_{m_idx}_{e_idx}") if "input(" in code else ""
