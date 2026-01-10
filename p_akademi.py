@@ -99,7 +99,7 @@ if not st.session_state.is_logged_in:
                     force_save(); st.rerun()
     st.stop()
 
-# --- 5. EKSİKSİZ 8 MODÜLLÜK MÜFREDAT ---
+# --- 5. MÜFREDAT ---
 training_data = [
     {"module_title": "1. Giriş ve Çıktı", "exercises": [
         {"msg": "Ekrana **'Merhaba Pito'** yazdır.", "task": "print('___')", "check": lambda c, o: "Merhaba Pito" in o, "solution": "print('Merhaba Pito')", "has_output": True},
@@ -123,7 +123,7 @@ training_data = [
         {"msg": "**elif** ile alternatif şart ekle.", "task": "if 5>10: pass\n___ 5==5: print('A')", "check": lambda c, o: "elif" in c, "solution": "elif 5==5: print('A')", "has_output": True}
     ]},
     {"module_title": "4. Döngüler", "exercises": [
-        {"msg": "3 kez tekrar için **range(3)** kullan.", "task": "for i in ___(3): print('X')", "check": lambda c, o: o.count("X")==3, "solution": "for i in range(3): print('X')", "has_output": True},
+        {"msg": "3 tur dönmek için **range(3)** kullan.", "task": "for i in ___(3): print('X')", "check": lambda c, o: o.count("X")==3, "solution": "for i in range(3): print('X')", "has_output": True},
         {"msg": "**while** döngüsü kur.", "task": "i=0\n___ i<1: print('Y'); i+=1", "check": lambda c, o: "while" in c, "solution": "i=0\nwhile i<1: print('Y'); i+=1", "has_output": True},
         {"msg": "**break** ile bitir.", "task": "for i in range(3):\n if i==1: ___\n print(i)", "check": lambda c, o: "break" in c, "solution": "for i in range(3):\n if i==1: break\n print(i)", "has_output": True},
         {"msg": "**continue** ile atla.", "task": "for i in range(3):\n if i==1: ___\n print(i)", "check": lambda c, o: "continue" in c, "solution": "for i in range(3):\n if i==1: continue\n print(i)", "has_output": True},
@@ -152,7 +152,7 @@ training_data = [
     ]},
     {"module_title": "8. Dosya Yönetimi", "exercises": [
         {"msg": "**open()** ve **'w'** kipiyle aç.", "task": "dosya = ___('n.txt', '___')", "check": lambda c, o: "open" in c and "w" in c, "solution": "open('n.txt', 'w')", "has_output": False},
-        {"msg": "**write()** ile yazı yaz.", "task": "f = open('t.txt', 'w'); f.___('Pito'); f.close()", "check": lambda c, o: "write" in c, "solution": "f = open('t.txt', 'w'); f.write('Pito'); f.close()", "has_output": False},
+        {"msg": "**write()** dosyaya yazı yazar.", "task": "f = open('t.txt', 'w'); f.___('Pito'); f.close()", "check": lambda c, o: "write" in c, "solution": "f = open('t.txt', 'w'); f.write('Pito'); f.close()", "has_output": False},
         {"msg": "**'r'** kipiyle oku.", "task": "f = open('t.txt', '___')", "check": lambda c, o: "r" in c, "solution": "f = open('t.txt', 'r')", "has_output": False},
         {"msg": "**read()** içeriği getir.", "task": "f = open('t.txt', 'r')\nprint(f.___())\nf.close()", "check": lambda c, o: "read" in c, "solution": "f = open('t.txt', 'r')\nprint(f.read())\nf.close()", "has_output": True},
         {"msg": "**close()** hafızayı boşaltır.", "task": "f = open('t.txt', 'r')\nf.___()", "check": lambda c, o: "close" in c, "solution": "f = open('t.txt', 'r')\nf.close()", "has_output": False}
@@ -167,9 +167,27 @@ if st.session_state.current_exercise >= len(training_data[m_idx]["exercises"]): 
 with col_main:
     rank_idx = sum(st.session_state.completed_modules)
     st.markdown(f"#### 👋 {RUTBELER[min(rank_idx, 8)]} {st.session_state.student_name} | ⭐ Puan: {int(st.session_state.total_score)}")
+    
+    # --- KRİTİK: MEZUNİYET EKRANI VE BUTONLAR ---
     if st.session_state.db_module >= 8:
         if not st.session_state.celebrated: st.balloons(); st.session_state.celebrated = True
-        st.success("🎉 Tebrikler! Eğitimi Bitirdin."); st.divider()
+        st.success("### 🎉 Tebrikler! Tüm Python macerasını başarıyla tamamladın.")
+        st.markdown('<div class="pito-bubble">Python yolculuğunu bitirdin! Puanın kaydedildi. Şimdi ne yapmak istersin?</div>', unsafe_allow_html=True)
+        
+        c1, c2 = st.columns(2)
+        with c1:
+            if st.button("🔄 Eğitimi Tekrar Al (Puanım Sıfırlansın)"):
+                st.session_state.update({
+                    'db_module': 0, 'db_exercise': 0, 'total_score': 0, 
+                    'current_module': 0, 'current_exercise': 0, 
+                    'completed_modules': [False]*8, 'scored_exercises': set(), 
+                    'celebrated': False, 'exercise_passed': False
+                })
+                force_save(); st.rerun()
+        with c2:
+            if st.button("🏆 Liderlik Listesinde Kal"):
+                st.info("Harika! Başarın liderlik tablosunda kalmaya devam edecek. Modülleri inceleyebilirsin.")
+        st.divider()
 
     mod_titles = [f"{'✅' if st.session_state.completed_modules[i] else '📖'} Modül {i+1}" for i in range(8)]
     sel_mod = st.selectbox("Modül Seç:", mod_titles, index=m_idx)
@@ -207,8 +225,6 @@ with col_main:
     if is_locked:
         st.markdown(f'<div class="solution-guide"><div class="solution-header">✅ Pito Çözüm Rehberi</div><b>Yönerge:</b> {curr_ex["msg"]}</div>', unsafe_allow_html=True)
         st.code(curr_ex['solution'], language="python")
-        
-        # SADECE HAS_OUTPUT=TRUE OLANLARDA ÇIKTIYI GÖSTER
         if curr_ex.get("has_output", False):
             sol_out = run_pito_code(curr_ex['solution'], "10", st.session_state.current_module, e_idx)
             st.markdown("<b>Muhtemel Çıktı:</b>", unsafe_allow_html=True)
@@ -222,7 +238,7 @@ with col_main:
             if out.startswith("⚠️") or out.startswith("❌"): st.error(out)
             else:
                 if curr_ex['check'](code, out):
-                    st.success("Tebrikler! Görev tamamlandı. ✅"); st.code(out)
+                    st.success("Tebrikler! Görev başarıyla tamamlandı. ✅"); st.code(out)
                     st.session_state.exercise_passed = True
                     if f"{st.session_state.current_module}_{e_idx}" not in st.session_state.scored_exercises:
                         st.session_state.total_score += st.session_state.current_potential_score
@@ -231,7 +247,7 @@ with col_main:
                         else: st.session_state.db_module += 1; st.session_state.db_exercise = 0; st.session_state.completed_modules[st.session_state.current_module] = True
                         force_save()
                 else:
-                    st.warning("⚠️ Görev Tamamlanmadı: Kodun çalıştı ama sonuç Pito'un istediği gibi değil.")
+                    st.warning("⚠️ Görev Tamamlanmadı: Kodun çalıştı ama sonuç Pito'nun istediği gibi değil.")
                     st.code(out if out else "[Çıktı Yok]")
 
     c_b, c_n = st.columns(2)
