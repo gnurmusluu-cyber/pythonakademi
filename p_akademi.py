@@ -31,7 +31,7 @@ st.markdown("""
         border-width: 20px 20px 0; border-style: solid; border-color: #3a7bd5 transparent;
     }
     
-    /* Çözüm Rehberi Kutusu (Sadece İnceleme Modunda) */
+    /* Çözüm Rehberi Kutusu (Titiz Tasarım) */
     .solution-guide {
         background-color: #f8fafc !important;
         border: 2px solid #3a7bd5 !important;
@@ -108,26 +108,19 @@ if not st.session_state.is_logged_in:
     with col_mid:
         st.markdown('<div class="pito-bubble">Merhaba! Ben <b>Pito</b>. Python Dünyası\'na hoş geldin.</div>', unsafe_allow_html=True)
         st.image(PITO_IMG if os.path.exists(PITO_IMG) else "https://img.icons8.com/fluency/180/robot-viewer.png", width=180)
-        
         if st.session_state.rejected_user:
             st.warning("⚠️ O halde kendi okul numaranı gir!")
-
         in_no_raw = st.text_input("Okul Numaran (Sadece Rakam):", key="login_field").strip()
-        
         if in_no_raw and not in_no_raw.isdigit():
             st.error("⚠️ Hata: Okul numarası sadece rakamlardan oluşmalıdır!")
         elif in_no_raw:
-            if st.session_state.rejected_user:
-                st.session_state.rejected_user = False
-                
+            if st.session_state.rejected_user: st.session_state.rejected_user = False
             df = get_db(use_cache=False)
             user_data = df[df["Okul No"] == in_no_raw]
-            
             if not user_data.empty:
                 row = user_data.iloc[0]
                 st.info(f"🔍 Bu numara **{row['Öğrencinin Adı']}** adına kayıtlı.")
                 st.markdown("### Sen bu kişi misin? 🤔")
-                
                 c1, c2 = st.columns(2)
                 with c1:
                     if st.button("✅ Evet, Benim"):
@@ -137,8 +130,7 @@ if not st.session_state.is_logged_in:
                 with c2:
                     if st.button("❌ Hayır, Ben Değilim"):
                         st.session_state.rejected_user = True
-                        if "login_field" in st.session_state:
-                            del st.session_state["login_field"]
+                        if "login_field" in st.session_state: del st.session_state["login_field"]
                         st.rerun()
             else:
                 st.info("Yeni bir maceracı! Bilgilerini tamamla:")
@@ -213,26 +205,26 @@ training_data = [
 # --- 6. ARA YÜZ DÜZENİ ---
 col_main, col_side = st.columns([3, 1])
 
+# Güvenli İndeks Kontrolü
+m_idx = min(st.session_state.current_module, len(training_data)-1)
+if st.session_state.current_exercise >= len(training_data[m_idx]["exercises"]):
+    st.session_state.current_exercise = 0
+
 completed_count = sum(st.session_state.completed_modules)
-student_rank = RUTBELER[completed_count]
+student_rank = RUTBELER[min(completed_count, 8)]
 
 with col_main:
     st.markdown(f"#### 👋 {student_rank} {st.session_state.student_name} | ⭐ Puan: {int(st.session_state.total_score)}")
     
     if st.session_state.db_module >= 8:
-        if not st.session_state.celebrated:
-            st.balloons(); st.session_state.celebrated = True
+        if not st.session_state.celebrated: st.balloons(); st.session_state.celebrated = True
         st.success("### 🎉 Tebrikler! Eğitimi Başarıyla Tamamladın.")
         st.markdown('<div class="pito-bubble">Python yolculuğunu bitirdin! Aşağıdan modülleri inceleyebilir veya baştan başlayabilirsin.</div>', unsafe_allow_html=True)
-        c1, c2 = st.columns(2)
-        with c1:
-            if st.button("🔄 Eğitimi Tekrar Al (Sıfırla)"):
-                st.session_state.update({'db_module': 0, 'db_exercise': 0, 'total_score': 0, 'current_module': 0, 'current_exercise': 0, 'completed_modules': [False]*8, 'scored_exercises': set(), 'celebrated': False})
-                force_save(); st.rerun()
-        with c2: st.info("Başarın kaydedildi.")
-        st.divider(); st.subheader("📖 İnceleme Modu")
+        if st.button("🔄 Eğitimi Tekrar Al (Sıfırla)"):
+            st.session_state.update({'db_module': 0, 'db_exercise': 0, 'total_score': 0, 'current_module': 0, 'current_exercise': 0, 'completed_modules': [False]*8, 'scored_exercises': set(), 'celebrated': False})
+            force_save(); st.rerun()
 
-    mod_titles = [f"{'✅' if st.session_state.completed_modules[i] else '📖'} Modül {i+1}" for i in range(len(training_data))]
+    mod_titles = [f"{'✅' if st.session_state.completed_modules[i] else '📖'} Modül {i+1}" for i in range(8)]
     if st.session_state.current_module != st.session_state.db_module and st.session_state.db_module < 8:
         if st.button(f"🔙 Güncel Görevime Dön (Modül {st.session_state.db_module + 1})", use_container_width=True):
             st.session_state.current_module, st.session_state.current_exercise = st.session_state.db_module, st.session_state.db_exercise
@@ -257,44 +249,36 @@ with col_main:
 
     code = st_ace(value=curr_ex['task'], language="python", theme="dracula", font_size=14, height=200, readonly=is_locked, key=f"ace_{m_idx}_{e_idx}", auto_update=True)
 
-    def run_pito_code(c, user_input=""):
+    def run_pito_code(c, user_input="Pito"):
         old_stdout, new_stdout = sys.stdout, StringIO()
         sys.stdout = new_stdout
         try:
             safe_code = c.replace("___", "None")
-            exec_globals = {"input": lambda p: str(user_input), "print": print, "int": int, "str": str, "len": len, "open": open, "range": range}
-            exec(safe_code, exec_globals)
+            exec(safe_code, {"input": lambda p: str(user_input), "print": print, "int": int, "str": str, "len": len, "open": open, "range": range})
             sys.stdout = old_stdout
             return new_stdout.getvalue()
         except Exception as e:
             sys.stdout = old_stdout
             return f"Hata: {e}"
 
-    # --- ÇÖZÜM REHBERİ: SADECE İNCELEME MODUNDA GÖRÜNÜR ---
+    # --- İNCELEME REHBERİ ALANI ---
     if is_locked:
         st.markdown(f"""
             <div class="solution-guide">
                 <div class="solution-header">✅ Pito'nun Çözüm Rehberi</div>
-                <b>Nasıl Yapılır?</b><br>
-                {curr_ex['msg']}<br><br>
-                <b>Doğru Kod Yapısı:</b>
+                <b>Nasıl Yapılır?</b><br>{curr_ex['msg']}<br><br>
+                <b>Egzersizin Doğru Kodu:</b>
             </div>
         """, unsafe_allow_html=True)
         st.code(curr_ex['solution'], language="python")
-        sol_out = run_pito_code(curr_ex['solution'], "10") 
+        sol_out = run_pito_code(curr_ex['solution'], "Pito") 
         st.markdown("<b>Muhtemel Çıktı:</b>", unsafe_allow_html=True)
         st.code(sol_out if sol_out else "Kod başarıyla çalıştırıldı.")
     else:
-        u_in = ""
-        if "input(" in code:
-            st.warning("👇 **Pito Terminali:** Aşağıya bir değer yaz ve 'Kontrol Et' butonuna bas!")
-            u_in = st.text_input("Giriş yap:", key=f"term_{m_idx}_{e_idx}")
-
+        u_in = st.text_input("Giriş yap:", key=f"term_{m_idx}_{e_idx}") if "input(" in code else ""
         if st.button("🔍 Kontrol Et", use_container_width=True):
-            out = run_pito_code(code, u_in)
-            if out.startswith("⚠️") or out.startswith("Hata:"):
-                st.error(out)
-                if out.startswith("Hata:"): st.session_state.current_potential_score = max(5, st.session_state.current_potential_score - 5)
+            out = run_pito_code(code, u_in or "Pito")
+            if out.startswith("Hata:"): st.error(out)
             else:
                 st.subheader("📟 Çıktı")
                 st.code(out if out else "Kod çalıştı!")
@@ -341,7 +325,6 @@ with col_side:
             for i, (_, r) in enumerate(df_sort.iterrows()):
                 medal = "🥇" if i == 0 else "🥈" if i == 1 else "🥉" if i == 2 else "⭐"
                 st.markdown(f'<div class="leaderboard-card"><b>{medal} {r["Rütbe"]} {r["Öğrencinin Adı"]} ({r["Sınıf"]})</b><br>{int(r["Puan"])} Puan</div>', unsafe_allow_html=True)
-        else: st.info("Henüz veri yok...")
     with tab_school:
         if not df_lb.empty:
             df_school_sort = df_lb.sort_values(by="Puan", ascending=False).drop_duplicates(subset=["Okul No"]).head(10)
