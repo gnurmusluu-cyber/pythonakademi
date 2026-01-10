@@ -112,7 +112,7 @@ training_data = [
         {"msg": "**yas** değişkenine 15 ata.", "task": "yas = ___\nprint(yas)", "check": lambda c, o: "15" in o, "solution": "yas = 15"},
         {"msg": "**isim** değişkenine 'Pito' ata.", "task": "isim = '___'\nprint(isim)", "check": lambda c, o: "Pito" in o, "solution": "isim = 'Pito'"},
         {"msg": "**input()** ile isim al.", "task": "ad = ___('Adın: ')\nprint(ad)", "check": lambda c, o: "input" in c, "solution": "ad = input('Adın: ')"},
-        {"msg": "Sayıyı metne çevir: s=10.", "task": "s = 10\nprint(___(s))", "check": lambda c, o: "str" in c, "solution": "s = 10\nprint(str(s))"},
+        {"msg": "Sayıyı metne çevir.", "task": "s = 10\nprint(___(s))", "check": lambda c, o: "str" in c, "solution": "str(s)"},
         {"msg": "Girdiyi tam sayıya çevirip 1 ekle.", "task": "n = ___(___('S: '))\nprint(n + 1)", "check": lambda c, o: "int" in c and "11" in o, "solution": "int(input('10'))"}
     ]},
     {"module_title": "3. Karar Yapıları", "exercises": [
@@ -124,7 +124,7 @@ training_data = [
     ]},
     {"module_title": "4. Döngüler", "exercises": [
         {"msg": "3 tur dönmek için **range(3)** kullan.", "task": "for i in ___(3): print('X')", "check": lambda c, o: o.count("X")==3, "solution": "range(3)"},
-        {"msg": "**while** döngüsü kur.", "task": "i=0\n___ i<1: print('Y'); i+=1", "check": lambda c, o: "while" in c, "solution": "while"},
+        {"msg": "**while** ile döngü kur.", "task": "i=0\n___ i<1: print('Y'); i+=1", "check": lambda c, o: "while" in c, "solution": "while"},
         {"msg": "**break** ile bitir.", "task": "for i in range(3):\n if i==1: ___\n print(i)", "check": lambda c, o: "break" in c, "solution": "break"},
         {"msg": "**continue** ile atla.", "task": "for i in range(3):\n if i==1: ___\n print(i)", "check": lambda c, o: "continue" in c, "solution": "continue"},
         {"msg": "Sayacı (**i**) yazdır.", "task": "for i in range(2): print(___)", "check": lambda c, o: "1" in o, "solution": "i"}
@@ -139,7 +139,7 @@ training_data = [
     {"module_title": "6. Fonksiyonlar ve Veriler", "exercises": [
         {"msg": "**def** ile fonksiyon tanımla.", "task": "___ f(): print('X')", "check": lambda c, o: "def" in c, "solution": "def f(): print('X')"},
         {"msg": "**Tuple** (1, 2) oluştur.", "task": "t = (___, 2)\nprint(t)", "check": lambda c, o: "1" in c, "solution": "1"},
-        {"msg": "Sözlük 'ad': 'Pito' ata.", "task": "d = {'ad': '___'}\nprint(d['ad'])", "check": lambda c, o: "Pito" in o, "solution": "Pito"},
+        {"msg": "Sözlüğe 'ad': 'Pito' ata.", "task": "d = {'ad': '___'}\nprint(d['ad'])", "check": lambda c, o: "Pito" in o, "solution": "Pito"},
         {"msg": "**keys()** anahtarları getirir.", "task": "d={'a':1}\nprint(d.___())", "check": lambda c, o: "keys" in c, "solution": "keys"},
         {"msg": "**Set** ile küme oluştur.", "task": "s = {1, 2, ___}\nprint(s)", "check": lambda c, o: "1" in c, "solution": "1"}
     ]},
@@ -148,7 +148,7 @@ training_data = [
         {"msg": "**Robot()** ile nesne üret.", "task": "class R: pass\np = ___()", "check": lambda c, o: "R()" in c, "solution": "R()"},
         {"msg": "Nitelik ata: `p.renk`.", "task": "class R: pass\np=R()\np.___ = 'Mavi'\nprint(p.renk)", "check": lambda c, o: "renk" in c, "solution": "renk"},
         {"msg": "Metot tanımla (self).", "task": "class R:\n def ___(self):\n  print('Bip!')", "check": lambda c, o: "ses" in c, "solution": "ses"},
-        {"msg": "Metodu nesneyle çağır.", "task": "class R:\n def s(self): print('X')\nr=R()\nr.___()", "check": lambda c, o: "s()" in c, "solution": "s()"}
+        {"msg": "Metodu çağır.", "task": "class R:\n def s(self): print('X')\nr=R()\nr.___()", "check": lambda c, o: "s()" in c, "solution": "s()"}
     ]},
     {"module_title": "8. Dosya Yönetimi", "exercises": [
         {"msg": "**open()** ve **'w'** kipiyle aç.", "task": "dosya = ___('n.txt', '___')", "check": lambda c, o: "open" in c and "w" in c, "solution": "open('n.txt', 'w')"},
@@ -171,8 +171,10 @@ with col_main:
         if not st.session_state.celebrated: st.balloons(); st.session_state.celebrated = True
         st.success("🎉 Tebrikler! Eğitimi Bitirdin."); st.divider()
 
-    sel_mod = st.selectbox("Modül Seç:", [f"{'✅' if st.session_state.completed_modules[i] else '📖'} Modül {i+1}" for i in range(8)], index=m_idx)
-    new_m_idx = int(sel_mod.split(" ")[1]) - 1
+    mod_titles = [f"{'✅' if st.session_state.completed_modules[i] else '📖'} Modül {i+1}" for i in range(8)]
+    # ValueError Fix: İndeks eşleştirme yöntemi kullanıldı
+    sel_mod = st.selectbox("Modül Seç:", mod_titles, index=m_idx)
+    new_m_idx = mod_titles.index(sel_mod)
     if new_m_idx != st.session_state.current_module:
         st.session_state.current_module, st.session_state.current_exercise = new_m_idx, 0; st.rerun()
 
@@ -192,8 +194,7 @@ with col_main:
     def run_pito_code(c, user_input="Pito", mod=0, step=0):
         # KRİTİK: BOŞLUK KONTROLÜ
         if "___" in c: return "⚠️ Boşluk Hatası: Lütfen kodun içindeki '___' alanlarını doldur!"
-        
-        # ÖZEL TALEPLER (MODÜL 1 ADIM 4 ÇIKTISI)
+        # MODÜL 1 ADIM 4 ÖZEL ÇIKTI
         if mod == 0 and step == 3: return "# bu bir yorumdur"
         
         old_stdout, new_stdout = sys.stdout, StringIO()
@@ -209,11 +210,11 @@ with col_main:
             return f"❌ Python Hatası: {e}"
 
     if is_locked:
-        st.markdown(f'<div class="solution-guide"><div class="solution-header">✅ Pito Çözüm Rehberi</div><b>Nasıl Yapılır?</b><br>{curr_ex["msg"]}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="solution-guide"><div class="solution-header">✅ Pito Çözüm Rehberi</div><b>Yönerge:</b> {curr_ex["msg"]}</div>', unsafe_allow_html=True)
         st.code(curr_ex['solution'], language="python")
         sol_out = run_pito_code(curr_ex['solution'], "10", st.session_state.current_module, e_idx)
         st.markdown("<b>Muhtemel Çıktı:</b>", unsafe_allow_html=True)
-        # ÖZEL TALEPLER (MODÜL 2 ADIM 4 & 5 ÇIKTILARI)
+        # MODÜL 2 ADIM 4 & 5 ÖZEL ÇIKTILAR
         if st.session_state.current_module == 1 and e_idx == 3: st.code("10")
         elif st.session_state.current_module == 1 and e_idx == 4: st.code("11")
         else: st.code(sol_out if sol_out else "Kod çalıştı.")
@@ -246,14 +247,15 @@ with col_main:
             if e_idx < 4:
                 if st.button("➡️ Sonraki"): st.session_state.current_exercise += 1; st.session_state.exercise_passed = False; st.rerun()
             elif st.session_state.current_module < 7:
-                if st.button("🏆 Modülü Bitir"): st.session_state.current_module += 1; st.session_state.current_exercise = 0; st.rerun()
+                if st.button("🏆 Modülü Bitir"):
+                    st.session_state.current_module += 1; st.session_state.current_exercise = 0; st.rerun()
 
 with col_side:
-    st.markdown("### 🏆 Liderlik")
+    st.markdown("### 🏆 Liderlik Tablosu")
     df_lb = get_db()
-    t1, t2 = st.tabs(["👥 Sınıf", "🏫 Okul"])
-    for t, d in zip([t1, t2], [df_lb[df_lb["Sınıf"] == st.session_state.student_class], df_lb]):
+    tab_class, tab_school = st.tabs(["👥 Sınıfım", "🏫 Okul"])
+    for t, d in zip([tab_class, tab_school], [df_lb[df_lb["Sınıf"] == st.session_state.student_class], df_lb]):
         with t:
             if not d.empty:
-                for _, r in d.sort_values(by="Puan", ascending=False).head(10).iterrows():
+                for i, (_, r) in enumerate(d.sort_values(by="Puan", ascending=False).head(10).iterrows()):
                     st.markdown(f'<div class="leaderboard-card"><b>{r["Rütbe"]} {r["Öğrencinin Adı"]}</b><br>{int(r["Puan"])} Puan</div>', unsafe_allow_html=True)
