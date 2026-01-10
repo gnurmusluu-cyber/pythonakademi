@@ -15,12 +15,12 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. TUM CIHAZLARA UYGUN GELISMIS TASARIM (CSS) ---
+# --- 2. TUM CIHAZLARA VE BEYAZ ZEMINE UYGUN GELISMIS TASARIM (CSS) ---
 st.markdown("""
     <style>
     /* Uygulama Arka Planını Beyaz Yap */
-    [data-testid="stAppViewContainer"] { background-color: #FFFFFF; }
-    [data-testid="stHeader"] { background-color: rgba(0,0,0,0); }
+    [data-testid="stAppViewContainer"] { background-color: #FFFFFF !important; }
+    [data-testid="stHeader"] { background-color: rgba(0,0,0,0) !important; }
     header {visibility: hidden;}
     
     /* Global Metin Rengi ve Görünürlük (Koyu Lacivert) */
@@ -30,34 +30,28 @@ st.markdown("""
     }
     
     /* Başlıkların ve Etiketlerin Görünmesini Sağla */
-    h1, h2, h3, h4, h5, h6, p, span, label, .stMarkdown {
+    h1, h2, h3, h4, h5, h6, p, span, label, .stMarkdown, [data-testid="stWidgetLabel"] p {
         color: #1E293B !important;
     }
 
-    /* Widget (Selectbox, Input) Görünürlük Ayarları */
-    div[data-baseweb="select"] > div {
-        background-color: #F1F5F9 !important;
+    /* Selectbox ve Input Kutularının Görünürlüğünü Sabitle (Hata Giderici) */
+    div[data-baseweb="select"] > div, div[data-baseweb="base-input"] {
+        background-color: #F8FAFC !important;
         color: #1E293B !important;
         border: 1px solid #CBD5E1 !important;
     }
-    div[data-testid="stMarkdownContainer"] p {
-        color: #1E293B !important;
-    }
     
-    /* Sekme (Tabs) Görünürlüğü */
-    button[data-baseweb="tab"] {
-        color: #64748B !important;
-    }
-    button[data-baseweb="tab"][aria-selected="true"] {
-        color: #3a7bd5 !important;
-        border-bottom-color: #3a7bd5 !important;
+    /* Açılır Menü İçindeki Yazıların Rengi */
+    div[role="listbox"] div {
+        color: #1E293B !important;
+        background-color: #FFFFFF !important;
     }
 
     /* Pito Konuşma Balonu */
     .pito-bubble {
-        position: relative; background: #F8FAFC; border: 2px solid #3a7bd5;
-        border-radius: 20px; padding: 25px; margin: 0 auto 30px auto; 
-        color: #1E293B !important; font-weight: 500; font-size: 1.15rem; 
+        position: relative; background: #F1F5F9; border: 2px solid #3a7bd5;
+        border-radius: 20px; padding: 20px; margin: 0 auto 30px auto; 
+        color: #1E293B !important; font-weight: 500; font-size: 1.1rem; 
         text-align: center; box-shadow: 0 10px 25px rgba(58, 123, 213, 0.08);
         max-width: 800px;
     }
@@ -72,6 +66,7 @@ st.markdown("""
         padding: 12px; margin-bottom: 8px; color: #1E293B !important;
         box-shadow: 0 2px 4px rgba(0,0,0,0.02);
     }
+    .leaderboard-card b { color: #3a7bd5 !important; }
     
     .champion-card { 
         background: linear-gradient(135deg, #FFD700, #F59E0B); 
@@ -89,7 +84,7 @@ st.markdown("""
     /* Mobil Düzenleme */
     @media (max-width: 768px) {
         .main .block-container { padding: 1rem !important; }
-        .pito-bubble { font-size: 1rem !important; padding: 15px !important; }
+        .pito-bubble { font-size: 0.95rem !important; }
     }
     </style>
     """, unsafe_allow_html=True)
@@ -108,7 +103,7 @@ for key, value in initial_states.items():
     if key not in st.session_state:
         st.session_state[key] = value
 
-# --- 4. GIF OYNATICI (BASE64 İLE DONMAYI ENGELLER) ---
+# --- 4. GIF OYNATICI (BASE64) ---
 def get_pito_gif(gif_name, width=280):
     gif_path = f"assets/{gif_name}.gif"
     if os.path.exists(gif_path):
@@ -147,7 +142,7 @@ def force_save():
 SINIFLAR = ["9-A", "9-B", "10-A", "10-B", "11-A", "11-B"]
 RUTBELER = ["🥚 Yeni Başlayan", "🌱 Python Çırağı", "🪵 Kod Oduncusu", "🧱 Mantık Mimarı", "🌀 Döngü Ustası", "📋 Liste Uzmanı", "📦 Fonksiyon Kaptanı", "🤖 OOP Robotu", "🏆 Python Kahramanı"]
 
-# --- 6. GİRİŞ EKRANI (DOĞRULAMALI) ---
+# --- 6. GİRİŞ EKRANI ---
 if not st.session_state.is_logged_in:
     _, col_mid, _ = st.columns([1, 2, 1])
     with col_mid:
@@ -239,7 +234,9 @@ with col_main:
 
     # MODUL SECIMI (GÖRÜNÜRLÜK FİKSLİ)
     mod_titles = [f"{'✅' if st.session_state.completed_modules[i] else '📖'} Modül {i+1}" for i in range(8)]
-    sel_mod = st.selectbox("Ders Programı:", mod_titles, index=st.session_state.current_module)
+    # Etiket rengini zorlamak için etiket yerine boşluk bırakıp markdown ile etiket yapıyoruz
+    st.markdown("**Ders Programı:**")
+    sel_mod = st.selectbox("", mod_titles, index=st.session_state.current_module, label_visibility="collapsed")
     m_idx = mod_titles.index(sel_mod)
     if m_idx != st.session_state.current_module:
         st.session_state.update({'current_module': m_idx, 'current_exercise': 0, 'feedback_type': None})
@@ -304,6 +301,7 @@ with col_main:
 with col_side:
     st.markdown("### 🏆 Liderler")
     df = get_db()
+    # Sekmelerin beyaz zemin uyumu için stil CSS kısmında eklendi
     t1, t2 = st.tabs(["👥 Sınıf", "🏫 Okul"])
     with t1:
         if not df.empty:
