@@ -15,8 +15,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. BEYAZ ZEMINE VE TÜM TEMALARA UYGUN KESIN TASARIM (CSS) ---
-# 
+# --- 2. BEYAZ ZEMINE VE AÇILIR MENÜLERE UYGUN KESIN TASARIM (CSS) ---
 st.markdown("""
     <style>
     /* 1. Uygulama Arka Planını Beyaz Yap */
@@ -25,60 +24,71 @@ st.markdown("""
     }
     header {visibility: hidden;}
 
-    /* 2. Tüm Metinleri Koyu Lacivert Yap (Okunabilirlik İçin) */
+    /* 2. Global Metin Rengi ve Görünürlük (Koyu Lacivert) */
     html, body, [class*="st-"] {
         color: #1E293B !important;
+        font-family: 'Inter', sans-serif;
     }
     h1, h2, h3, h4, h5, h6, p, span, label, .stMarkdown {
         color: #1E293B !important;
     }
 
-    /* 3. Açılır Menü (Selectbox) ve Giriş Kutularını Sabitle */
-    /* Bu kısım image_978150.png'deki siyah kutu sorununu çözer */
+    /* 3. AÇILIR MENÜ (SELECTBOX) LİSTESİ İÇİN KESİN ÇÖZÜM */
+    /* Menü kapalıyken görünüm */
     div[data-baseweb="select"] > div {
-        background-color: #F1F5F9 !important;
+        background-color: #F8FAFC !important;
         color: #1E293B !important;
         border: 2px solid #E2E8F0 !important;
     }
-    div[role="listbox"] ul li {
+    /* Menü AÇILDIĞINDA (Popover) arka planı beyaz yap */
+    div[data-baseweb="popover"], div[data-baseweb="popover"] > div {
+        background-color: #FFFFFF !important;
+    }
+    /* Menü içindeki seçeneklerin (li) görünümü */
+    div[data-baseweb="popover"] li {
         color: #1E293B !important;
         background-color: #FFFFFF !important;
     }
-    div[data-baseweb="base-input"] {
+    /* Seçeneklerin üzerine gelindiğinde (hover) rengi */
+    div[data-baseweb="popover"] li:hover {
         background-color: #F1F5F9 !important;
+    }
+
+    /* 4. Giriş Kutuları */
+    div[data-baseweb="base-input"] {
+        background-color: #F8FAFC !important;
         border: 2px solid #E2E8F0 !important;
         border-radius: 8px !important;
     }
-    input {
-        color: #1E293B !important;
-    }
+    input { color: #1E293B !important; }
 
-    /* 4. Sekmelerin (Tabs) Görünürlüğü */
+    /* 5. Sekmelerin (Tabs) Görünürlüğü */
     button[data-baseweb="tab"] { color: #64748B !important; }
     button[data-baseweb="tab"][aria-selected="true"] {
         color: #3a7bd5 !important;
         border-bottom-color: #3a7bd5 !important;
     }
 
-    /* 5. Pito Konuşma Balonu */
+    /* 6. Pito Konuşma Balonu */
     .pito-bubble {
-        position: relative; background: #F8FAFC; border: 2px solid #3a7bd5;
-        border-radius: 20px; padding: 25px; margin: 0 auto 30px auto; 
-        color: #1E293B !important; font-weight: 500; font-size: 1.2rem; 
+        position: relative; background: #F1F5F9; border: 2px solid #3a7bd5;
+        border-radius: 20px; padding: 20px; margin: 0 auto 30px auto; 
+        color: #1E293B !important; font-weight: 500; font-size: 1.1rem; 
         text-align: center; box-shadow: 0 10px 25px rgba(58, 123, 213, 0.08);
-        max-width: 800px;
+        max-width: 850px;
     }
     .pito-bubble:after {
         content: ''; position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%);
         border-width: 20px 20px 0; border-style: solid; border-color: #3a7bd5 transparent;
     }
 
-    /* 6. Liderlik Tablosu Kartları */
+    /* 7. Liderlik Tablosu Kartları */
     .leaderboard-card { 
         background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; 
         padding: 12px; margin-bottom: 8px; color: #1E293B !important;
         box-shadow: 0 2px 4px rgba(0,0,0,0.02);
     }
+    .leaderboard-card b { color: #3a7bd5 !important; }
     
     .champion-card { 
         background: linear-gradient(135deg, #FFD700, #F59E0B); 
@@ -86,23 +96,23 @@ st.markdown("""
         color: #FFFFFF !important; text-align: center; font-weight: bold;
     }
 
-    /* 7. Buton Tasarımı */
+    /* 8. Buton Tasarımı */
     .stButton > button { 
         width: 100%; border-radius: 12px; height: 3.5em; 
         background: linear-gradient(45deg, #3a7bd5, #00d2ff) !important; 
         color: white !important; font-weight: 600; border: none;
     }
-
-    /* 8. Mobil ve PC Optimizasyonu */
+    
+    /* 9. Mobil Uyumluluk */
     @media (max-width: 768px) {
         .main .block-container { padding: 1rem !important; }
-        .pito-bubble { font-size: 1rem !important; padding: 15px !important; }
+        .pito-bubble { font-size: 1rem !important; }
         [data-testid="column"] { width: 100% !important; flex: 1 1 100% !important; }
     }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 3. TÜM HAFIZA DEĞİŞKENLERİNİ BAŞLAT (HATA ÖNLEYİCİ) ---
+# --- 3. TÜM HAFIZA DEĞİŞKENLERİNİ BAŞLAT ---
 initial_states = {
     'is_logged_in': False, 'student_name': "", 'student_no': "", 'student_class': "",
     'completed_modules': [False]*8, 'current_module': 0, 'current_exercise': 0,
@@ -111,7 +121,6 @@ initial_states = {
     'celebrated': False, 'rejected_user': False, 'pito_emotion': "pito_merhaba",
     'feedback_type': None, 'feedback_msg': ""
 }
-
 for key, value in initial_states.items():
     if key not in st.session_state:
         st.session_state[key] = value
@@ -126,7 +135,7 @@ def get_pito_gif(gif_name, width=280):
         return f'<div style="text-align: center;"><img src="data:image/gif;base64,{encoded}" width="{width}" style="max-width: 100%;"></div>'
     return f'<div style="text-align: center;"><img src="https://img.icons8.com/fluency/200/robot-viewer.png" width="{width}"></div>'
 
-# --- 5. VERİ TABANI YÖNETİMİ ---
+# --- 5. VERİ TABANI ---
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1lat8rO2qm9QnzEUYlzC_fypG3cRkGlJfSfTtwNvs318/edit#gid=0"
 conn = st.connection("gsheets", type=GSheetsConnection)
 
@@ -155,7 +164,7 @@ def force_save():
 SINIFLAR = ["9-A", "9-B", "10-A", "10-B", "11-A", "11-B"]
 RUTBELER = ["🥚 Yeni Başlayan", "🌱 Python Çırağı", "🪵 Kod Oduncusu", "🧱 Mantık Mimarı", "🌀 Döngü Ustası", "📋 Liste Uzmanı", "📦 Fonksiyon Kaptanı", "🤖 OOP Robotu", "🏆 Python Kahramanı"]
 
-# --- 6. GİRİŞ EKRANI (DOĞRULAMALI) ---
+# --- 6. GİRİŞ EKRANI ---
 if not st.session_state.is_logged_in:
     _, col_mid, _ = st.columns([1, 2, 1])
     with col_mid:
@@ -191,14 +200,14 @@ if not st.session_state.is_logged_in:
                     force_save(); st.rerun()
     st.stop()
 
-# --- 7. MÜFREDAT KONU ANLATIMI VE EGZERSİZLER (MEB KAYNAKLI) ---
+# --- 7. MÜFREDAT KONU ANLATIMI VE EGZERSİZLER ---
 training_data = [
     {"module_title": "1. Merhaba Dünya: Veri Çıkışı", "exercises": [
-        {"msg": "Python'da programın bize cevap vermesini sağlayan komut **print()** fonksiyonudur. Metinleri (string) mutlaka **tek (' ') veya çift (\" \") tırnak** içine almalısın. \n\n**Hadi dene:** Ekrana tırnakları kullanarak **'Merhaba Pito'** yazdır.", "task": "print('___')", "check": lambda c, o: "Merhaba Pito" in o, "solution": "print('Merhaba Pito')"},
-        {"msg": "Sayılar için tırnak gerekmez. Python sayıları doğrudan matematiksel değer olarak tanır. \n\n**Hadi dene:** Ekrana sadece **100** sayısını yazdır.", "task": "print(___)", "check": lambda c, o: "100" in o, "solution": "print(100)"},
-        {"msg": "Birden fazla bilgiyi yan yana yazdırırken aralarına **virgül (,)** koyarız. \n\n**Hadi dene:** **'Puan:'** metni ile **100** sayısını virgül kullanarak yan yana yazdır.", "task": "print('Puan:', ___)", "check": lambda c, o: "100" in o, "solution": "print('Puan:', 100)"},
-        {"msg": "**# (Diyez)** işaretiyle başlayan satırlar Python tarafından yorum (not) kabul edilir ve çalıştırılmaz. \n\n**Hadi dene:** Satırın başına **#** işaretini koy ve yanına **Not** yaz.", "task": "___ Bu bir not", "check": lambda c, o: "#" in c, "solution": "# Bu bir not"},
-        {"msg": "Metin içinde **'\\n'** karakteri alt satıra geçmeyi sağlar. \n\n**Hadi dene:** Tek print içinde **'Üst'** ve **'Alt'** kelimelerini araya **\\n** koyarak yazdır.", "task": "print('Üst' + '___' + 'Alt')", "check": lambda c, o: "\n" in o, "solution": "print('Üst\\nAlt')"}
+        {"msg": "Python'da ekrana yazı yazdırmak için **print()** fonksiyonu kullanılır. Metinler mutlaka **tırnak** (' ') içine alınmalıdır. \n\n**Hadi dene:** Ekrana **'Merhaba Pito'** yazdır.", "task": "print('___')", "check": lambda c, o: "Merhaba Pito" in o, "solution": "print('Merhaba Pito')"},
+        {"msg": "Sayılar için tırnak gerekmez. Python sayıları matematiksel değer olarak tanır. \n\n**Hadi dene:** Ekrana sadece **100** sayısını yazdır.", "task": "print(___)", "check": lambda c, o: "100" in o, "solution": "print(100)"},
+        {"msg": "Verileri yan yana yazdırmak için **virgül (,)** koyarız. \n\n**Hadi dene:** **'Puan:'** metni ile **100** sayısını yan yana yazdır.", "task": "print('Puan:', ___)", "check": lambda c, o: "100" in o, "solution": "print('Puan:', 100)"},
+        {"msg": "**# (Diyez)** işaretiyle başlayan satırlar çalıştırılmaz (not). \n\n**Hadi dene:** Satırın başına **#** işaretini koy ve yanına **Not** yaz.", "task": "___ Bu bir not", "check": lambda c, o: "#" in c, "solution": "# Bu bir not"},
+        {"msg": "Alt satıra geçmek için **'\\n'** kullanılır. \n\n**Hadi dene:** **'Üst'** ve **'Alt'** kelimelerini araya **\\n** koyarak yazdır.", "task": "print('Üst' + '___' + 'Alt')", "check": lambda c, o: "\n" in o, "solution": "print('Üst\\nAlt')"}
     ]},
     {"module_title": "2. Değişkenler: Bilgi Kutuları", "exercises": [
         {"msg": "Değişkenler verileri hafızada saklar. Atama operatörü **(=)** kullanılır. \n\n**Hadi dene:** **yas** adında bir değişken oluştur, içine **15** ata ve yazdır.", "task": "yas = ___\nprint(yas)", "check": lambda c, o: "15" in o, "solution": "yas = 15\nprint(yas)"},
@@ -210,12 +219,12 @@ training_data = [
     {"module_title": "3. Karar Yapıları: If-Else", "exercises": [{"msg": "Eşitlik için **çift eşittir (==)** kullanılır. \n\n**Hadi dene:** Eğer 10 sayısı **10'a eşitse** 'X' yazdır.", "task": "if 10 ___ 10: print('X')", "check": lambda c, o: "==" in c, "solution": "if 10 == 10: print('X')"}, {"msg": "Şart yanlışsa **else:** bloğu çalışır. \n\n**Hadi dene:** 5, 10'dan büyük değilse **'Y'** yazdıracak bir **else** kur.", "task": "if 5>10: pass\n___: print('Y')", "check": lambda c, o: "else" in c, "solution": "else"}, {"msg": "Büyük veya eşiti kontrol için **>=** kullanılır. \n\n**Hadi dene:** Eğer 5 sayısı **5'ten büyük veya eşitse** 'Z' yazdır.", "task": "if 5 ___ 5: print('Z')", "check": lambda c, o: ">=" in c, "solution": ">="}, {"msg": "**and** ile iki şartın da doğru olması istenir. \n\n**Hadi dene:** Eğer 1 eşit 1 **ve** 2 eşit 2 ise 'OK' yazdır.", "task": "if 1==1 ___ 2==2: print('OK')", "check": lambda c, o: "and" in c, "solution": "and"}, {"msg": "Birden fazla ihtimal için **elif** kullanılır. \n\n**Hadi dene:** İlk şart yanlış ama **5==5** doğruysa 'A' yazdır.", "task": "if 5>10: pass\n___ 5==5: print('A')", "check": lambda c, o: "elif" in c, "solution": "elif"}]},
     {"module_title": "4. Döngüler: Tekrarın Gücü", "exercises": [{"msg": "**for** ve **range(3)** ile 3 kez tekrar yap. \n\n**Hadi dene:** 3 kez 'X' yazdır.", "task": "for i in ___(3): print('X')", "check": lambda c, o: o.count("X")==3, "solution": "range"}, {"msg": "**while** şart doğruyken döner. \n\n**Hadi dene:** **i < 1** doğruyken 'Y' yazdıran döngü kur.", "task": "i=0\n___ i<1: print('Y'); i+=1", "check": lambda c, o: "while" in c, "solution": "while"}, {"msg": "**break** döngüyü bitirir. \n\n**Hadi dene:** i değeri 1 olduğunda döngüyü **bitir**.", "task": "for i in range(3):\n if i==1: ___\n print(i)", "check": lambda c, o: "break" in c, "solution": "break"}, {"msg": "**continue** adımı atlar. \n\n**Hadi dene:** i değeri 1 olduğunda o adımı **atla**.", "task": "for i in range(3):\n if i==1: ___\n print(i)", "check": lambda c, o: "continue" in c, "solution": "continue"}, {"msg": "**i** sayacı her turda değişir. \n\n**Hadi dene:** Döngü sayacı olan **i** değişkenini yazdır.", "task": "for i in range(2): print(___)", "check": lambda c, o: "1" in o, "solution": "i"}]},
     {"module_title": "5. Listeler: Veri Grupları", "exercises": [{"msg": "Listeler **[ ]** içine yazılır. \n\n**Hadi dene:** **10** ve **20** sayılarının olduğu bir liste oluştur.", "task": "L = [___, 20]", "check": lambda c, o: "10" in c, "solution": "L=[10, 20]"}, {"msg": "Sıralama **0**'dan başlar. \n\n**Hadi dene:** L listesinin **0. indeksindeki** elemanı yazdır.", "task": "L=[5,6]\nprint(L[___])", "check": lambda c, o: "5" in o, "solution": "0"}, {"msg": "**len()** eleman sayısını verir. \n\n**Hadi dene:** L listesinin boyutunu ekrana yazdır.", "task": "L=[1,2]\nprint(___(L))", "check": lambda c, o: "2" in o, "solution": "len"}, {"msg": "**append()** sona yeni eleman ekler. \n\n**Hadi dene:** Listeye **30** sayısını ekle.", "task": "L=[10]\nL.___(___)\nprint(L)", "check": lambda c, o: "30" in o, "solution": "append"}, {"msg": "**pop()** son elemanı siler. \n\n**Hadi dene:** Listeden son elemanı **çıkart**.", "task": "L=[1,2]\nL.___()\nprint(L)", "check": lambda c, o: "1" in o, "solution": "L=[1,2]\nL.pop()"}]},
-    {"module_title": "6. Fonksiyonlar ve Türler", "exercises": [{"msg": "**def** ile f adında bir fonksiyon tanımla.", "task": "___ f(): print('X')", "check": lambda c, o: "def" in c, "solution": "def"}, {"msg": "**Tuple** (Demet) **( )** ile oluşturulur. Bir tane kur.", "task": "t = (___, 2)\nprint(t)", "check": lambda c, o: "1" in c, "solution": "1"}, {"msg": "**Sözlük** (Dict) anahtar:değer tutar. \n\n**Hadi dene:** **'ad'** anahtarına **'Pito'** ata.", "task": "d = {'ad': '___'}\nprint(d['ad'])", "check": lambda c, o: "Pito" in c, "solution": "Pito"}, {"msg": "**keys()** tüm etiketleri getirir. \n\n**Hadi dene:** Sözlükteki anahtarları yazdır.", "task": "d={'a':1}\nprint(d.___())", "check": lambda c, o: "keys" in c, "solution": "keys"}, {"msg": "**Set** (Küme) benzersiz veri tutar. \n\n**Hadi dene:** Tekrar eden sayıları teke düşüren bir küme oluştur.", "task": "s = {1, 2, ___}\nprint(s)", "check": lambda c, o: "1" in c, "solution": "1"}]},
+    {"module_title": "6. Fonksiyonlar ve Türler", "exercises": [{"msg": "**def** ile f adında bir fonksiyon tanımla.", "task": "___ f(): print('X')", "check": lambda c, o: "def" in c, "solution": "def"}, {"msg": "**Tuple** (Demet) **( )** ile oluşturulur. Bir tane kur.", "task": "t = (___, 2)\nprint(t)", "check": lambda c, o: "1" in c, "solution": "1"}, {"msg": "**Sözlük** (Dict) anahtar:değer tutar. \n\n**Hadi dene:** **'ad'** anahtarına **'Pito'** ata.", "task": "d = {'ad': '___'}\nprint(d['ad'])", "check": lambda c, o: "Pito" in c, "solution": "Pito"}, {"msg": "**keys()** tüm etiketleri getirir. \n\n**Hadi dene:** Sözlükteki anahtarları yazdır.", "task": "d={'a':1}\nprint(d.___())", "check": lambda c, o: "keys" in c, "solution": "keys"}, {"msg": "**Set** (Küme) benzersiz veri tutar. \n\n**Hadi dene:** Tekrar eden sayıları teke düşüren bir küme oluştur.", "task": "s = {1, 2, ___}\nprint(s)", "check": lambda c, o: "1" in c, "solution": "s = {1, 2, 1}\nprint(s)"}]},
     {"module_title": "7. OOP: Nesne Tabanlı", "exercises": [{"msg": "**class** ile **Robot** sınıfı oluştur.", "task": "___ Robot: pass", "check": lambda c, o: "class" in c, "solution": "class"}, {"msg": "R sınıfından p nesnesi üret.", "task": "class R: pass\np = ___()", "check": lambda c, o: "R()" in c, "solution": "R"}, {"msg": "**renk** özelliği olarak **'Mavi'** ata.", "task": "class R: pass\np=R()\np.___ = 'Mavi'\nprint(p.renk)", "check": lambda c, o: "renk" in c, "solution": "renk"}, {"msg": "Metotlar için **self** kullanılır. **ses** metodu ekle.", "task": "class R:\n def ___(self):\n  print('Bip!')", "check": lambda c, o: "ses" in c, "solution": "ses"}, {"msg": "**r** nesnesinden **s** metodunu çağır.", "task": "class R:\n def s(self): print('X')\nr=R()\nr.___()", "check": lambda c, o: "s()" in c, "solution": "s"}]},
     {"module_title": "8. Dosya Yönetimi", "exercises": [{"msg": "**'w'** kipiyle dosya aç.", "task": "dosya = ___('n.txt', '___')", "check": lambda c, o: "open" in c, "solution": "w"}, {"msg": "**write()** ile 'Pito' yaz ve kapat.", "task": "f = open('t.txt', 'w'); f.___('Pito'); f.close()", "check": lambda c, o: "write" in c, "solution": "write"}, {"msg": "**'r'** kipiyle dosyayı okuma modunda aç.", "task": "f = open('t.txt', '___')", "check": lambda c, o: "'r'" in c, "solution": "r"}, {"msg": "**read()** ile içeriği yazdır.", "task": "f = open('t.txt', 'r')\nprint(f.___())\nf.close()", "check": lambda c, o: "read" in c, "solution": "read"}, {"msg": "**close()** ile dosyayı güvenle kapat.", "task": "f = open('t.txt', 'r')\nf.___()", "check": lambda c, o: "close" in c, "solution": "close"}]}
 ]
 
-# --- 8. KOD CALISTIRICI (SIMULASYONLU) ---
+# --- 8. KOD CALISTIRICI ---
 def run_pito_code(c, user_input="10"):
     old_stdout, new_stdout = sys.stdout, StringIO()
     sys.stdout = new_stdout
@@ -229,7 +238,7 @@ def run_pito_code(c, user_input="10"):
         sys.stdout = old_stdout
         return f"Hata: {e}"
 
-# --- 9. ANA ARAYÜZ (RESPONSIVE PC/MOBIL) ---
+# --- 9. ANA ARAYÜZ (RESPONSIVE) ---
 col_main, col_side = st.columns([3, 1])
 student_rank = RUTBELER[sum(st.session_state.completed_modules)]
 
@@ -245,8 +254,8 @@ with col_main:
             st.session_state.update({'db_module': 0, 'db_exercise': 0, 'total_score': 0, 'current_module': 0, 'current_exercise': 0, 'completed_modules': [False]*8, 'scored_exercises': set(), 'celebrated': False, 'pito_emotion': "pito_dusunuyor", 'feedback_type': None})
             force_save(); st.rerun()
 
-    # MODUL SECIMI - CSS ILE GORUNURLUK GARANTILENMIS ALAN
-    st.markdown("**Ders Programı:**")
+    # MODUL SECIMI (GORUNURLUK FIXLENMIS)
+    st.markdown("**Ders Programı Seçimi:**")
     mod_titles = [f"{'✅' if st.session_state.completed_modules[i] else '📖'} Modül {i+1}" for i in range(8)]
     sel_mod = st.selectbox("mod_sel", mod_titles, index=st.session_state.current_module, label_visibility="collapsed")
     m_idx = mod_titles.index(sel_mod)
@@ -259,7 +268,7 @@ with col_main:
     curr_ex = training_data[m_idx]["exercises"][e_idx]
     is_locked = (m_idx < st.session_state.db_module)
 
-    # Pito ve Mesaj (PC'de yan yana, Mobilde alt alta)
+    # Pito ve Mesaj
     c_p1, c_p2 = st.columns([1, 4])
     with c_p1: st.markdown(get_pito_gif(st.session_state.pito_emotion, width=180), unsafe_allow_html=True)
     with c_p2:
@@ -269,7 +278,7 @@ with col_main:
     # Editor
     code = st_ace(value=curr_ex['task'], language="python", theme="dracula", font_size=15, height=200, readonly=is_locked, key=f"ace_{m_idx}_{e_idx}", auto_update=True)
 
-    # Geri Bildirim Alani (DİNAMİK VE KOYU YAZILI)
+    # Geri Bildirim Alani (Dinamik ve Okunabilir)
     if st.session_state.feedback_type == "error":
         st.error(f"**❌ Hatalı Yanıt!** {st.session_state.feedback_msg}")
     elif st.session_state.feedback_type == "success":
@@ -279,16 +288,16 @@ with col_main:
         st.success("**✅ Pito'nun Çözüm Örneği:**")
         st.code(curr_ex['solution'], language="python")
         sol_out = run_pito_code(curr_ex['solution'], "10") 
-        st.markdown("**📟 Kodun Üreteceği Çıktı:**")
+        st.markdown("**📟 Beklenen Çıktı:**")
         st.code(sol_out if sol_out else "Kod çalıştı.")
     else:
-        u_in = st.text_input("👇 Terminal:", key=f"t_{m_idx}_{e_idx}") if "input(" in code else ""
+        u_in = st.text_input("👇 Terminal Girdisi:", key=f"t_{m_idx}_{e_idx}") if "input(" in code else ""
         if st.button("🔍 Kodumu Kontrol Et"):
             out = run_pito_code(code, u_in)
             if "⚠️" in out or "Hata" in out:
                 st.session_state.update({'pito_emotion': "pito_hata", 'feedback_type': "error", 'feedback_msg': f"Bir hata çıktı: {out}"})
             elif curr_ex['check'](code, out) and "___" not in code:
-                st.session_state.update({'exercise_passed': True, 'pito_emotion': "pito_basari", 'feedback_type': "success", 'feedback_msg': "Zorlu bir adımı geçtin! Sonraki adıma hazırsın."})
+                st.session_state.update({'exercise_passed': True, 'pito_emotion': "pito_basari", 'feedback_type': "success", 'feedback_msg': "Zorlu bir adımı geçtin! Sıradakine hazırsın."})
                 if f"{m_idx}_{e_idx}" not in st.session_state.scored_exercises:
                     st.session_state.total_score += st.session_state.current_potential_score
                     st.session_state.scored_exercises.add(f"{m_idx}_{e_idx}")
@@ -297,10 +306,9 @@ with col_main:
                         st.session_state.db_module += 1; st.session_state.db_exercise = 0; st.session_state.completed_modules[m_idx] = True
                     force_save()
             else:
-                st.session_state.update({'pito_emotion': "pito_hata", 'feedback_type': "error", 'feedback_msg': "Cevabın henüz tam değil. Pito'nun yönergesini tekrar oku!"})
+                st.session_state.update({'pito_emotion': "pito_hata", 'feedback_type': "error", 'feedback_msg': "Yanıtın eksik veya hatalı. Lütfen açıklamayı tekrar oku!"})
             st.rerun()
 
-    # Navigasyon Butonlari
     if st.session_state.exercise_passed or is_locked:
         c_b1, c_b2 = st.columns(2)
         with c_b1:
@@ -313,7 +321,7 @@ with col_main:
                 if st.button("🏆 Modülü Bitir"): st.session_state.update({'current_module': m_idx + 1, 'current_exercise': 0, 'pito_emotion': "pito_dusunuyor", 'feedback_type': None}); st.rerun()
 
 with col_side:
-    st.markdown("### 🏆 Liderler")
+    st.markdown("### 🏆 Liderler Tablosu")
     df = get_db()
     t1, t2 = st.tabs(["👥 Sınıf", "🏫 Okul"])
     with t1:
