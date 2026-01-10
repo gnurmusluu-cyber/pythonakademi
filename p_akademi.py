@@ -182,7 +182,7 @@ with col_main:
     if st.session_state.db_module >= 8:
         if not st.session_state.celebrated: st.balloons(); st.session_state.celebrated = True
         st.success(f"🎉 Tebrikler {st.session_state.student_name}! Python macerasını bitirdin.")
-        if st.button("🔄 Tekrar Al"):
+        if st.button("🔄 Eğitimi Tekrar Al(Bu durumda Puanın Sıfırlanır)"):
             st.session_state.update({'db_module':0,'db_exercise':0,'total_score':0,'current_module':0,'current_exercise':0,'completed_modules':[False]*8,'scored_exercises':set(),'celebrated':False,'fail_count':0,'feedback_msg':"", 'last_output':""})
             force_save(); st.rerun()
         st.divider()
