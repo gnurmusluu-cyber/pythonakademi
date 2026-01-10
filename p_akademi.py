@@ -6,6 +6,8 @@ import pandas as pd
 from datetime import datetime
 from streamlit_gsheets import GSheetsConnection
 import os
+import requests
+from streamlit_lottie import st_lottie
 
 # --- 1. TASARIM VE SAYFA AYARLARI ---
 st.set_page_config(layout="wide", page_title="Pito Python Akademi", initial_sidebar_state="collapsed")
@@ -48,7 +50,18 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. VERİ TABANI YÖNETİMİ ---
+# --- 2. ANİMASYON VE VERİ TABANI ---
+def load_lottieurl(url: str):
+    try:
+        r = requests.get(url)
+        return r.json() if r.status_code == 200 else None
+    except: return None
+
+LOTTIE_IDLE = "https://assets5.lottiefiles.com/packages/lf20_3rwasyjy.json"
+LOTTIE_SUCCESS = "https://assets10.lottiefiles.com/packages/lf20_m6cu97lc.json"
+LOTTIE_ERROR = "https://assets3.lottiefiles.com/packages/lf20_028p9qon.json"
+LOTTIE_COMPLETE = "https://assets1.lottiefiles.com/packages/lf20_touohxv0.json"
+
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1lat8rO2qm9QnzEUYlzC_fypG3cRkGlJfSfTtwNvs318/edit#gid=0"
 conn = st.connection("gsheets", type=GSheetsConnection)
 
@@ -57,14 +70,9 @@ def get_db(use_cache=True):
         df = conn.read(spreadsheet=SHEET_URL, ttl=60 if use_cache else 0)
         if df is None or df.empty:
             return pd.DataFrame(columns=["Okul No", "Öğrencinin Adı", "Sınıf", "Puan", "Rütbe", "Tamamlanan Modüller", "Mevcut Modül", "Mevcut Egzersiz", "Tarih"])
-        
-        # Sütun tiplerini temizle ve zorla
         df["Okul No"] = df["Okul No"].astype(str).str.split('.').str[0].str.strip()
         df = df[df["Okul No"].str.isdigit()] 
-        
-        # KRİTİK: Puan sütununu tam sayıya çevir (Float görünümünü engeller)
         df["Puan"] = pd.to_numeric(df["Puan"], errors='coerce').fillna(0).astype(int)
-        
         return df.dropna(subset=["Okul No"])
     except:
         return pd.DataFrame(columns=["Okul No", "Öğrencinin Adı", "Sınıf", "Puan", "Rütbe", "Tamamlanan Modüller", "Mevcut Modül", "Mevcut Egzersiz", "Tarih"])
@@ -75,11 +83,9 @@ def force_save():
         score = int(st.session_state.total_score)
         df_all = get_db(use_cache=False)
         if df_all.empty and st.session_state.db_module > 0: return 
-            
         df_clean = df_all[df_all["Okul No"] != no]
         progress = ",".join(["1" if m else "0" for m in st.session_state.completed_modules])
         rank = RUTBELER[sum(st.session_state.completed_modules)]
-        
         new_row = pd.DataFrame([[no, st.session_state.student_name, st.session_state.student_class, score, rank, progress, st.session_state.db_module, st.session_state.db_exercise, datetime.now().strftime("%H:%M:%S")]], 
                                columns=["Okul No", "Öğrencinin Adı", "Sınıf", "Puan", "Rütbe", "Tamamlanan Modüller", "Mevcut Modül", "Mevcut Egzersiz", "Tarih"])
         conn.update(spreadsheet=SHEET_URL, data=pd.concat([df_clean, new_row], ignore_index=True))
@@ -90,7 +96,7 @@ if 'is_logged_in' not in st.session_state:
     for k, v in {'student_name': "", 'student_no': "", 'student_class': "", 'completed_modules': [False]*8, 
                  'current_module': 0, 'current_exercise': 0, 'exercise_passed': False, 'total_score': 0, 
                  'scored_exercises': set(), 'db_module': 0, 'db_exercise': 0, 'is_logged_in': False, 
-                 'current_potential_score': 20, 'celebrated': False}.items():
+                 'current_potential_score': 20, 'celebrated': False, 'pito_state': "idle"}.items():
         st.session_state[k] = v
 
 PITO_IMG = "assets/pito.png"
@@ -101,7 +107,7 @@ if not st.session_state.is_logged_in:
     _, col_mid, _ = st.columns([1, 2, 1])
     with col_mid:
         st.markdown('<div class="pito-bubble">Merhaba! Ben <b>Pito</b>. Python Dünyası\'na hoş geldin.</div>', unsafe_allow_html=True)
-        st.image(PITO_IMG if os.path.exists(PITO_IMG) else "https://img.icons8.com/fluency/180/robot-viewer.png", width=180)
+        st_lottie(load_lottieurl(LOTTIE_IDLE), height=200, key="login_pito")
         in_no_raw = st.text_input("Okul Numaran (Sadece Rakam):", key="login_field").strip()
         
         if in_no_raw and not in_no_raw.isdigit():
@@ -113,39 +119,33 @@ if not st.session_state.is_logged_in:
                 row = user_data.iloc[0]
                 m_v, e_v = int(row['Mevcut Modül']), int(row['Mevcut Egzersiz'])
                 st.markdown(f"### Hoş geldin, **{row['Öğrencinin Adı']}**! 👋")
-                st.success(f"Puanın: {int(row['Puan'])} | " + (f"Eğitimi Tamamladın! 🏆" if m_v >= 8 else f"Kaldığın Yer: Modül {m_v+1}"))
+                st.success(f"Puanın: {int(row['Puan'])} | Kaldığın Yer: Modül {m_v+1}")
                 c1, c2 = st.columns(2)
                 with c1:
                     if st.button("🚀 Devam Et"):
-                        st.session_state.student_no, st.session_state.student_name, st.session_state.student_class = str(row["Okul No"]), row["Öğrencinin Adı"], row["Sınıf"]
-                        st.session_state.total_score, st.session_state.db_module, st.session_state.db_exercise = int(row["Puan"]), m_v, e_v
-                        st.session_state.current_module, st.session_state.current_exercise = min(m_v, 7), e_v
-                        st.session_state.completed_modules = [True if x == "1" else False for x in str(row["Tamamlanan Modüller"]).split(",")]
-                        st.session_state.is_logged_in = True; st.rerun()
+                        st.session_state.update({'student_no': in_no_raw, 'student_name': row["Öğrencinin Adı"], 'student_class': row["Sınıf"], 'total_score': int(row["Puan"]), 'db_module': m_v, 'db_exercise': e_v, 'current_module': min(m_v, 7), 'current_exercise': e_v, 'completed_modules': [True if x == "1" else False for x in str(row["Tamamlanan Modüller"]).split(",")], 'is_logged_in': True})
+                        st.rerun()
                 with c2:
                     if st.button("📚 İncele"):
-                        st.session_state.student_no, st.session_state.student_name, st.session_state.student_class = str(row["Okul No"]), row["Öğrencinin Adı"], row["Sınıf"]
-                        st.session_state.total_score, st.session_state.db_module, st.session_state.db_exercise = int(row["Puan"]), m_v, e_v
-                        st.session_state.current_module, st.session_state.current_exercise = 0, 0
-                        st.session_state.completed_modules = [True if x == "1" else False for x in str(row["Tamamlanan Modüller"]).split(",")]
-                        st.session_state.is_logged_in = True; st.rerun()
+                        st.session_state.update({'student_no': in_no_raw, 'student_name': row["Öğrencinin Adı"], 'student_class': row["Sınıf"], 'total_score': int(row["Puan"]), 'db_module': m_v, 'db_exercise': e_v, 'current_module': 0, 'current_exercise': 0, 'completed_modules': [True if x == "1" else False for x in str(row["Tamamlanan Modüller"]).split(",")], 'is_logged_in': True})
+                        st.rerun()
             else:
                 st.info("Yeni bir maceracı! Bilgilerini tamamla:")
                 in_name = st.text_input("Adın Soyadın:", key="new_name")
                 in_class = st.selectbox("Sınıfın:", SINIFLAR, key="new_class")
                 if st.button("Maceraya Başla! ✨"):
                     if in_name.strip():
-                        st.session_state.student_no, st.session_state.student_name, st.session_state.student_class = in_no_raw, in_name.strip(), in_class
-                        st.session_state.is_logged_in = True; force_save(); st.rerun()
+                        st.session_state.update({'student_no': in_no_raw, 'student_name': in_name.strip(), 'student_class': in_class, 'is_logged_in': True})
+                        force_save(); st.rerun()
     st.stop()
 
-# --- 5. DETAYLANDIRILMIŞ EĞİTİCİ MÜFREDAT ---
+# --- 5. DETAYLI KONU ANLATIMLI MÜFREDAT ---
 training_data = [
     {"module_title": "1. Giriş ve Çıktı", "exercises": [
         {"msg": "Programımızın dış dünyayla iletişim kurmasının en temel yolu **print()** fonksiyonudur. Parantez içine yazdığımız her şey terminal ekranında görünür. Metinsel ifadeleri mutlaka **tırnak** içinde yazmalısın. Hadi dene: Ekrana **'Merhaba Pito'** yazdır.", "task": "print('___')", "check": lambda c, o: "Merhaba Pito" in o, "solution": "print('Merhaba Pito')"},
         {"msg": "Python'da matematiksel değer olan sayıları ekrana yazdırırken **tırnak işareti kullanmayız.** Şimdi ekrana **100** sayısını yazdır.", "task": "print(___)", "check": lambda c, o: "100" in o, "solution": "print(100)"},
-        {"msg": "Farklı verileri ayırmak için **virgül (,)** kullanırız. Virgül, otomatik olarak araya boşluk bırakır. Hadi dene: **'Puan:'** metni ile **100** sayısını yan yana yazdır.", "task": "print('Puan:', ___)", "check": lambda c, o: "100" in o, "solution": "print('Puan:', 100)"},
-        {"msg": "**# (Diyez)** işaretiyle başlayan satırlar Python tarafından okunmaz. Buna 'Yorum Satırı' denir. Hadi dene: Bir **yorum satırı** oluştur.", "task": "___ Bu bir yorumdur", "check": lambda c, o: "#" in c, "solution": "# Kodlarımı buraya yazıyorum"},
+        {"msg": "print() içinde farklı verileri ayırmak için **virgül (,)** kullanırız. Virgül, otomatik olarak araya boşluk bırakır. Hadi dene: **'Puan:'** metni ile **100** sayısını yan yana yazdır.", "task": "print('Puan:', ___)", "check": lambda c, o: "100" in o, "solution": "print('Puan:', 100)"},
+        {"msg": "**# (Diyez)** işaretiyle başlayan satırlar Python tarafından okunmaz. Buna 'Yorum Satırı' denir. Bir yorum satırı ekle.", "task": "___ Bu bir yorumdur", "check": lambda c, o: "#" in c, "solution": "# Kodlarımı buraya yazıyorum"},
         {"msg": "Alt satıra geçmek için **'\\n'** karakteri kullanılır. Hadi dene: **'Üst'** ve **'Alt'** kelimelerini tek print içinde farklı satırlarda yazdır.", "task": "print('Üst' + '___' + 'Alt')", "check": lambda c, o: "\n" in o, "solution": "print('Üst' + '\\n' + 'Alt')"}
     ]},
     {"module_title": "2. Değişkenler", "exercises": [
@@ -185,7 +185,7 @@ training_data = [
     ]},
     {"module_title": "7. OOP", "exercises": [
         {"msg": "**Sınıf (Class)** nesne taslağıdır. **class** yazarak **Robot** sınıfı oluştur.", "task": "___ Robot: pass", "check": lambda c, o: "class" in c, "solution": "class Robot: pass"},
-        {"msg": "**Nesne (Object)** sınıftan üretilen gerçek örnektir. **R** sınıfını kullanarak **p** adında bir nesne oluştur.", "task": "class R: pass\np = ___()", "check": lambda c, o: "R()" in c, "solution": "class R: pass\np = R()"},
+        {"msg": "**Nesne (Object)** sınıftan üretilen gerçek örnektir. **R** sınıfından **p** nesnesi üret.", "task": "class R: pass\np = ___()", "check": lambda c, o: "R()" in c, "solution": "class R: pass\np = R()"},
         {"msg": "Nitelik nesneye ait bilgidir. Robota **renk** niteliği olarak **'Mavi'** ata.", "task": "class R: pass\np=R()\np.___ = 'Mavi'\nprint(p.renk)", "check": lambda c, o: "renk" in c, "solution": "class R: pass\np=R()\np.renk = 'Mavi'\nprint(p.renk)"},
         {"msg": "**Metot** sınıf içi fonksiyondur. İlk parametre **self** olmalıdır. Robota **ses** metodu ekle.", "task": "class R:\n def ___(self):\n  print('Bip!')", "check": lambda c, o: "ses" in c, "solution": "class R:\n    def ses(self):\n        print('Bip!')"},
         {"msg": "Metodu çalıştırmak için **nesne.metot()** yazılır. **r** üzerinden **s** metodunu çağır.", "task": "class R:\n def s(self): print('X')\nr=R()\nr.___()", "check": lambda c, o: "s()" in c, "solution": "class R:\n    def s(self):\n        print('X')\nr=R()\nr.s()"}
@@ -201,25 +201,21 @@ training_data = [
 
 # --- 6. ARA YÜZ DÜZENİ ---
 col_main, col_side = st.columns([3, 1])
-
-completed_count = sum(st.session_state.completed_modules)
-student_rank = RUTBELER[completed_count]
+current_rank = RUTBELER[sum(st.session_state.completed_modules)]
 
 with col_main:
-    st.markdown(f"#### 👋 {student_rank} {st.session_state.student_name} | ⭐ Puan: {int(st.session_state.total_score)}")
+    st.markdown(f"#### 👋 {current_rank} {st.session_state.student_name} | ⭐ Puan: {int(st.session_state.total_score)}")
     
     if st.session_state.db_module >= 8:
         if not st.session_state.celebrated:
-            st.balloons(); st.session_state.celebrated = True
+            st.balloons(); st.session_state.celebrated = True; st.session_state.pito_state = "complete"
         st.success("### 🎉 Tebrikler! Eğitimi Başarıyla Tamamladın.")
         st.markdown('<div class="pito-bubble">Python yolculuğunu bitirdin! Aşağıdan modülleri inceleyebilir veya baştan başlayabilirsin.</div>', unsafe_allow_html=True)
         c1, c2 = st.columns(2)
         with c1:
             if st.button("🔄 Eğitimi Tekrar Al (Sıfırla)"):
-                st.session_state.db_module, st.session_state.db_exercise, st.session_state.total_score = 0, 0, 0
-                st.session_state.current_module, st.session_state.current_exercise = 0, 0
-                st.session_state.completed_modules = [False]*8; st.session_state.scored_exercises = set()
-                st.session_state.celebrated = False; force_save(); st.rerun()
+                st.session_state.update({'db_module': 0, 'db_exercise': 0, 'total_score': 0, 'current_module': 0, 'current_exercise': 0, 'completed_modules': [False]*8, 'scored_exercises': set(), 'celebrated': False, 'pito_state': "idle"})
+                force_save(); st.rerun()
         with c2:
             if st.button("🏆 Liderlik Listesinde Kal"): st.info("Başarın kaydedildi.")
         st.divider(); st.subheader("📖 İnceleme Modu")
@@ -227,13 +223,13 @@ with col_main:
     mod_titles = [f"{'✅' if st.session_state.completed_modules[i] else '📖'} Modül {i+1}" for i in range(8)]
     if st.session_state.current_module != st.session_state.db_module and st.session_state.db_module < 8:
         if st.button(f"🔙 Güncel Görevime Dön (Modül {st.session_state.db_module + 1})", use_container_width=True):
-            st.session_state.current_module, st.session_state.current_exercise = st.session_state.db_module, st.session_state.db_exercise
+            st.session_state.current_module, st.session_state.current_exercise, st.session_state.pito_state = st.session_state.db_module, st.session_state.db_exercise, "idle"
             st.rerun()
 
     sel_mod = st.selectbox("Modül Seç:", mod_titles, index=st.session_state.current_module)
     m_idx = mod_titles.index(sel_mod)
     if m_idx != st.session_state.current_module:
-        st.session_state.current_module, st.session_state.current_exercise = m_idx, 0
+        st.session_state.update({'current_module': m_idx, 'current_exercise': 0, 'pito_state': "idle"})
         st.rerun()
 
     st.divider()
@@ -242,7 +238,9 @@ with col_main:
     is_locked = (m_idx < st.session_state.db_module) or (st.session_state.db_module >= 8)
 
     c_img, c_msg = st.columns([1, 4])
-    with c_img: st.image(PITO_IMG if os.path.exists(PITO_IMG) else "https://img.icons8.com/fluency/200/robot-viewer.png", width=140)
+    with c_img:
+        anim_url = LOTTIE_SUCCESS if st.session_state.pito_state == "success" else LOTTIE_ERROR if st.session_state.pito_state == "error" else LOTTIE_COMPLETE if st.session_state.pito_state == "complete" else LOTTIE_IDLE
+        st_lottie(load_lottieurl(anim_url), height=160, key=f"pito_anim_{m_idx}_{e_idx}")
     with c_msg:
         st.info(f"##### 🗣️ Pito:\n{curr_ex['msg']}")
         st.caption(f"Adım: {e_idx + 1}/5 " + ("🔒 İnceleme Modu" if is_locked else f"🎁 Puan: {st.session_state.current_potential_score}"))
@@ -281,13 +279,13 @@ with col_main:
         if st.button("🔍 Kontrol Et", use_container_width=True):
             out = run_pito_code(code, u_in)
             if out.startswith("⚠️") or out.startswith("Hata:"):
-                st.error(out)
+                st.error(out); st.session_state.pito_state = "error"
                 if out.startswith("Hata:"): st.session_state.current_potential_score = max(5, st.session_state.current_potential_score - 5)
             else:
                 st.subheader("📟 Çıktı")
                 st.code(out if out else "Kod çalıştı!")
                 if curr_ex['check'](code, out) and "___" not in code:
-                    st.session_state.exercise_passed = True
+                    st.session_state.update({'exercise_passed': True, 'pito_state': "success"})
                     if f"{m_idx}_{e_idx}" not in st.session_state.scored_exercises:
                         st.session_state.total_score += st.session_state.current_potential_score
                         st.session_state.scored_exercises.add(f"{m_idx}_{e_idx}")
@@ -299,21 +297,25 @@ with col_main:
                     st.success("Tebrikler! ✅")
                 else:
                     st.session_state.current_potential_score = max(5, st.session_state.current_potential_score - 5)
-                    st.warning("Hatalı!")
+                    st.session_state.pito_state = "error"; st.warning("Hatalı!")
 
     c_back, c_next = st.columns(2)
     with c_back:
         if is_locked and e_idx > 0:
-            if st.button("⬅️ Önceki Adım"): st.session_state.current_exercise -= 1; st.rerun()
+            if st.button("⬅️ Önceki Adım"): 
+                st.session_state.current_exercise, st.session_state.pito_state = e_idx - 1, "idle"
+                st.rerun()
     with c_next:
         if st.session_state.exercise_passed or is_locked:
             if e_idx < 4:
                 if st.button("➡️ Sonraki Adıma Geç"):
-                    st.session_state.current_exercise += 1; st.session_state.exercise_passed = False; st.rerun()
+                    st.session_state.update({'current_exercise': e_idx + 1, 'exercise_passed': False, 'pito_state': "idle"})
+                    st.rerun()
             else:
                 if st.button("🏆 Modülü Bitir"):
                     if st.session_state.current_module < 7:
-                        st.session_state.current_module += 1; st.session_state.current_exercise = 0; st.rerun()
+                        st.session_state.update({'current_module': st.session_state.current_module + 1, 'current_exercise': 0, 'pito_state': "idle"})
+                        st.rerun()
                     else:
                         st.session_state.db_module = 8; st.session_state.completed_modules[7] = True
                         force_save(); st.rerun()
@@ -327,17 +329,21 @@ with col_side:
         if not df_class_lb.empty:
             df_sort = df_class_lb.sort_values(by="Puan", ascending=False).drop_duplicates(subset=["Okul No"]).head(10)
             for i, (_, r) in enumerate(df_sort.iterrows()):
-                medal = "🥇" if i == 0 else "🥈" if i == 1 else "🥉" if i == 2 else "⭐"
-                st.markdown(f'<div class="leaderboard-card"><b>{medal} {r["Rütbe"]} {r["Öğrencinin Adı"]} ({r["Sınıf"]})</b><br>{int(r["Puan"])} Puan</div>', unsafe_allow_html=True)
-        else: st.info("Henüz veri yok...")
+                st.markdown(f'<div class="leaderboard-card"><b>{"🥇" if i == 0 else "🥈" if i == 1 else "🥉" if i == 2 else "⭐"} {r["Rütbe"]} {r["Öğrencinin Adı"]} ({r["Sınıf"]})</b><br>{int(r["Puan"])} Puan</div>', unsafe_allow_html=True)
+        else: st.info("Veri yok...")
     with tab_school:
         if not df_lb.empty:
             df_school_sort = df_lb.sort_values(by="Puan", ascending=False).drop_duplicates(subset=["Okul No"]).head(10)
             for i, (_, r) in enumerate(df_school_sort.iterrows()):
-                medal = "🏆" if i == 0 else "🥈" if i == 1 else "🥉" if i == 2 else "⭐"
-                st.markdown(f'<div class="leaderboard-card"><b>{medal} {r["Rütbe"]} {r["Öğrencinin Adı"]} ({r["Sınıf"]})</b><br>{int(r["Puan"])} Puan</div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="leaderboard-card"><b>{"🏆" if i == 0 else "🥈" if i == 1 else "🥉" if i == 2 else "⭐"} {r["Rütbe"]} {r["Öğrencinin Adı"]} ({r["Sınıf"]})</b><br>{int(r["Puan"])} Puan</div>', unsafe_allow_html=True)
     if not df_lb.empty:
         class_sums = df_lb.groupby("Sınıf")["Puan"].sum()
         if not class_sums.empty:
             champ_class = class_sums.idxmax(); champ_puan = int(class_sums.max())
-            st.markdown(f'<div class="champion-card">🏆 Şampiyon Sınıf<br>{champ_class}<br>Toplam: {champ_puan} Puan</div>', unsafe_allow_html=True)
+            st.markdown(f"""
+                <div class="champion-card">
+                    <span style="font-size: 1.4rem;">🏆 Şampiyon Sınıf</span><br>
+                    <span style="font-size: 1.1rem;">{champ_class}</span><br>
+                    <span style="font-size: 0.9rem;">Toplam: {champ_puan} Puan</span>
+                </div>
+            """, unsafe_allow_html=True)
