@@ -2,3 +2,6 @@ streamlit
 streamlit-ace
 pandas
 st-gsheets-connection
+streamlit-gsheets
+streamlit-lottie
+requests
