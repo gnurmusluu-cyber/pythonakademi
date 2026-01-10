@@ -55,6 +55,7 @@ st.markdown("""
     .leaderboard-card { background: linear-gradient(135deg, #1e1e1e, #2d2d2d); border-radius: 12px; padding: 10px; margin-bottom: 8px; color: white; border: 1px solid #444; }
     .champion-card { background: linear-gradient(135deg, #FFD700, #FFA500); border-radius: 15px; padding: 15px; margin-top: 20px; color: #1e1e1e; text-align: center; font-weight: bold; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3); }
     .stButton > button { width: 100%; border-radius: 12px; height: 3.5em; background: linear-gradient(45deg, #3a7bd5, #00d2ff) !important; color: white !important; font-weight: bold; border: none; }
+    .retrain-btn > button { background: linear-gradient(45deg, #e53935, #e35d5b) !important; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -109,6 +110,7 @@ if not st.session_state.is_logged_in:
                         st.rerun()
                 with c2:
                     if st.button("❌ Hayır, Ben Değilim"):
+                        # - Reset işlemi için en güvenli yol
                         st.session_state.rejected_user = True
                         if "login_field" in st.session_state: del st.session_state["login_field"]
                         st.rerun()
@@ -120,7 +122,7 @@ if not st.session_state.is_logged_in:
                     force_save(); st.rerun()
     st.stop()
 
-# --- 6. MÜFREDAT VE EGZERSİZLER ---
+# --- 6. MÜFREDAT ---
 training_data = [
     {"module_title": "1. Giriş ve Çıktı", "exercises": [
         {"msg": "Python'da ekrana yazı yazdırmak için **print()** kullanılır. Metinler mutlaka **tırnak** içinde olmalıdır. Hadi dene: Ekrana **'Merhaba Pito'** yazdır.", "task": "print('___')", "check": lambda c, o: "Merhaba Pito" in o, "solution": "print('Merhaba Pito')"},
@@ -144,13 +146,12 @@ training_data = [
     {"module_title": "8. Dosyalar", "exercises": [{"msg": "open() ve 'w' ile aç.", "task": "dosya = ___('n.txt', '___')", "check": lambda c, o: "open" in c, "solution": "f = open('n.txt', 'w')\nf.write('X')\nf.close()"}, {"msg": "write() ile 'Pito' yaz.", "task": "f = open('t.txt', 'w'); f.___('Pito'); f.close()", "check": lambda c, o: "write" in c, "solution": "f = open('t.txt', 'w'); f.write('Pito'); f.close()"}, {"msg": "'r' ile okuma modunda aç.", "task": "f = open('t.txt', '___')", "check": lambda c, o: "'r'" in c, "solution": "f = open('t.txt', 'r'); f.close()"}, {"msg": "read() ile oku ve yazdır.", "task": "f = open('t.txt', 'r')\nprint(f.___())\nf.close()", "check": lambda c, o: "read" in c, "solution": "f = open('t.txt', 'w'); f.write('X'); f.close(); f = open('t.txt', 'r'); print(f.read()); f.close()"}, {"msg": "close() ile dosyayı kapat.", "task": "f = open('t.txt', 'r')\nf.___()", "check": lambda c, o: "close" in c, "solution": "f = open('t.txt', 'r'); f.close()"}]}
 ]
 
-# --- 7. KOD ÇALIŞTIRICI ---
-def run_pito_code(c, user_input="10"):
+# --- 7. KOD ÇALIŞTIRMA FONKSİYONU ---
+def run_pito_code(c, user_input="10"): # [Düzeltme] ValueError önlendi
     old_stdout, new_stdout = sys.stdout, StringIO()
     sys.stdout = new_stdout
     if "input(" in c and not user_input: return "⚠️ Terminale veri gir!"
     try:
-        # Placeholder'ları temizle
         safe_code = c.replace("___", "None")
         exec(safe_code, {"input": lambda p: str(user_input), "print": print, "int": int, "str": str, "len": len, "open": open, "range": range})
         sys.stdout = old_stdout
