@@ -88,7 +88,7 @@ if 'is_logged_in' not in st.session_state:
 
 PITO_IMG = "assets/pito.png"
 
-# --- 4. GİRİŞ EKRANI (GELİŞTİRİLMİŞ DOĞRULAMA) ---
+# --- 4. GİRİŞ EKRANI ---
 if not st.session_state.is_logged_in:
     st.markdown("<br>", unsafe_allow_html=True)
     _, col_mid, _ = st.columns([1, 2, 1])
@@ -96,16 +96,20 @@ if not st.session_state.is_logged_in:
         st.markdown('<div class="pito-bubble">Merhaba! Ben <b>Pito</b>. Python Dünyası\'na hoş geldin.</div>', unsafe_allow_html=True)
         st.image(PITO_IMG if os.path.exists(PITO_IMG) else "https://img.icons8.com/fluency/180/robot-viewer.png", width=180)
         
-        # Reddedilme uyarısı
+        # Reddedilme uyarısı gösterimi
         if st.session_state.rejected_user:
             st.warning("⚠️ O halde kendi okul numaranı gir!")
-            st.session_state.rejected_user = False # Uyarıyı bir kez göster
+            # Bayrağı hemen indirmiyoruz ki uyarı bir süre kalsın, ancak yeni bir numara girilince temizlenecek
 
         in_no_raw = st.text_input("Okul Numaran (Sadece Rakam):", key="login_field").strip()
         
         if in_no_raw and not in_no_raw.isdigit():
             st.error("⚠️ Hata: Okul numarası sadece rakamlardan oluşmalıdır!")
         elif in_no_raw:
+            # Kullanıcı yeni numara yazdıysa reddedilme uyarısını temizleyelim
+            if st.session_state.rejected_user:
+                st.session_state.rejected_user = False
+                
             df = get_db(use_cache=False)
             user_data = df[df["Okul No"] == in_no_raw]
             
@@ -118,22 +122,14 @@ if not st.session_state.is_logged_in:
                 with c1:
                     if st.button("✅ Evet, Benim"):
                         m_v, e_v = int(row['Mevcut Modül']), int(row['Mevcut Egzersiz'])
-                        st.session_state.student_no = str(row["Okul No"])
-                        st.session_state.student_name = row["Öğrencinin Adı"]
-                        st.session_state.student_class = row["Sınıf"]
-                        st.session_state.total_score = int(row["Puan"])
-                        st.session_state.db_module = m_v
-                        st.session_state.db_exercise = e_v
-                        st.session_state.current_module = min(m_v, 7)
-                        st.session_state.current_exercise = e_v
-                        st.session_state.completed_modules = [True if x == "1" else False for x in str(row["Tamamlanan Modüller"]).split(",")]
-                        st.session_state.is_logged_in = True
+                        st.session_state.update({'student_no': str(row["Okul No"]), 'student_name': row["Öğrencinin Adı"], 'student_class': row["Sınıf"], 'total_score': int(row["Puan"]), 'db_module': m_v, 'db_exercise': e_v, 'current_module': min(m_v, 7), 'current_exercise': e_v, 'completed_modules': [True if x == "1" else False for x in str(row["Tamamlanan Modüller"]).split(",")], 'is_logged_in': True})
                         st.rerun()
                 with c2:
                     if st.button("❌ Hayır, Ben Değilim"):
-                        # Hafızayı temizle ve uyaruyu aktif et
-                        st.session_state.login_field = ""
+                        # KRİTİK FİKS: API Hatasını önlemek için anahtarı silip rerun yapıyoruz
                         st.session_state.rejected_user = True
+                        if "login_field" in st.session_state:
+                            del st.session_state["login_field"]
                         st.rerun()
             else:
                 st.info("Yeni bir maceracı! Bilgilerini tamamla:")
@@ -141,8 +137,8 @@ if not st.session_state.is_logged_in:
                 in_class = st.selectbox("Sınıfın:", SINIFLAR, key="new_class")
                 if st.button("Maceraya Başla! ✨"):
                     if in_name.strip():
-                        st.session_state.student_no, st.session_state.student_name, st.session_state.student_class = in_no_raw, in_name.strip(), in_class
-                        st.session_state.is_logged_in = True; force_save(); st.rerun()
+                        st.session_state.update({'student_no': in_no_raw, 'student_name': in_name.strip(), 'student_class': in_class, 'is_logged_in': True})
+                        force_save(); st.rerun()
     st.stop()
 
 # --- 5. DETAYLANDIRILMIŞ EĞİTİCİ MÜFREDAT ---
@@ -155,7 +151,7 @@ training_data = [
         {"msg": "Alt satıra geçmek için **'\\n'** karakteri kullanılır. Hadi dene: **'Üst'** ve **'Alt'** kelimelerini tek print içinde farklı satırlarda yazdır.", "task": "print('Üst' + '___' + 'Alt')", "check": lambda c, o: "\n" in o, "solution": "print('Üst' + '\\n' + 'Alt')"}
     ]},
     {"module_title": "2. Değişkenler", "exercises": [
-        {"msg": "Değişkenler bilgileri hafızada saklamaya yarar. Hadi dene: **yas** adında bir değişken oluştur ve içine **15** sayısını atayarak ekrana yazdır.", "task": "yas = ___\nprint(yas)", "check": lambda c, o: "15" in o, "solution": "yas = 15\nprint(yas)"},
+        {"msg": "Değişkenler bilgileri hafızada saklamaya yarar. yas = 15 yazarak bir tam sayı değişkeni oluştur ve yazdır.", "task": "yas = ___\nprint(yas)", "check": lambda c, o: "15" in o, "solution": "yas = 15\nprint(yas)"},
         {"msg": "Hadi dene: **isim** adında bir değişken oluştur, içine **'Pito'** değerini ata ve ekrana yazdır.", "task": "isim = '___'\nprint(isim)", "check": lambda c, o: "Pito" in o, "solution": "isim = 'Pito'\nprint(isim)"},
         {"msg": "**input()** ile kullanıcıdan bilgi alırız. Hadi dene: **'Adın: '** sorusuyla kullanıcıdan isim al ve yazdır.", "task": "ad = ___('Adın: ')\nprint(ad)", "check": lambda c, o: "input" in c, "solution": "ad = input('Adın: ')\nprint(ad)"},
         {"msg": "**str()** fonksiyonu sayısal veriyi metne dönüştürür. Hadi dene: **s = 10** değişkenini metne çevirip yazdır.", "task": "s = 10\nprint(___(s))", "check": lambda c, o: "str" in c, "solution": "s = 10\nprint(str(s))"},
@@ -173,7 +169,7 @@ training_data = [
         {"msg": "**'while'**, şart doğruyken çalışır. Hadi dene: **i<1** şartı doğruyken ekrana 'Y' yazdıran döngüyü kur.", "task": "i=0\n___ i<1: print('Y'); i+=1", "check": lambda c, o: "while" in c, "solution": "i=0\nwhile i<1: print('Y'); i+=1"},
         {"msg": "**'break'** döngüyü bitirir. Hadi dene: i değeri 1 olduğunda döngüyü **bitir**.", "task": "for i in range(3):\n if i==1: ___\n print(i)", "check": lambda c, o: "break" in c, "solution": "for i in range(3):\n    if i==1: break\n    print(i)"},
         {"msg": "**'continue'** o adımı atlar. Hadi dene: i değeri 1 olduğunda o adımı **atla**.", "task": "for i in range(3):\n if i==1: ___\n print(i)", "check": lambda c, o: "continue" in c, "solution": "for i in range(3):\n    if i==1: continue\n    print(i)"},
-        {"msg": "Döngü sayacı olan **i** değişkeni tur numarasını tutar. Hadi dene: i sayacını yazdır.", "task": "for i in range(2): print(___)", "check": lambda c, o: "1" in o, "solution": "for i in range(2): print(i)"}
+        {"msg": "Döngü sayacı olan **i** değişkenini ekrana yazdırarak tur numarasını görebilirsin.", "task": "for i in range(2): print(___)", "check": lambda c, o: "1" in o, "solution": "for i in range(2): print(i)"}
     ]},
     {"module_title": "5. Listeler", "exercises": [
         {"msg": "Listeler `[]` içinde saklanır. Hadi dene: **10** ve **20** sayılarından oluşan bir liste oluştur.", "task": "L = [___, 20]", "check": lambda c, o: "10" in c, "solution": "L=[10, 20]\nprint(L)"},
@@ -343,4 +339,10 @@ with col_side:
         class_sums = df_lb.groupby("Sınıf")["Puan"].sum()
         if not class_sums.empty:
             champ_class = class_sums.idxmax(); champ_puan = int(class_sums.max())
-            st.markdown(f'<div class="champion-card">🏆 Şampiyon Sınıf<br>{champ_class}<br>Toplam: {champ_puan} Puan</div>', unsafe_allow_html=True)
+            st.markdown(f"""
+                <div class="champion-card">
+                    <span style="font-size: 1.4rem;">🏆 Şampiyon Sınıf</span><br>
+                    <span style="font-size: 1.1rem;">{champ_class}</span><br>
+                    <span style="font-size: 0.9rem;">Toplam: {champ_puan} Puan</span>
+                </div>
+            """, unsafe_allow_html=True)
