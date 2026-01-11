@@ -27,7 +27,7 @@ if 'is_logged_in' not in st.session_state:
 SINIFLAR = ["9-A", "9-B", "10-A", "10-B", "11-A", "11-B"]
 RUTBELER = ["🥚 Yeni Başlayan", "🌱 Python Çırağı", "🪵 Kod Oduncusu", "🧱 Mantık Mimarı", "🌀 Döngü Ustası", "📋 Liste Uzmanı", "📦 Fonksiyon Kaptanı", "🤖 OOP Robotu", "🏆 Python Kahramanı"]
 
-# --- MODERN UI CSS (KESİN GÖRÜNÜRLÜK VE HİZALAMA MÜHÜRÜ) ---
+# --- MODERN UI CSS (KESİN GÖRÜNÜRLÜK MÜHÜRLERİ) ---
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -68,18 +68,23 @@ st.markdown("""
         border-width: 15px 25px 15px 0; border-style: solid; border-color: transparent #3a7bd5 transparent transparent;
     }
 
-    /* Liderlik Tablosu */
+    /* Liderlik Tablosu: Görünürlük Fix */
     .champion-box {
         background: linear-gradient(135deg, #FFD700 0%, #F59E0B 100%);
-        color: #000000; border-radius: 15px; padding: 20px; text-align: center;
+        color: #000000 !important; border-radius: 15px; padding: 20px; text-align: center;
         margin-bottom: 20px; box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.4);
         font-weight: bold;
     }
     .ranking-card {
-        background: white; border-radius: 12px; padding: 12px; margin-bottom: 10px;
+        background-color: #ffffff !important; /* Zemin Beyaz */
+        color: #1e293b !important; /* Metin Koyu Lacivert */
+        border-radius: 12px; padding: 12px; margin-bottom: 10px;
         display: flex; justify-content: space-between; align-items: center;
         border: 1px solid #e2e8f0; border-left: 5px solid #3a7bd5;
     }
+    /* Kart içindeki alt elemanların renklerini zorla */
+    .ranking-card b { color: #1e293b !important; }
+    .ranking-card small { color: #64748b !important; }
     
     .stButton > button {
         border-radius: 15px; height: 4em; 
@@ -226,7 +231,7 @@ with col_main:
             {"msg": "**Pito'nun Notu:** Python'ın dünyayla konuşma yolu `print()` fonksiyonudur. Metinleri (String) mutlaka tırnak (' ') içine almalısın. Tırnaklar bilgisayara 'buradaki ifadeyi olduğu gibi yansıt' der.\n\n**GÖREV:** Editor içine tam olarak **'Merhaba Pito'** metnini tırnaklar içerisinde yaz!", "task": "print('___')", "check": lambda c, o, i: "Merhaba Pito" in o, "solution": "print('Merhaba Pito')", "hint": "Metnin başına ve sonuna tek (') tırnak koy."},
             {"msg": "**Sayılar (Integers):** Sayılar tırnak gerektirmez. Tırnak koyarsan Python onu sayı değil, yazı olarak görür ve matematik yapamaz.\n\n**GÖREV:** Boşluğa tırnak kullanmadan sadece **100** sayısını yaz.", "task": "print(___)", "check": lambda c, o, i: "100" in o, "solution": "print(100)", "hint": "Rakamları doğrudan yaz."},
             {"msg": "**Virgül Operatörü:** Virgül (`,`) farklı veri tiplerini aynı satırda birleştirir ve otomatik bir boşluk koyar.\n\n**GÖREV:** 'Puan:' metni ile **100** sayısını yan yana bas.", "task": "print('Puan:', ___)", "check": lambda c, o, i: "100" in o, "solution": "print('Puan:', 100)", "hint": "Virgülden sonra 100 yaz."},
-            {"msg": "**Yorum Satırı:** `#` işareti Python'a 'Bu satırı görmezden gel' der. Sadece biz yazılımcıların kod içine not alması içindir.\n\n**GÖREV:** Satırın en başına **#** işaretini koy.", "task": "___ bu bir nottur", "check": lambda c, o, i: "#" in c, "solution": "# bu bir nottur", "hint": "Diyez (#) işaretini kullan."},
+            {"msg": "**Yorum Satırları:** `#` işareti Python'a 'Bu satırı görmezden gel' der. Sadece biz yazılımcıların kod içine not alması içindir.\n\n**GÖREV:** Satırın en başına **#** işaretini koy.", "task": "___ bu bir nottur", "check": lambda c, o, i: "#" in c, "solution": "# bu bir nottur", "hint": "Diyez (#) işaretini kullan."},
             {"msg": "**Newline:** `\\n` metni alt satıra böler. Sanki klavyede Enter tuşuna basılmış gibi davranır.\n\n**GÖREV:** Boşluğa **\\n** yazarak kelimeleri alt alta getir.", "task": "print('Üst' + '___' + 'Alt')", "check": lambda c, o, i: "Üst\nAlt" in o, "solution": "print('Üst\\nAlt')", "hint": "\\n birleşik yazılır."}
         ]},
         {"module_title": "2. Hafıza: Değişkenler ve input()", "exercises": [
@@ -248,17 +253,17 @@ with col_main:
             {"msg": "**While:** Şart 'True' olduğu sürece çalışmaya devam eder.", "task": "i = 0\n___ i == 0: print('D'); i += 1", "check": lambda c, o, i: "while" in c, "solution": "i = 0\nwhile i == 0:\n    print('D')\n    i += 1", "hint": "while döngüsü."},
             {"msg": "**break:** Döngüyü anında sonlandırır. Acil çıkış kapısıdır.", "task": "for i in range(5):\n if i == 1: ___", "check": lambda c, o, i: "break" in c, "solution": "for i in range(5):\n    if i == 1: break\n    print(i)", "hint": "break kullan."},
             {"msg": "**continue:** O anki adımı pas geçer ve döngünün başına döner.", "task": "for i in range(3):\n if i == 1: ___", "check": lambda c, o, i: "continue" in c, "solution": "for i in range(3):\n    if i == 1: continue\n    print(i)", "hint": "continue yaz."},
-            {"msg": "**in:** Listelerde gezinmek için kullanılır. Her bir elemanı sırayla değişkenimize atar.", "task": "for x ___ ['A']: print(x)", "check": lambda c, o, i: "in" in c, "solution": "for x in ['A']:\n    print(x)", "hint": "in anahtarı."}
+            {"msg": "**in Operatörü:** Listelerde gezinmek için kullanılır. Her bir elemanı sırayla değişkenimize atar.", "task": "for x ___ ['A']: print(x)", "check": lambda c, o, i: "in" in c, "solution": "for x in ['A']:\n    print(x)", "hint": "in anahtarı."}
         ]},
         {"module_title": "5. Gruplama: Listeler", "exercises": [
             {"msg": "**Listeler:** Birden fazla veriyi tek kutuda tutar. Saymaya her zaman 0'dan başlarız!", "task": "L = [___, 20]", "check": lambda c, o, i: "10" in str(i.get('L','')), "solution": "L=[10,20]", "hint": "10 yaz."},
             {"msg": "**İndisleme:** Listenin ilk elemanına `[0]` indeksiyle ulaşılır.", "task": "L = [50, 60]\nprint(L[___])", "check": lambda c, o, i: "50" in o, "solution": "L=[50,60]\nprint(L[0])", "hint": "0 yaz."},
             {"msg": "**.append():** Listenin sonuna yeni bir eleman ekler.", "task": "L = [10]\nL.___ (30)", "check": lambda c, o, i: "append" in c, "solution": "L.append(30)", "hint": "append metodu."},
             {"msg": "**len():** Listenin içindeki toplam eleman sayısını (uzunluğu) verir.", "task": "L = [1, 2, 3]\nprint(___(L))", "check": lambda c, o, i: "3" in o, "solution": "print(len(L))", "hint": "len yaz."},
-            {"msg": "**.pop():** Son elemanı sepetten çıkarır.", "task": "L = [1, 2]\nL.___()", "check": lambda c, o, i: "pop" in c, "solution": "L.pop()", "hint": "pop metodu."}
+            {"msg": "**.pop():** Listenin en sonundaki elemanı sepetten çıkarır ve siler.", "task": "L = [1, 2]\nL.___()", "check": lambda c, o, i: "pop" in c, "solution": "L.pop()", "hint": "pop metodu."}
         ]},
-        {"module_title": "6. Fonksiyonlar ve Sözlükler", "exercises": [
-            {"msg": "**def:** Fonksiyon tanımlama anahtarıdır.", "task": "___ pito(): print('Hi')", "check": lambda c, o, i: "def" in c, "solution": "def pito():\n    print('Hi')", "hint": "def yaz."},
+        {"module_title": "6. Modülerlik: Fonksiyonlar ve Sözlükler", "exercises": [
+            {"msg": "**def:** Fonksiyon tanımlama anahtarıdır. Tekrar eden kodları paketler.", "task": "___ pito(): print('Hi')", "check": lambda c, o, i: "def" in c, "solution": "def pito():\n    print('Hi')", "hint": "def yaz."},
             {"msg": "**Sözlük:** `{anahtar: değer}` çiftleridir. Rehber mantığıdır.", "task": "d = {'ad': '___'}", "check": lambda c, o, i: "Pito" in str(i.get('d', {})), "solution": "d={'ad':'Pito'}", "hint": "Pito yaz."},
             {"msg": "**Tuple:** Listeye benzer ama parantez `()` ile kurulur ve içeriği değiştirilemez.", "task": "t = (___, 2)", "check": lambda c, o, i: "1" in str(i.get('t', '')), "solution": "t=(1, 2)", "hint": "1 yaz."},
             {"msg": "**.keys():** Sözlükteki tüm etiketleri liste halinde verir.", "task": "d = {'a':1}\nprint(d.___())", "check": lambda c, o, i: "keys" in c, "solution": "d.keys()", "hint": "keys metodu."},
