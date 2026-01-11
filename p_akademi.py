@@ -10,14 +10,14 @@ import os
 # --- 1. TASARIM VE SAYFA AYARLARI ---
 st.set_page_config(layout="wide", page_title="Pito Python Akademi", initial_sidebar_state="collapsed")
 
-# --- 2. SESSION STATE (HATA ZIRHI - EN ÜSTTE) ---
+# --- 2. SESSION STATE (HATA VE VERİ KORUMA ZIRHI) ---
 if 'is_logged_in' not in st.session_state:
     for k, v in {
         'student_name': "", 'student_no': "", 'student_class': "", 'completed_modules': [False]*8, 
         'current_module': 0, 'current_exercise': 0, 'exercise_passed': False, 'total_score': 0, 
         'scored_exercises': set(), 'db_module': 0, 'db_exercise': 0, 'is_logged_in': False, 
         'current_potential_score': 20, 'fail_count': 0, 'feedback_msg': "", 'last_output': "", 
-        'login_error': "", 'graduation_view': False
+        'login_error': "", 'graduation_view': False, 'badges': []
     }.items():
         st.session_state[k] = v
 
@@ -102,10 +102,10 @@ def show_pito_img(width=180):
     if os.path.exists("assets/pito.png"): st.image("assets/pito.png", width=width)
     else: st.image("https://img.icons8.com/fluency/180/robot-viewer.png", width=width)
 
-# --- 5. GİRİŞ EKRANI (SOL PANEL) ---
+# --- 5. GİRİŞ EKRANI ---
 with col_app:
     if not st.session_state.is_logged_in:
-        st.markdown('<div class="pito-bubble">Merhaba! Ben <b>Pito</b>. Python dünyasına adım atmaya hazır mısın?</div>', unsafe_allow_html=True)
+        st.markdown('<div class="pito-bubble">Merhaba! Ben <b>Pito</b>. Nusaybin laboratuvarında Python dünyasına adım atmaya hazır mısın?</div>', unsafe_allow_html=True)
         show_pito_img(180)
         in_no = st.text_input("Okul Numaran:", key="login_f").strip()
         if in_no:
@@ -147,42 +147,42 @@ with col_app:
                 st.session_state.update({'current_module': 0, 'current_exercise': 0, 'graduation_view': False}); st.rerun()
         st.stop()
 
-    # --- 6. MÜHÜRLÜ VE BOL AÇIKLAMALI PEDAGOJİK MÜFREDAT (40 ADIM) ---
+    # --- 6. BOL AÇIKLAMALI MÜHÜRLÜ MÜFREDAT (40 ADIM) ---
     training_data = [
         {"module_title": "1. print() ve Metin Dünyası", "exercises": [
-            {"msg": "**Pito'nun Notu:** Python'ın dünyayla konuşma yolu `print()` fonksiyonudur. Ekrana yazacağın metinleri mutlaka tırnak (' ') içine almalısın. Tırnaklar Python'a 'buradaki ifadeyi olduğu gibi yansıt' der.\n\n**GÖREV:** Editor içine tam olarak **'Merhaba Pito'** metnini tırnaklar içerisinde yaz ve kontrol et!", "task": "print('___')", "check": lambda c, o, i: "Merhaba Pito" in o, "solution": "print('Merhaba Pito')", "hint": "Metnin hem başına hem sonuna tek (') veya çift (\") tırnak koy."},
-            {"msg": "**Pito'nun Notu:** Sayılar (Integer), metinlerden farklıdır; tırnak gerektirmezler. Eğer tırnak koyarsan Python onu sayı değil, yazı olarak görür.\n\n**GÖREV:** Boşluğa tırnak kullanmadan sadece **100** sayısını yaz. Bu sayede Python onun bir sayı olduğunu anlayacaktır.", "task": "print(___)", "check": lambda c, o, i: "100" in o, "solution": "print(100)", "hint": "Rakamları tırnaksız yazmalısın."},
-            {"msg": "**Pito'nun Notu:** Virgül (`,`) farklı veri tiplerini aynı satırda birleştirirken araya otomatik bir boşluk koyar.\n\n**GÖREV:** 'Puan:' metni ile **100** sayısını yan yana basmak için boşluğa sadece **100** yaz.", "task": "print('Puan:', ___)", "check": lambda c, o, i: "100" in o, "solution": "print('Puan:', 100)", "hint": "Virgülden sonra sadece sayısal değeri yaz."},
-            {"msg": "**Pito'nun Notu:** `#` işareti Python'a 'Bu satırı görmezden gel' demektir (Yorum Satırı).\n\n**GÖREV:** Satırın en başına **#** işaretini koyarak bu satırı etkisiz bir nota dönüştür.", "task": "___ bu bir nottur", "check": lambda c, o, i: "#" in c, "solution": "# bu bir nottur", "hint": "Diyez işaretini kullan."},
-            {"msg": "**Pito'nun Notu:** `\\n` kaçış karakteri metni alt satıra böler. Sanki klavyede Enter tuşuna basılmış gibi davranır.\n\n**GÖREV:** 'Üst' ve 'Alt' kelimelerini alt alta getirmek için tırnaklar içindeki boşluğa **\\n** yaz.", "task": "print('Üst' + '___' + 'Alt')", "check": lambda c, o, i: "Üst\nAlt" in o, "solution": "print('Üst\\nAlt')", "hint": "Tırnaklar içerisine \\n yaz."}
+            {"msg": "**Pito'nun Notu:** Python'ın dünyayla konuşma yolu `print()` fonksiyonudur. Ekrana yazacağın metinleri mutlaka tırnak (' ') içine almalısın. Tırnaklar Python'a 'buradaki ifadeyi olduğu gibi yansıt' komutunu verir.\n\n**GÖREV:** Editor içine tam olarak **'Merhaba Pito'** metnini tırnaklar içerisinde yaz ve kontrol et!", "task": "print('___')", "check": lambda c, o, i: "Merhaba Pito" in o, "solution": "print('Merhaba Pito')", "hint": "Metnin hem başına hem sonuna tek (') veya çift (\") tırnak koy."},
+            {"msg": "**Pito'un Notu:** Sayılar (Integer), metinlerden farklıdır; tırnak gerektirmezler. Eğer tırnak koyarsan Python onu sayı değil, yazı olarak görür.\n\n**GÖREV:** Boşluğa tırnak kullanmadan sadece **100** sayısını yaz. Bu sayede Python onun bir sayı olduğunu anlayacaktır.", "task": "print(___)", "check": lambda c, o, i: "100" in o, "solution": "print(100)", "hint": "Rakamları tırnaksız yazmalısın."},
+            {"msg": "**Pito'un Notu:** Virgül (`,`) farklı veri tiplerini aynı satırda birleştirirken araya otomatik bir boşluk koyar.\n\n**GÖREV:** 'Puan:' metni ile **100** sayısını yan yana basmak için boşluğa **100** yaz.", "task": "print('Puan:', ___)", "check": lambda c, o, i: "100" in o, "solution": "print('Puan:', 100)", "hint": "Virgülden sonra sadece sayısal değeri yaz."},
+            {"msg": "**Pito'un Notu:** `#` işareti Python'a 'Bu satırı okuma' demektir (Yorum Satırı).\n\n**GÖREV:** Satırın en başına **#** işaretini koyarak bu satırı etkisiz bir nota dönüştür.", "task": "___ bu bir nottur", "check": lambda c, o, i: "#" in c, "solution": "# bu bir nottur", "hint": "Diyez işaretini kullan."},
+            {"msg": "**Pito'un Notu:** `\\n` metni alt satıra böler. Sanki klavyede Enter tuşuna basılmış gibi davranır.\n\n**GÖREV:** 'Üst' ve 'Alt' kelimelerini alt alta getirmek için tırnaklar içindeki boşluğa **\\n** yaz.", "task": "print('Üst' + '___' + 'Alt')", "check": lambda c, o, i: "Üst\nAlt" in o, "solution": "print('Üst\\nAlt')", "hint": "Tırnaklar içerisine \\n yaz."}
         ]},
         {"module_title": "2. Hafıza: Değişkenler ve Atama", "exercises": [
-            {"msg": "**Değişkenler:** Bellekteki kutulardır. `=` işareti sağdaki değeri soldaki kutunun içine koyar (Atama).", "task": "yas = ___", "check": lambda c, o, i: "15" in c, "solution": "yas = 15", "hint": "Eşittirden sonra 15 yaz."},
-            {"msg": "**Metinler:** Tırnak şarttır. İsimlerde boşluk kullanamazsın.", "task": "isim = '___'", "check": lambda c, o, i: "Pito" in o, "solution": "isim = 'Pito'", "hint": "Tırnaklar arasına Pito yaz."},
-            {"msg": "**Girdi:** `input()` kullanıcıdan bilgi bekler ve bunu metin olarak belleğe kaydeder.", "task": "ad = ___('Adın: ')", "check": lambda c, o, i: "input" in c, "solution": "ad = input('Adın: ')", "hint": "Girdi almak için input kullanılır."},
-            {"msg": "**Casting:** Sayıları metne çevirmek için `str()` kullanılır.", "task": "print(___(10))", "check": lambda c, o, i: "str" in c, "solution": "print(str(10))", "hint": "str fonksiyonunu yerleştir."},
-            {"msg": "**Matematik:** `input()` verisini `int()` ile sayıya çevirmelisin.", "task": "n = ___(___('S: '))", "check": lambda c, o, i: "int" in c and "input" in c, "solution": "n = int(input('S: '))", "hint": "int(input()) yapısını kur."}
+            {"msg": "**Pito'un Notu:** Değişkenler bellekteki kutulardır. `=` işareti sağdaki değeri soldaki kutunun içine koyar (Atama).", "task": "yas = ___", "check": lambda c, o, i: "15" in c, "solution": "yas = 15", "hint": "Eşittirden sonra 15 yaz."},
+            {"msg": "**Metinler:** Tırnak şarttır. İsimlerde boşluk kullanamazsın.\n\n**GÖREV:** `isim` değişkenine **'Pito'** metnini ata. Tırnak kullanmayı unutma!", "task": "isim = '___'", "check": lambda c, o, i: "Pito" in o, "solution": "isim = 'Pito'", "hint": "Tırnaklar arasına Pito yaz."},
+            {"msg": "**input():** Kullanıcıdan bilgi bekler ve bunu metin (String) olarak algılar.\n\n**GÖREV:** Kullanıcıdan adını almak için boşluğa **input** yaz.", "task": "ad = ___('Adın: ')", "check": lambda c, o, i: "input" in c, "solution": "ad = input('Adın: ')", "hint": "input kelimesini kullan."},
+            {"msg": "**Casting:** Sayıları metne çevirmek için `str()` fonksiyonunu kullanırız.\n\n**GÖREV:** 10 sayısını metne çeviren **str** fonksiyonunu yaz.", "task": "print(___(10))", "check": lambda c, o, i: "str" in c, "solution": "print(str(10))", "hint": "str fonksiyonunu yerleştir."},
+            {"msg": "**Matematik:** `input()` ile gelen metni `int()` ile tam sayıya çevirmelisin.\n\n**GÖREV:** Dış boşluğa **int**, içe **input** yazarak sayı girişi al.", "task": "n = ___(___('S: '))", "check": lambda c, o, i: "int" in c and "input" in c, "solution": "n = int(input('S: '))", "hint": "int(input()) yapısını kur."}
         ]},
         {"module_title": "3. Karar Yapıları: If-Else Mantığı", "exercises": [
-            {"msg": "**Konu:** Programların beyni `if` bloğudur. Eşitlik sorgusunda mutlaka `==` (çift eşittir) kullanmalısın.", "task": "if 10 ___ 10: print('OK')", "check": lambda c, o, i: "==" in c, "solution": "if 10 == 10:\n    print('OK')", "hint": "== koy."},
-            {"msg": "**Konu:** `else:` bloğu, 'if' şartı sağlanmadığında devreye giren son çaredir.", "task": "if 5 > 10: pass\n___: print('Hata')", "check": lambda c, o, i: "else" in c, "solution": "if 5 > 10: pass\nelse:\n    print('Hata')", "hint": "Sadece else: yaz."},
-            {"msg": "**Konu:** Birden fazla şartı denetlemek için `elif` kullanılır.", "task": "p = 60\nif p < 50: pass\n___ p > 50: print('G')", "check": lambda c, o, i: "elif" in c, "solution": "if p < 50: pass\nelif p > 50:\n    print('G')", "hint": "elif kullan."},
-            {"msg": "**Konu:** `and` (ve) bağlacı, her iki tarafın da doğru olmasını bekler.", "task": "if 1==1 ___ 2==2: print('OK')", "check": lambda c, o, i: "and" in c, "solution": "if 1==1 and 2==2:\n    print('OK')", "hint": "and yaz."},
-            {"msg": "**Konu:** `!=` operatörü 'eşit değilse' anlamına gelir.", "task": "s = 5\nif s ___ 0: print('Var')", "check": lambda c, o, i: "!=" in c, "solution": "if s != 0:\n    print('Var')", "hint": "!= kullan."}
+            {"msg": "**Karar:** Programların beyni `if` bloğudur. Eşitlik sorgusunda mutlaka `==` kullanmalısın.", "task": "if 10 ___ 10: print('OK')", "check": lambda c, o, i: "==" in c, "solution": "if 10 == 10:\n    print('OK')", "hint": "== koy."},
+            {"msg": "**B Planı:** `else:` şart sağlanmadığında devreye girer.", "task": "if 5 > 10: pass\n___: print('Hata')", "check": lambda c, o, i: "else" in c, "solution": "if 5 > 10: pass\nelse:\n    print('Hata')", "hint": "Sadece else: yaz."},
+            {"msg": "**elif:** Birden fazla şartı denetlemek için kullanılır.", "task": "p = 60\nif p < 50: pass\n___ p > 50: print('G')", "check": lambda c, o, i: "elif" in c, "solution": "if p < 50: pass\nelif p > 50:\n    print('G')", "hint": "elif kullan."},
+            {"msg": "**and:** İki tarafın da doğru olmasını bekler.", "task": "if 1==1 ___ 2==2: print('OK')", "check": lambda c, o, i: "and" in c, "solution": "if 1==1 and 2==2:\n    print('OK')", "hint": "and yaz."},
+            {"msg": "**!=:** 'eşit değilse' anlamına gelir.", "task": "s = 5\nif s ___ 0: print('Var')", "check": lambda c, o, i: "!=" in c, "solution": "if s != 0:\n    print('Var')", "hint": "!= kullan."}
         ]},
         {"module_title": "4. Otomasyon: For ve While Döngüleri", "exercises": [
-            {"msg": "**Konu:** `range(5)` komutu 0'dan 4'e kadar sayı üretir. `for` bu sayılarda adım adım ilerler.", "task": "for i in ___(5): print(i)", "check": lambda c, o, i: "range" in c, "solution": "for i in range(5):\n    print(i)", "hint": "range yaz."},
-            {"msg": "**Konu:** `while` döngüsü bir şart 'True' olduğu sürece çalışır.", "task": "i = 0\n___ i == 0: print('D'); i += 1", "check": lambda c, o, i: "while" in c, "solution": "i = 0\nwhile i == 0:\n    print('D')\n    i += 1", "hint": "while yaz."},
-            {"msg": "**Konu:** `break` döngüyü anında sonlandırır.", "task": "for i in range(5):\n if i == 1: ___", "check": lambda c, o, i: "break" in c, "solution": "for i in range(5):\n    if i == 1: break\n    print(i)", "hint": "break kullan."},
-            {"msg": "**Konu:** `continue` ise o anki adımı pas geçer.", "task": "for i in range(3):\n if i == 1: ___", "check": lambda c, o, i: "continue" in c, "solution": "for i in range(3):\n    if i == 1: continue\n    print(i)", "hint": "continue yaz."},
-            {"msg": "**Konu:** Listelerde gezinmek için `in` kullanılır.", "task": "for x ___ ['A']: print(x)", "check": lambda c, o, i: "in" in c, "solution": "for x in ['A']:\n    print(x)", "hint": "in yaz."}
+            {"msg": "**for:** `range(5)` komutu 0'dan 4'e kadar sayı üretir. `for` bu sayılarda adım adım ilerler.", "task": "for i in ___(5): print(i)", "check": lambda c, o, i: "range" in c, "solution": "for i in range(5):\n    print(i)", "hint": "range yaz."},
+            {"msg": "**while:** Şart 'True' olduğu sürece çalışır.", "task": "i = 0\n___ i == 0: print('D'); i += 1", "check": lambda c, o, i: "while" in c, "solution": "i = 0\nwhile i == 0:\n    print('D')\n    i += 1", "hint": "while yaz."},
+            {"msg": "**break:** Döngüyü anında sonlandırır.", "task": "for i in range(5):\n if i == 1: ___", "check": lambda c, o, i: "break" in c, "solution": "for i in range(5):\n    if i == 1: break\n    print(i)", "hint": "break kullan."},
+            {"msg": "**continue:** O anki adımı pas geçer.", "task": "for i in range(3):\n if i == 1: ___", "check": lambda c, o, i: "continue" in c, "solution": "for i in range(3):\n    if i == 1: continue\n    print(i)", "hint": "continue yaz."},
+            {"msg": "**in:** Listelerde gezinmek için kullanılır.", "task": "for x ___ ['A']: print(x)", "check": lambda c, o, i: "in" in c, "solution": "for x in ['A']:\n    print(x)", "hint": "in yaz."}
         ]},
         {"module_title": "5. Gruplama: Listeler", "exercises": [
             {"msg": "**Listeler:** Birden fazla veriyi tek kutuda tutar. Python'da saymaya 0'dan başlarız!", "task": "L = [___, 20]", "check": lambda c, o, i: "10" in c, "solution": "L = [10, 20]", "hint": "10 yaz."},
             {"msg": "**İndeks:** İlk elemana `[0]` indeksiyle ulaşılır.", "task": "L = [50, 60]\nprint(L[___])", "check": lambda c, o, i: "50" in o, "solution": "L = [50, 60]\nprint(L[0])", "hint": "0 yaz."},
             {"msg": "**.append():** Listenin sonuna yeni bir eleman ekler.", "task": "L = [10]\nL.___ (30)", "check": lambda c, o, i: "append" in c, "solution": "L = [10]\nL.append(30)", "hint": "append kullan."},
-            {"msg": "**len():** Listenin içindeki eleman sayısını verir.", "task": "L = [1, 2]\nprint(___(L))", "check": lambda c, o, i: "2" in o, "solution": "L = [1, 2]\nprint(len(L))", "hint": "len yaz."},
-            {"msg": "**.pop():** Son elemanı siler.", "task": "L = [1]\nL.___()", "check": lambda c, o, i: "pop" in c, "solution": "L = [1]\nL.pop()", "hint": "pop yaz."}
+            {"msg": "**len():** Listenin içindeki eleman sayısını verir.", "task": "L = [1, 2, 3]\nprint(___(L))", "check": lambda c, o, i: "3" in o, "solution": "L = [1, 2, 3]\nprint(len(L))", "hint": "len yaz."},
+            {"msg": "**.pop():** Son elemanı siler.", "task": "L = [1, 2]\nL.___()", "check": lambda c, o, i: "pop" in c, "solution": "L = [1, 2]\nL.pop()", "hint": "pop yaz."}
         ]},
         {"module_title": "6. Fonksiyonlar ve Sözlükler", "exercises": [
             {"msg": "**def:** Fonksiyon tanımlama anahtarıdır.", "task": "___ pito(): print('Hi')", "check": lambda c, o, i: "def" in c, "solution": "def pito():\n    print('Hi')", "hint": "def yaz."},
@@ -192,22 +192,22 @@ with col_app:
             {"msg": "**return:** Sonucu dışarıya fırlatır.", "task": "def f(): ___ 5", "check": lambda c, o, i: "return" in c, "solution": "def f():\n    return 5", "hint": "return kullan."}
         ]},
         {"module_title": "7. OOP: Nesne Tabanlı Dünya", "exercises": [
-            {"msg": "**OOP:** `class` bir taslaktır. Ondan 'Nesneler' üretiriz.", "task": "___ Robot: pass", "check": lambda c, o, i: "class" in c, "solution": "class Robot:\n    pass", "hint": "class yaz."},
+            {"msg": "**class:** Bir taslaktır. Ondan 'Nesneler' üretiriz.", "task": "___ Robot: pass", "check": lambda c, o, i: "class" in c, "solution": "class Robot:\n    pass", "hint": "class yaz."},
             {"msg": "Nesne `Robot()` ile üretilir.", "task": "class Robot: pass\nr = ___", "check": lambda c, o, i: "Robot()" in c, "solution": "class Robot: pass\nr = Robot()", "hint": "Robot() yaz."},
             {"msg": "Özellikler `.` yardımıyla atanır.", "task": "class R: pass\nr = R()\nr.___ = 'Mavi'", "check": lambda c, o, i: "renk" in c, "solution": "class R: pass\nr = R()\nr.renk = 'Mavi'", "hint": "renk yaz."},
-            {"msg": "**self:** Nesnenin kendisidir. Metotlarda ilk sırada olmalıdır.", "task": "class R:\n def ses(___): print('B')", "check": lambda c, o, i: "self" in c, "solution": "class R:\n    def ses(self):\n        print('B')", "hint": "self yaz."},
+            {"msg": "**self:** Nesnenin kendisidir. Metotlarda ilk sırada olmalıdır.", "task": "class R:\n def ses(___): print('Bip')", "check": lambda c, o, i: "self" in c, "solution": "class R:\n    def ses(self):\n        print('Bip')", "hint": "self yaz."},
             {"msg": "Nesne metodu nokta ve parantez ile çağrılır.", "task": "class R:\n def s(self): pass\nr = R()\nr.___()", "check": lambda c, o, i: "s()" in c, "solution": "class R:\n    def s(self):\n        pass\nr = R()\nr.s()", "hint": "s() yaz."}
         ]},
         {"module_title": "8. Kalıcılık: Dosya Yönetimi", "exercises": [
             {"msg": "Kaydetmek için `open()` kullanılır. **'w'** (write) yazma modudur.", "task": "f = ___('n.txt', '___')", "check": lambda c, o, i: "open" in c and "w" in c, "solution": "f = open('n.txt', 'w')", "hint": "open ve w yaz."},
-            {"msg": "`.write()` içeriği mühürler.", "task": "f = open('t.txt', 'w')\nf.___('X')", "check": lambda c, o, i: "write" in c, "solution": "f = open('t.txt', 'w')\nf.write('X')", "hint": "write yaz."},
+            {"msg": "**.write():** İçeriği mühürler.", "task": "f = open('t.txt', 'w')\nf.___('X')", "check": lambda c, o, i: "write" in c, "solution": "f = open('t.txt', 'w')\nf.write('X')\nf.close()", "hint": "write yaz."},
             {"msg": "**'r'** okuma modudur.", "task": "f = open('t.txt', '___')", "check": lambda c, o, i: "r" in c, "solution": "f = open('t.txt', 'r')", "hint": "r koy."},
             {"msg": "`.read()` belleğe tüm içeriği getirir.", "task": "f = open('t.txt', 'r')\nprint(f.___())", "check": lambda c, o, i: "read" in c, "solution": "f = open('t.txt', 'r')\nprint(f.read())", "hint": "read yaz."},
             {"msg": "`.close()` hayati önem taşır; mühürdür!", "task": "f = open('t.txt', 'r')\nf.___()", "check": lambda c, o, i: "close" in c, "solution": "f = open('t.txt', 'r')\nf.close()", "hint": "close kullan."}
         ]}
     ]
 
-    # --- 7. QUEST BAR ---
+    # --- 7. QUEST BAR VE İLERLEME ---
     total_steps = 40
     curr_idx = (st.session_state.current_module * 5) + (st.session_state.current_exercise + 1)
     progress_perc = (curr_idx / total_steps) * 100
@@ -229,9 +229,14 @@ with col_app:
         st.info(f"##### 🗣️ Pito'nun Notu:\n{curr_ex['msg']}")
         st.caption(f"Adım: {st.session_state.current_exercise + 1}/5 | {'🔒 İnceleme' if is_review_mode else f'🎁 Potansiyel: {st.session_state.current_potential_score} | ❌ Hata: {st.session_state.fail_count}/4'}")
 
-    # --- 8. FEEDBACK VE ÇÖZÜM BLOĞU ---
+    # --- 8. FEEDBACK VE ÇÖZÜM BLOĞU (MÜHÜRLÜ) ---
     if st.session_state.feedback_msg:
-        if "✅" in st.session_state.feedback_msg: st.success(st.session_state.feedback_msg)
+        if "✅" in st.session_state.feedback_msg:
+            st.success(st.session_state.feedback_msg)
+            # --- KRİTİK ÇIKTI PANELİ (TEBRİKLERİN ALTINDA) ---
+            if st.session_state.last_output:
+                st.markdown("##### 🖥️ Kod Çıktısı (Konsol):")
+                st.code(st.session_state.last_output, language="text")
         else: st.error(st.session_state.feedback_msg)
 
     if not st.session_state.exercise_passed and st.session_state.fail_count == 3:
@@ -244,12 +249,6 @@ with col_app:
     # KOD PANELİ
     if not is_review_mode and st.session_state.fail_count < 4 and not st.session_state.exercise_passed:
         code = st_ace(value=curr_ex['task'], language="python", theme="dracula", font_size=14, height=180, key=f"ace_{st.session_state.current_module}_{st.session_state.current_exercise}", auto_update=True)
-        
-        # --- KRİTİK ÇIKTI PANELİ (EDITORÜN HEMEN ALTI) ---
-        if st.session_state.last_output:
-            st.markdown("##### 🖥️ Kod Çıktısı (Konsol):")
-            st.code(st.session_state.last_output, language="text")
-
         if st.button("🔍 Kodumu Kontrol Et", use_container_width=True):
             if "___" in code: st.session_state.feedback_msg = "⚠️ Pito bekliyor: Lütfen önce boşluğu doldur!"; st.rerun()
             else:
@@ -265,12 +264,11 @@ with col_app:
                 except:
                     sys.stdout = old_stdout; st.session_state.fail_count += 1
                     st.session_state.current_potential_score = max(0, st.session_state.current_potential_score - 5)
-                    st.session_state.feedback_msg = f"❌ 5 Puan Kaybettin! Kalan: {st.session_state.current_potential_score} Puan. Tekrar dene!" if st.session_state.fail_count < 4 else "🌿 Puan kazanamadın ama tecrübe kazandın! Doğru çözümü yukarıdan inceleyip ilerle."
+                    if st.session_state.fail_count < 4:
+                        st.session_state.feedback_msg = f"❌ 5 Puan Kaybettin! Kalan: {st.session_state.current_potential_score} Puan. Tekrar dene!"
+                    else:
+                        st.session_state.feedback_msg = "🌿 Puan kazanamadın ama tecrübe kazandın! Doğru çözümü yukarıdan inceleyip ilerle."
                 st.rerun()
-    elif is_review_mode: # İnceleme modunda da çıktı görünmeli
-        if st.session_state.last_output:
-            st.markdown("##### 🖥️ Kod Çıktısı:")
-            st.code(st.session_state.last_output)
 
     # --- 9. NAVİGASYON ---
     if st.session_state.exercise_passed or is_review_mode or st.session_state.fail_count >= 4:
@@ -284,7 +282,8 @@ with col_app:
             elif st.session_state.current_module < 7:
                 if st.button("🏆 Modülü Bitir"):
                     st.balloons()
-                    if not is_review_mode: st.session_state.db_module += 1; st.session_state.db_exercise = 0; st.session_state.completed_modules[st.session_state.current_module] = True; force_save()
+                    if not is_review_mode:
+                        st.session_state.db_module += 1; st.session_state.db_exercise = 0; st.session_state.completed_modules[st.session_state.current_module] = True; force_save()
                     st.session_state.update({'current_module': st.session_state.current_module + 1, 'current_exercise': 0, 'exercise_passed': False, 'fail_count': 0, 'current_potential_score': 20, 'feedback_msg': "", 'last_output': ""}); st.rerun()
             elif st.session_state.current_module == 7:
                 if st.button("🏁 Mezun Ol"):
