@@ -12,7 +12,7 @@ import time
 # --- 1. TASARIM VE SAYFA AYARLARI ---
 st.set_page_config(layout="wide", page_title="Pito Python Akademi", initial_sidebar_state="collapsed")
 
-# --- 2. SESSION STATE (HATA VE VERİ ZIRHI) ---
+# --- 2. SESSION STATE (HATA ZIRHI VE SİSTEM ANAYASASI) ---
 if 'is_logged_in' not in st.session_state:
     for k, v in {
         'student_name': "", 'student_no': "", 'student_class': "", 'completed_modules': [False]*8,
@@ -52,18 +52,16 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 3. KESİN GIF ÇÖZÜMÜ: YOL BULUCU + BASE64 ---
-def get_pito_gif(gif_name):
-    # Scriptin bulunduğu klasörü baz alarak assets klasörünü bulur
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    asset_path = os.path.join(current_dir, "assets", gif_name)
-    if os.path.exists(asset_path):
-        with open(asset_path, "rb") as f:
+# --- 3. TEKNİK: MACBOOK/SAFARI GIF OYNATMA (BASE64) ---
+def get_base64_gif(gif_path):
+    if os.path.exists(gif_path):
+        with open(gif_path, "rb") as f:
             data = f.read()
             return base64.b64encode(data).decode()
     return None
 
-def show_pito_gif(width=180):
+# GÖRSEL GÜNCELLEME 1: Varsayılan boyut 180'den 250'ye çıkarıldı.
+def show_pito_gif(width=250):
     emotion_map = {
         "standart": "pito_dusunuyor.gif",
         "merhaba": "pito_merhaba.gif",
@@ -72,13 +70,16 @@ def show_pito_gif(width=180):
         "akademi": "pito_mezun.gif"
     }
     gif_file = emotion_map.get(st.session_state.pito_emotion, "pito_dusunuyor.gif")
-    base64_gif = get_pito_gif(gif_file)
+    # os.path.join ile güvenli dosya yolu oluşturma
+    gif_path = os.path.join("assets", gif_file)
+    base64_gif = get_base64_gif(gif_path)
     
     if base64_gif:
-        # Cache çakışmasını önlemek için zaman damgası ekliyoruz
-        st.markdown(f'<img src="data:image/gif;base64,{base64_gif}" width="{width}">', unsafe_allow_html=True)
+        # Cache-busting için zaman damgası
+        t = time.time()
+        st.markdown(f'<div style="display: flex; justify-content: center;"><img src="data:image/gif;base64,{base64_gif}?t={t}" width="{width}"></div>', unsafe_allow_html=True)
     else:
-        st.image("https://img.icons8.com/fluency/180/robot-viewer.png", width=width)
+        st.image("https://img.icons8.com/fluency/250/robot-viewer.png", width=width)
 
 # --- 4. VERİ TABANI ---
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1lat8rO2qm9QnzEUYlzC_fypG3cRkGlJfSfTtwNvs318/edit#gid=0"
@@ -97,7 +98,7 @@ def get_db():
 db_current = get_db()
 if db_current is None: db_current = pd.DataFrame(columns=["Okul No", "Öğrencinin Adı", "Sınıf", "Puan", "Rütbe", "Tamamlanan Modüller", "Mevcut Modül", "Mevcut Egzersiz", "Tarih"])
 
-# --- 5. LİDERLİK TABLOSU (MÜHÜRLÜ - HER AN SABİT) ---
+# --- 5. LİDERLİK TABLOSU (MÜHÜRLÜ - ST.STOP ÖNCESİ) ---
 col_app, col_ranking = st.columns([3, 1])
 
 with col_ranking:
@@ -108,7 +109,7 @@ with col_ranking:
             top_class = class_stats.sort_values(by="Puan", ascending=False).head(1).iloc[0]
             st.markdown(f'<div class="leaderboard-card" style="background: linear-gradient(135deg, #FFD700, #DAA520); color: black;"><b>Sınıf: {top_class["Sınıf"]}</b><br>Toplam: {int(top_class["Puan"])} Puan</div>', unsafe_allow_html=True)
     st.markdown("---")
-    tab_c, tab_s = st.tabs(["👥 Sınıfım", "🏫 Okul Geneli"])
+    tab_c, tab_s = st.tabs(["👥 Sınıfım", "🏫 Okul"])
     with tab_c:
         if st.session_state.is_logged_in:
             my_c = db_current[db_current["Sınıf"] == st.session_state.student_class].sort_values(by="Puan", ascending=False).head(10)
@@ -130,12 +131,13 @@ def force_save():
         conn.update(spreadsheet=SHEET_URL, data=pd.concat([df_clean, new_row], ignore_index=True))
     except: pass
 
-# --- 6. GİRİŞ VE KAYIT SİSTEMİ ---
+# --- 6. GİRİŞ VE KAYIT EKRANI ---
 with col_app:
     if not st.session_state.is_logged_in:
         st.markdown('<div class="pito-bubble">Merhaba! Ben <b>Pito</b>. Python dünyasına adım atmaya hazır mısın?</div>', unsafe_allow_html=True)
         st.session_state.pito_emotion = "merhaba"
-        show_pito_gif(180)
+        # GÖRSEL GÜNCELLEME 2: Giriş ekranında daha büyük Pito
+        show_pito_gif(250)
         in_no = st.text_input("Okul Numaran:", key="login_f", placeholder="Sayısal okul numaranı gir...").strip()
         if in_no:
             if not in_no.isdigit(): st.error("⚠️ Sadece rakam giriniz!")
@@ -163,13 +165,12 @@ with col_app:
         st.stop()
 
     # MEZUNİYET EKRANI
-    if st.session_state.db_module >= 8 and not st.session_state.graduation_view:
-        st.session_state.graduation_view = True; st.balloons()
-
     if st.session_state.graduation_view:
         st.session_state.pito_emotion = "akademi"
         st.markdown('<div class="pito-bubble">🎊 <b>TEBRİKLER Python Kahramanı!</b> Tüm akademiyi başarıyla tamamladın.</div>', unsafe_allow_html=True)
-        st.balloons(); show_pito_gif(250)
+        st.balloons()
+        # GÖRSEL GÜNCELLEME 3: Mezuniyette çok daha büyük Pito
+        show_pito_gif(350)
         st.success(f"Nusaybin laboratuvarının gururu oldun! Toplam Puanın: {st.session_state.total_score}")
         c1, c2 = st.columns(2)
         with c1:
@@ -178,17 +179,17 @@ with col_app:
                 force_save(); st.rerun()
         with c2:
             if st.button("🔍 İnceleme Modu ve Liderlikte Kal"):
-                st.session_state.update({'current_module': 0, 'current_exercise': 0, 'graduation_view': False, 'last_output': "", 'feedback_msg': "", 'pito_emotion': 'standart'}); st.rerun()
+                st.session_state.update({'current_module': 0, 'current_exercise': 0, 'graduation_view': False, 'pito_emotion': 'standart'}); st.rerun()
         st.stop()
 
-    # --- 7. MÜHÜRLÜ VE DERİN PEDAGOJİK MÜFREDAT (40 ADIM) ---
+    # --- 7. EKSİKSİZ VE DERİN PEDAGOJİK MÜFREDAT (40 ADIM) ---
     training_data = [
         {"module_title": "1. İletişim: print() ve Metin Dünyası", "exercises": [
-            {"msg": "**Pito'nun Notu:** Python'ın dünyayla konuşma yolu `print()` fonksiyonudur. Metinler mutlaka tırnak (' ') içine alınmalıdır. Bu tırnaklar bilgisayara 'bu bir yazı dizisidir' mesajını verir.", "task": "print('___')", "check": lambda c, o, i: "Merhaba Pito" in o, "solution": "print('Merhaba Pito')", "hint": "Tırnak içine Merhaba Pito yaz."},
+            {"msg": "**Pito'nun Notu:** Python'ın dünyayla konuşma yolu `print()` fonksiyonudur. Metinler mutlaka tırnak (' ') içine alınmalıdır. Bu tırnaklar bilgisayara 'bu bir yazı dizisidir' mesajını verir.", "task": "print('___')", "check": lambda c, o, i: "Merhaba Pito" in o, "solution": "print('Merhaba Pito')", "hint": "Metnin başına ve sonuna tek (') tırnak koy."},
             {"msg": "**Pito'un Notu:** Sayılar (Integer), tırnak gerektirmezler. Tırnak koyarsan Python onu sayı değil, yazı olarak görür ve matematik yapamaz.", "task": "print(___)", "check": lambda c, o, i: "100" in o, "solution": "print(100)", "hint": "Doğrudan 100 yaz."},
-            {"msg": "**Pito'nun Notu:** Virgül (`,`) farklı veri tiplerini aynı satırda birleştirirken otomatik bir boşluk koyar.", "task": "print('Puan:', ___)", "check": lambda c, o, i: "100" in o, "solution": "print('Puan:', 100)", "hint": "Virgülden sonra 100 yaz."},
+            {"msg": "**Pito'nun Notu:** Virgül (`,`) farklı veri tiplerini aynı satırda birleştirirken otomatik bir boşluk koyar. Bu, değişkenleri ve mesajları birleştirmek için en profesyonel yöntemdir.", "task": "print('Puan:', ___)", "check": lambda c, o, i: "100" in o, "solution": "print('Puan:', 100)", "hint": "Virgülden sonra 100 yaz."},
             {"msg": "**Pito'nun Notu:** `#` işareti 'Yorum Satırı'dır. Bilgisayar bu satırı okumaz, sadece yazılımcıların notları içindir.", "task": "___ bu bir nottur", "check": lambda c, o, i: "#" in c, "solution": "# bu bir nottur", "hint": "Satırın en başına # koy."},
-            {"msg": "**Pito'nun Notu:** `\\n` metni alt satıra böler. Sanki klavyede Enter tuşuna basılmış gibi davranır.", "task": "print('Üst' + '___' + 'Alt')", "check": lambda c, o, i: "Üst\nAlt" in o, "solution": "print('Üst\\nAlt')", "hint": "\\n yaz."}
+            {"msg": "**Pito'nun Notu:** `\\n` metni alt satıra böler. Sanki klavyede Enter tuşuna basılmış gibi davranır.", "task": "print('Üst' + '___' + 'Alt')", "check": lambda c, o, i: "Üst\nAlt" in o, "solution": "print('Üst\\nAlt')", "hint": "Tırnaklar içerisine \\n yaz."}
         ]},
         {"module_title": "2. Hafıza: Değişkenler ve input()", "exercises": [
             {"msg": "**Pito'nun Notu:** Değişkenler bellekteki (RAM) kutulardır. `=` işareti bir 'atama operatörü'dür ve sağdaki değeri soldaki kutunun içine koyar.", "task": "yas = ___", "check": lambda c, o, i: "15" in str(i.get('yas', '')), "solution": "yas = 15", "hint": "15 yaz."},
@@ -209,14 +210,14 @@ with col_app:
             {"msg": "**While:** Şart 'True' olduğu sürece çalışmaya devam eder.", "task": "i = 0\n___ i == 0: print('D'); i += 1", "check": lambda c, o, i: "while" in c, "solution": "i = 0\nwhile i == 0:\n    print('D')\n    i += 1", "hint": "while yaz."},
             {"msg": "**break:** Döngüyü anında sonlandırır. Şart sağlandığı an acil çıkış kapısıdır.", "task": "for i in range(5):\n if i == 1: ___", "check": lambda c, o, i: "break" in c, "solution": "for i in range(5):\n    if i == 1: break\n    print(i)", "hint": "break kullan."},
             {"msg": "**continue:** O anki adımı 'pas geçer' ve döngünün en başına geri döner.", "task": "for i in range(3):\n if i == 1: ___", "check": lambda c, o, i: "continue" in c, "solution": "for i in range(3):\n    if i == 1: continue\n    print(i)", "hint": "continue yaz."},
-            {"msg": "**in:** Listelerde gezinmek için kullanılır.", "task": "for x ___ ['A']: print(x)", "check": lambda c, o, i: "in" in c, "solution": "for x in ['A']:\n    print(x)", "hint": "in yaz."}
+            {"msg": "**in:** Listelerde gezinmek için kullanılır.", "task": "for x ___ ['A', 'B']: print(x)", "check": lambda c, o, i: "in" in c, "solution": "for x in ['A', 'B']:\n    print(x)", "hint": "in yaz."}
         ]},
         {"module_title": "5. Gruplama: Listeler (Veri Sepeti)", "exercises": [
             {"msg": "**Listeler:** Birden fazla veriyi tek kutuda tutar. Python'da saymaya 0'dan başlarız!", "task": "L = [___, 20]", "check": lambda c, o, i: "10" in str(i.get('L', '')), "solution": "L = [10, 20]", "hint": "10 yaz."},
             {"msg": "**İndeks:** Listenin ilk elemanına `[0]` indeksiyle ulaşılır. Buna 'İndisleme' denir.", "task": "L = [50, 60]\nprint(L[___])", "check": lambda c, o, i: "50" in o, "solution": "L = [50, 60]\nprint(L[0])", "hint": "0 yaz."},
             {"msg": "**.append():** Listenin sonuna yeni bir eleman ekler.", "task": "L = [10]\nL.___ (30)", "check": lambda c, o, i: "append" in c, "solution": "L = [10]\nL.append(30)", "hint": "append kullan."},
             {"msg": "**len():** Listenin içindeki toplam eleman sayısını verir.", "task": "L = [1, 2, 3]\nprint(___(L))", "check": lambda c, o, i: "3" in o, "solution": "L = [1, 2, 3]\nprint(len(L))", "hint": "len yaz."},
-            {"msg": "**.pop():** Listenin en sonundaki elemanı sepetten çıkarır.", "task": "L = [1, 2]\nL.___()", "check": lambda c, o, i: "pop" in c, "solution": "L = [1, 2]\nL.pop()", "hint": "pop yazmalısın."}
+            {"msg": "**.pop():** Listenin en sonundaki elemanı sepetten çıkarır.", "task": "L = [1, 2]\nL.___()", "check": lambda c, o, i: "pop" in c, "solution": "L = [1, 2]\nL.pop()", "hint": "pop yaz."}
         ]},
         {"module_title": "6. Modülerlik: Fonksiyonlar ve Sözlükler", "exercises": [
             {"msg": "**def:** Tekrar eden kodları paketlemek için kullanırız.", "task": "___ pito(): print('Hi')", "check": lambda c, o, i: "def" in c, "solution": "def pito():\n    print('Hi')", "hint": "def yaz."},
@@ -228,12 +229,12 @@ with col_app:
         {"module_title": "7. Nesneler: OOP Dünyası", "exercises": [
             {"msg": "**class:** Bir taslaktır. Ondan 'Nesneler' üretiriz. Sınıf bir fabrikadır.", "task": "___ Robot: pass", "check": lambda c, o, i: "class" in c, "solution": "class Robot:\n    pass", "hint": "class yaz."},
             {"msg": "**Robot():** Kalıptan nesne üretmek için sınıf ismini parantezlerle `()` çağırırız.", "task": "class Robot: pass\nr = ___", "check": lambda c, o, i: "Robot" in str(i.get('r', '')), "solution": "class Robot: pass\nr = Robot()", "hint": "Robot() yaz."},
-            {"msg": "**Özellikler:** Nesnelerin kimlik bilgileridir, nokta (`.`) yardımıyla atanır.", "task": "class R: pass\nr = R()\nr.___ = 'Mavi'", "check": lambda c, o, i: "renk" in c, "solution": "class R: pass\nr = R()\nr.renk = 'Mavi'", "hint": "renk yaz."},
-            {"msg": "**self:** Nesnenin kendisini temsil eden parametredir. Metotlarda ilk sırada olmalıdır.", "task": "class R:\n def ses(___): print('Bip')", "check": lambda c, o, i: "self" in c, "solution": "class R:\n    def ses(self):\n        print('Bip')", "hint": "self yaz."},
-            {"msg": "**Method:** Nesnenin bir eylemini çalıştırmak için nokta ve metod ismi yazılır.", "task": "class R:\n def s(self): pass\nr = R()\nr.___()", "check": lambda c, o, i: "s()" in c, "solution": "class R:\n    def s(self):\n        pass\nr = R()\nr.s()", "hint": "s() yaz."}
+            {"msg": "**Özellik:** r nesnesine **renk** özelliği ata.", "task": "class R: pass\nr = R()\nr.___ = 'Mavi'", "check": lambda c, o, i: "renk" in c, "solution": "class R: pass\nr = R()\nr.renk = 'Mavi'", "hint": "renk yaz."},
+            {"msg": "**self:** Nesnenin kendisini temsil eden parametredir.", "task": "class R:\n def ses(___): print('Bip')", "check": lambda c, o, i: "self" in c, "solution": "class R:\n    def ses(self):\n        print('Bip')", "hint": "self yaz."},
+            {"msg": "**Method:** r nesnesinin **s()** metodunu çalıştır.", "task": "class R:\n def s(self): pass\nr = R()\nr.___()", "check": lambda c, o, i: "s()" in c, "solution": "class R:\n    def s(self):\n        pass\nr = R()\nr.s()", "hint": "s() yaz."}
         ]},
         {"module_title": "8. Kalıcılık: Dosya Yönetimi", "exercises": [
-            {"msg": "**open():** Bilgileri saklamak için kullanılır. **'w'** (write) yazma modudur.", "task": "f = ___('n.txt', '___')", "check": lambda c, o, i: "open" in c and "w" in c, "solution": "f = open('n.txt', 'w')", "hint": "open ve w yaz."},
+            {"msg": "**open():** Bilgileri saklamak için kullanılır. **'w'** yazma modudur.", "task": "f = ___('n.txt', '___')", "check": lambda c, o, i: "open" in c and "w" in c, "solution": "f = open('n.txt', 'w')", "hint": "open ve w yaz."},
             {"msg": "**.write():** Veriyi dosyanın içine kalıcı olarak mühürler.", "task": "f = open('t.txt', 'w')\nf.___('X')", "check": lambda c, o, i: "write" in c, "solution": "f = open('t.txt', 'w')\nf.write('X')\nf.close()", "hint": "write yaz."},
             {"msg": "**'r':** Okuma modudur. Dosyayı sadece görmemizi sağlar.", "task": "f = open('t.txt', '___')", "check": lambda c, o, i: "r" in c, "solution": "f = open('t.txt', 'r')", "hint": "r koy."},
             {"msg": "**.read():** Dosyanın tüm içeriğini belleğe getirir.", "task": "f = open('t.txt', 'r')\nprint(f.___())", "check": lambda c, o, i: "read" in c, "solution": "f = open('t.txt', 'r')\nprint(f.read())", "hint": "read yaz."},
@@ -257,8 +258,11 @@ with col_app:
     curr_ex = training_data[st.session_state.current_module]["exercises"][st.session_state.current_exercise]
     is_review_mode = (st.session_state.current_module < st.session_state.db_module)
 
-    c_box_i, c_box_m = st.columns([1, 4])
-    with c_box_i: show_pito_gif(140)
+    # GÖRSEL GÜNCELLEME 4: Sütun oranları Pito'ya (1.3) daha fazla yer verecek şekilde güncellendi.
+    c_box_i, c_box_m = st.columns([1.3, 3.7])
+    with c_box_i:
+        # Egzersiz ekranında varsayılan (250px) Pito
+        show_pito_gif()
     with c_box_m:
         st.info(f"##### 🗣️ Pito'nun Notu:\n{curr_ex['msg']}")
         st.caption(f"Adım: {st.session_state.current_exercise + 1}/5 | {'🔒 İnceleme Modu' if is_review_mode else f'🎁 Potansiyel: {st.session_state.current_potential_score} | ❌ Hata: {st.session_state.fail_count}/4'}")
