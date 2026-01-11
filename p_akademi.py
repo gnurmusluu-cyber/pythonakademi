@@ -10,7 +10,7 @@ import base64
 import time
 from pathlib import Path
 
-# --- 1. TASARIM VE SAYFA AYARLARI ---
+# --- 1. SAYFA AYARLARI ---
 st.set_page_config(layout="wide", page_title="Pito Python Akademi", initial_sidebar_state="collapsed")
 
 # --- 2. SESSION STATE (SİSTEM ANAYASASI) ---
@@ -27,21 +27,21 @@ if 'is_logged_in' not in st.session_state:
 SINIFLAR = ["9-A", "9-B", "10-A", "10-B", "11-A", "11-B"]
 RUTBELER = ["🥚 Yeni Başlayan", "🌱 Python Çırağı", "🪵 Kod Oduncusu", "🧱 Mantık Mimarı", "🌀 Döngü Ustası", "📋 Liste Uzmanı", "📦 Fonksiyon Kaptanı", "🤖 OOP Robotu", "🏆 Python Kahramanı"]
 
-# --- MODERN UI CSS ---
+# --- MODERN UI CSS (KESİN GÖRÜNÜRLÜK VE NEON ÇUBUK) ---
 st.markdown("""
     <style>
     header {visibility: hidden;}
     .main .block-container {padding-top: 1rem; background-color: #0f172a;}
     
-    /* SOL ÜST KİMLİK KARTI */
+    /* SOL ÜST KİMLİK KARTI: Her ışıkta görünür */
     .user-header-box {
         background-color: #ffffff !important; border: 3px solid #3a7bd5 !important;
         border-radius: 20px !important; padding: 15px 25px !important; margin-bottom: 25px !important;
         box-shadow: 0 10px 25px rgba(58, 123, 213, 0.3) !important;
         display: flex !important; justify-content: space-between !important; align-items: center !important;
     }
-    .info-label { color: #64748b !important; font-size: 0.8rem !important; font-weight: 800 !important; }
-    .info-value { color: #1e293b !important; font-size: 1.1rem !important; font-weight: 900 !important; }
+    .info-label { color: #64748b !important; font-size: 0.85rem !important; font-weight: 800 !important; }
+    .info-value { color: #1e293b !important; font-size: 1.2rem !important; font-weight: 900 !important; }
     .score-badge { 
         background: linear-gradient(45deg, #3a7bd5, #00d2ff) !important; color: white !important;
         padding: 8px 20px !important; border-radius: 30px !important; font-weight: 900 !important;
@@ -54,14 +54,14 @@ st.markdown("""
     }
     .quest-bar { 
         height: 26px !important; background: #0f172a !important; 
-        border-radius: 15px !important; margin: 15px 0 !important; overflow: hidden !important; 
+        border-radius: 15px !important; margin: 12px 0 !important; overflow: hidden !important; 
         border: 2px solid #334155 !important;
     }
     .quest-fill { 
         height: 100% !important; background: linear-gradient(90deg, #3a7bd5, #00d2ff) !important; 
         box-shadow: 0 0 20px rgba(0, 210, 255, 0.7) !important; transition: width 0.8s ease-in-out !important; 
     }
-    .quest-text { color: #f8fafc !important; font-weight: 800 !important; font-size: 1.2rem !important; }
+    .quest-text { color: #f8fafc !important; font-weight: 800 !important; font-size: 1.15rem !important; }
 
     /* PİTO KONUŞMA BALONU */
     .pito-bubble {
@@ -86,12 +86,12 @@ st.markdown("""
     
     .stButton > button {
         border-radius: 15px; height: 4.2em; background: linear-gradient(45deg, #3a7bd5, #00d2ff) !important;
-        color: white !important; font-weight: bold; border: none; font-size: 1.1rem;
+        color: white !important; font-weight: bold; border: none; font-size: 1.15rem;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 3. KESİN GIF ÇÖZÜMÜ ---
+# --- 3. KESİN GIF ÇÖZÜMÜ (SAFARI/MACBOOK) ---
 def get_base64_gif(file_name):
     base_path = Path(__file__).parent.absolute()
     asset_path = base_path / "assets" / file_name
@@ -162,14 +162,14 @@ def force_save():
 with col_main:
     if st.session_state.is_logged_in:
         current_rank = RUTBELER[min(sum(st.session_state.completed_modules), 8)]
-        st.markdown(f'''<div class="user-header-box"><div><div class="info-label">AKADEMİ ÖĞRENCİSİ</div><div class="info-value">👤 {st.session_state.student_name} ({st.session_state.student_class})</div></div><div style="text-align:center;"><div class="info-label">RÜTBE</div><div class="info-value">{current_rank}</div></div><div style="text-align:right;"><div class="info-label">TOPLAM PUAN</div><div class="score-badge">⭐ {st.session_state.total_score}</div></div></div>''', unsafe_allow_html=True)
+        st.markdown(f'''<div class="user-header-box"><div><div class="info-label">AKADEMİ ÖĞRENCİSİ</div><div class="info-value">👤 {st.session_state.student_name} ({st.session_state.student_class})</div></div><div style="text-align:center;"><div class="info-label">GÜNCEL RÜTBE</div><div class="info-value">{current_rank}</div></div><div style="text-align:right;"><div class="info-label">TOPLAM PUAN</div><div class="score-badge">⭐ {st.session_state.total_score}</div></div></div>''', unsafe_allow_html=True)
 
     if not st.session_state.is_logged_in:
         c1, c2 = st.columns([1.6, 3.4])
         with c1: st.session_state.pito_emotion = "merhaba"; show_pito_gif(450)
         with c2:
             st.markdown('<div class="pito-bubble" style="margin-top: 60px;">Merhaba Geleceğin Yazılımcısı!<br><br>Ben <b>Pito</b>. Nusaybin laboratuvarında Python macerasına hazır mısın? Numaranı gir ve mühürlü dünyaya katıl!</div>', unsafe_allow_html=True)
-            in_no = st.text_input("Okul Numaran:", key="login_f", placeholder="Sayısal numaranı buraya yaz...").strip()
+            in_no = st.text_input("Okul Numaran:", key="login_f", placeholder="Sayısal okul numaranı yaz...").strip()
             if in_no and in_no.isdigit():
                 user_data = db_current[db_current["Okul No"] == in_no] if db_current is not None else pd.DataFrame()
                 if not user_data.empty:
@@ -191,7 +191,7 @@ with col_main:
         st.session_state.pito_emotion = "akademi"; show_pito_gif(550)
         st.markdown('<div class="pito-bubble" style="text-align:center;">🎊 <b>TEBRİKLER Python Kahramanı!</b><br>Nusaybin laboratuvarının gururusun. Python akademisini %100 mühürledin!</div>', unsafe_allow_html=True)
         st.balloons()
-        if st.button("🔄 Eğitimi Tekrar Al (Puan Sıfırlanır)"):
+        if st.button("🔄 Eğitimi Tekrar Al (Sıfırla)"):
             st.session_state.update({'db_module': 0, 'db_exercise': 0, 'current_module': 0, 'current_exercise': 0, 'total_score': 0, 'completed_modules': [False]*8, 'graduation_view': False, 'scored_exercises': set(), 'pito_emotion': 'merhaba'}); force_save(); st.rerun()
         if st.button("🔍 Modülleri İncele"): st.session_state.graduation_view = False; st.rerun()
         st.stop()
@@ -199,10 +199,10 @@ with col_main:
     # --- 7. MUTLAK VE DERİN MÜFREDAT (40 ADIM) ---
     training_data = [
         {"module_title": "1. İletişim: print() ve Metin Dünyası", "exercises": [
-            {"msg": "**Pito'nun Notu:** Python'ın dünyayla konuştuğu tek kapı `print()` fonksiyonudur. Metinleri (yazıları) mutlaka tırnak (' ') içine almalısın. Tırnaklar bilgisayara 'buradaki ifadeyi olduğu gibi yansıt' der.\n\n**GÖREV:** Editor içine tam olarak **'Merhaba Pito'** metnini tırnaklar içerisinde yaz!", "task": "print('___')", "check": lambda c, o, i: "Merhaba Pito" in o, "solution": "print('Merhaba Pito')", "hint": "Metnin başına ve sonuna tek (') tırnak koy."},
+            {"msg": "**Pito'nun Notu:** Python'ın dünyayla konuştuğu tek kapı `print()` fonksiyonudur. Metinleri (yazıları) mutlaka tırnak (' ') içine almalısın. Tırnaklar Python'a 'buradaki ifadeyi olduğu gibi yansıt' der.\n\n**GÖREV:** Editor içine tam olarak **'Merhaba Pito'** metnini tırnaklar içerisinde yaz!", "task": "print('___')", "check": lambda c, o, i: "Merhaba Pito" in o, "solution": "print('Merhaba Pito')", "hint": "Metnin başına ve sonuna tek (') tırnak koy."},
             {"msg": "**Sayılar (Integers):** Sayılar tırnak gerektirmezler. Eğer bir sayıya tırnak koyarsan Python onu sayı değil, bir 'yazı' olarak görür ve üzerinde matematik yapamaz.\n\n**GÖREV:** Boşluğa tırnak kullanmadan sadece **100** sayısını yaz.", "task": "print(___)", "check": lambda c, o, i: "100" in o, "solution": "print(100)", "hint": "Sayısal değerleri tırnaksız yazmalısın."},
-            {"msg": "**Virgül Operatörü:** Virgül (`,`) farklı veri tiplerini (metin ve sayı gibi) aynı satırda birleştirir ve araya otomatik bir boşluk koyar. Bu, değişkenleri ve mesajları birleştirmek için en profesyonel yöntemdir.\n\n**GÖREV:** 'Puan:' metni ile **100** sayısını yan yana bas.", "task": "print('Puan:', ___)", "check": lambda c, o, i: "100" in o, "solution": "print('Puan:', 100)", "hint": "Virgülden sonra sadece 100 yaz."},
-            {"msg": "**# Yorum Satırı:** Diyez işareti Python'a 'Bu satırı görmezden gel' demektir. Sadece biz yazılımcıların kod içine not alması içindir; kodun çalışmasını asla etkilemez.\n\n**GÖREV:** Satırın en başına **#** işaretini koyarak bu satırı etkisiz bir nota dönüştür.", "task": "___ bu bir nottur", "check": lambda c, o, i: "#" in c, "solution": "# bu bir nottur", "hint": "Klavyeden diyez (#) işaretini en başa yerleştir."},
+            {"msg": "**Virgül Operatörü:** Virgül (`,`) farklı veri tiplerini (metin ve sayı gibi) aynı satırda birleştirir ve araya otomatik bir boşluk koyar.\n\n**GÖREV:** 'Puan:' metni ile **100** sayısını yan yana bas.", "task": "print('Puan:', ___)", "check": lambda c, o, i: "100" in o, "solution": "print('Puan:', 100)", "hint": "Virgülden sonra sadece 100 yaz."},
+            {"msg": "**# Yorum Satırı:** Diyez işareti Python'a 'Bu satırı görmezden gel' demektir. Sadece biz yazılımcıların kod içine not alması içindir; kodun çalışmasını asla etkilemez.\n\n**GÖREV:** Satırın en başına **#** işaretini koy.", "task": "___ bu bir nottur", "check": lambda c, o, i: "#" in c, "solution": "# bu bir nottur", "hint": "Klavyeden diyez (#) işaretini en başa yerleştir."},
             {"msg": "**Newline:** `\\n` kaçış karakteri metni alt satıra fırlatır. Sanki Enter tuşuna basılmış gibi davranır. Bu karakter metinlerin içinde gizli bir komuttur.\n\n**GÖREV:** Tırnaklar içindeki boşluğa **\\n** yaz.", "task": "print('Üst' + '___' + 'Alt')", "check": lambda c, o, i: "Üst\nAlt" in o, "solution": "print('Üst\\nAlt')", "hint": "\\n (ters eğik çizgi ve n)."}
         ]},
         {"module_title": "2. Hafıza: Değişkenler ve input()", "exercises": [
@@ -210,7 +210,7 @@ with col_main:
             {"msg": "**input():** Programı durdurur ve kullanıcıdan bir bilgi bekler. Python bu bilgiyi ne olursa olsun her zaman 'metin' (String) olarak algılar.\n\n**GÖREV:** Veri alma fonksiyonu olan **input** yaz.", "task": "ad = ___('Adın: ')", "check": lambda c, o, i: "input" in c, "solution": "ad = input('Adın: ')", "hint": "input kelimesini kullan."},
             {"msg": "**Casting:** Sayıları metne çevirmemiz gerektiğinde (Buna 'Casting' diyoruz) `str()` fonksiyonunu kullanırız. Bu, farklı tipleri birleştirirken hata almanı önler.\n\n**GÖREV:** 10 sayısını metne çeviren **str** fonksiyonunu boşluğa yerleştir.", "task": "print(___(10))", "check": lambda c, o, i: "str" in c, "solution": "print(str(10))", "hint": "str(değişken) formunu kullan."},
             {"msg": "**int():** `input()` verisini matematiksel işleme sokmak için onu `int()` fonksiyonu ile 'tam sayıya' çevirmelisin.\n\n**GÖREV:** Dışa **int**, içe **input** yazarak sistemi kur.", "task": "n = ___(___('S: '))", "check": lambda c, o, i: "int" in c and "input" in c, "solution": "n = int(input('S: '))", "hint": "int(input()) yapısını kur."},
-            {"msg": "**Değişken Kuralları:** Değişken isimlerinde rakamla başlamamaya ve boşluk kullanmamaya dikkat et!\n\n**GÖREV:** `isim` değişkenine **'Pito'** metnini ata.", "task": "isim = ___", "check": lambda c, o, i: "Pito" in str(i.get('isim', '')), "solution": "isim = 'Pito'", "hint": "Metni tırnaklar içine yaz."}
+            {"msg": "**İsimlendirme:** Değişken isimlerinde rakamla başlamamaya ve boşluk kullanmamaya dikkat et!\n\n**GÖREV:** `isim` değişkenine **'Pito'** metnini ata.", "task": "isim = ___", "check": lambda c, o, i: "Pito" in str(i.get('isim', '')), "solution": "isim = 'Pito'", "hint": "Metni tırnaklar içine yaz."}
         ]},
         {"module_title": "3. Mantık: Karar Yapıları (If-Else)", "exercises": [
             {"msg": "**Eşitlik Sorgusu:** Karar yapılarında `=` (atama) ile `==` (eşitlik sorgusu) çok farklıdır. Sorgularken mutlaka çift eşittir kullanmalısın.", "task": "if 10 ___ 10: print('OK')", "check": lambda c, o, i: "==" in c, "solution": "if 10 == 10:\n    print('OK')", "hint": "== koy."},
@@ -242,7 +242,7 @@ with col_main:
         ]},
         {"module_title": "7. Nesneler: OOP Dünyası", "exercises": [
             {"msg": "**class:** Nesne üretmek için kullanılan kalıptır (Fabrika).", "task": "___ Robot: pass", "check": lambda c, o, i: "class" in c, "solution": "class", "hint": "class yaz."},
-            {"msg": "**Instance:** Kalıptan canlı bir nesne üretir (Instance).", "task": "r = ___", "check": lambda c, o, i: "Robot" in str(i.get('r','')), "solution": "Robot()", "hint": "Robot()."},
+            {"msg": "**Instance:** Kalıptan canlı bir nesne üretir.", "task": "r = ___", "check": lambda c, o, i: "Robot" in str(i.get('r','')), "solution": "Robot()", "hint": "Robot()."},
             {"msg": "**Nokta (.):** Nesnenin özelliklerine (rengi, hızı vb.) nokta ile ulaşılır.", "task": "r.___ = 'Mavi'", "check": lambda c, o, i: "renk" in c, "solution": "renk", "hint": "renk."},
             {"msg": "**self:** Nesnenin kendisini temsil eden gizli parametredir.", "task": "def s(___): pass", "check": lambda c, o, i: "self" in c, "solution": "self", "hint": "self yaz."},
             {"msg": "**Metot:** Nesneye bağlı çalışan fonksiyonlardır.", "task": "r.___()", "check": lambda c, o, i: "s()" in c, "solution": "s()", "hint": "s()."}
@@ -277,16 +277,16 @@ with col_main:
         if "✅" in st.session_state.feedback_msg: st.success(st.session_state.feedback_msg)
         else: st.error(st.session_state.feedback_msg)
 
-    # ÖNEMLİ: Editör sadece 4. hatadan ÖNCE veya BAŞARI durumunda gizlenmez
+    # Editör Mantığı: Sadece başarıda veya 4. hatadan sonra gizlenir
     if not is_review_mode and st.session_state.fail_count < 4 and not st.session_state.exercise_passed:
         custom_input = ""
         if "input" in curr_ex['solution']: custom_input = st.text_input("📝 Girdi Kutusu:", key=f"inp_{st.session_state.current_module}_{st.session_state.current_exercise}").strip()
         
-        # ACE EDİTÖR: Kırmızı Apply butonu kaldırıldı.
-        code = st_ace(value=curr_ex.get('task',''), language="python", theme="monokai", font_size=18, height=220, auto_update=True, key=f"ace_{st.session_state.current_module}_{st.session_state.current_exercise}_{st.session_state.fail_count}")
+        # ACE EDİTÖR: Benzersiz Key ve Otomatik Güncelleme
+        code = st_ace(value=curr_ex.get('task',''), language="python", theme="monokai", font_size=18, height=220, auto_update=True, key=f"ace_{st.session_state.current_module}_{st.session_state.current_exercise}")
         
         if st.button("🔍 Kodumu Kontrol Et", use_container_width=True):
-            # KOD KONTROL MANTIĞI
+            # Boşluk Kontrolü (Öğrenciye hata hakkı kaybettirmez)
             if "___" in code:
                 st.session_state.feedback_msg = "⚠️ Pito bekliyor: Boşluğu doldurmalısın!"
                 st.rerun()
@@ -305,20 +305,20 @@ with col_main:
                     st.session_state.current_potential_score = max(0, st.session_state.current_potential_score - 5)
                     st.session_state.pito_emotion = "uzgun"
                     
-                    # HATA KADEMELERİ (PEDAGOJİK DÖNGÜ)
+                    # PEDAGOJİK HATA DÖNGÜSÜ
                     if st.session_state.fail_count == 1:
                         st.session_state.feedback_msg = "❌ Bu ilk hatan lütfen daha dikkatli ol ve tekrar dene (kazanacağın puan -5 azaldı.)"
                     elif st.session_state.fail_count == 2:
                         st.session_state.feedback_msg = "❌ Bu 2. hatan lütfen daha dikkatli ol ve tekrar dene (kazanacağın puan -5 azaldı.)"
                     elif st.session_state.fail_count == 3:
-                        st.session_state.feedback_msg = f"❌ Bu 3. hatan lütfen daha dikkatli ol ve tekrar dene (kazanacağın puan -5 azaldı.) \n\n💡 **İpucu:** {curr_ex['hint']}"
+                        st.session_state.feedback_msg = f"❌ Bu 3. hatan lütfen daha dikkatli ol ve tekrar dene (kazanacağın puan -5 azaldı.) \n\n💡 **Pito'dan İpucu:** {curr_ex['hint']}"
                     else:
                         st.session_state.feedback_msg = "🌿 Bu egzersizden puan alamadın ama üzülme aşağıda çözümü inceleyebilirsin."
                     st.rerun()
     
-    # Navigasyon: Sadece 4. hatada veya başarıda görünür
+    # Navigasyon: Sadece tam başarıda veya 4. hatadan sonra görünür
     if st.session_state.exercise_passed or is_review_mode or st.session_state.fail_count >= 4:
-        if st.session_state.fail_count >= 4 or is_review_mode:
+        if (st.session_state.fail_count >= 4 or is_review_mode) and not st.session_state.exercise_passed:
             st.markdown('<div style="background:#fef2f2; border:2px solid #ef4444; border-radius:15px; padding:15px; margin-bottom:15px;">🔍 **Mühürlü Çözüm Yolu:**</div>', unsafe_allow_html=True)
             st.code(curr_ex['solution'], language="python")
         
