@@ -4,27 +4,28 @@ import json
 import time
 import os
 import re
+import io
 from datetime import datetime
 from streamlit_gsheets import GSheetsConnection
 
-# --- 1. SİSTEM VE PADDING KONFİGÜRASYONU ---
+# --- 1. SİSTEM VE GÖRSEL KONFİGÜRASYON ---
 st.set_page_config(
     page_title="Pito Python Akademi", 
     layout="wide", 
     initial_sidebar_state="collapsed"
 )
 
-# Giriş durumuna göre üst boşluğu (padding) belirle
+# Giriş durumuna göre üst boşluğu (padding) dinamik ayarla
 top_pad = "1rem" if st.session_state.get("user") is None else "3.5rem"
 
 st.markdown(f"""
     <style>
     .stApp {{ background-color: #0E1117; color: #FFFFFF; }}
     
-    /* STREAMLIT MENÜSÜNÜ GİZLE (Sağ üstteki 3 nokta) */
+    /* STREAMLIT ÜST MENÜSÜNÜ GİZLE */
     .stApp > header {{ display: none; }}
 
-    /* DİNAMİK PADDING: Giriş ekranında dar, Dashboard'da ferah */
+    /* DİNAMİK PADDING: Dashboard'da elemanların yarım görünmesini engeller */
     .block-container {{
         padding-top: {top_pad} !important; 
         padding-bottom: 1rem !important;
@@ -47,7 +48,7 @@ st.markdown(f"""
         text-shadow: 2px 2px 10px rgba(0, 255, 0, 0.2);
     }}
 
-    /* Dashboard Bileşenleri */
+    /* Dashboard Panelleri */
     .hero-panel {{ 
         background: linear-gradient(90deg, #1E1E2F 0%, #2D2D44 100%); 
         padding: 25px; 
@@ -106,7 +107,7 @@ st.markdown(f"""
         color: #E0E0E0; 
     }}
     
-    /* Butonlar ve Formlar */
+    /* Butonlar ve Girdiler */
     .stButton>button {{ 
         border-radius: 10px; 
         background-color: #00FF00 !important; 
@@ -121,16 +122,16 @@ st.markdown(f"""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 3. AKILLI VERİ MOTORU (KOTA DOSTU) ---
+# --- 2. AKILLI VERİ MOTORU (KOTA VE CACHE DOSTU) ---
 conn = st.connection("gsheets", type=GSheetsConnection)
 
-@st.cache_data(ttl=600) # Veriyi 10 dakika cache'de tutar (Kota dostu)
-def veri_oku_akilli(url):
+@st.cache_data(ttl=600) # Veriyi 10 dakika boyunca yerel hafızada tutar
+def veri_cek_akilli(url):
     try:
         return conn.read(spreadsheet=url, ttl=0)
     except Exception as e:
         if "429" in str(e):
-            st.error("🚦 Trafik çok yoğun! Lütfen 1 dakika sonra tekrar dene.")
+            st.error("🚦 Pito: 'Laboratuvarda trafik çok yoğun! Lütfen 1 dakika sonra tekrar dene.'")
         return None
 
 def kod_normalize_et(kod):
@@ -138,10 +139,10 @@ def kod_normalize_et(kod):
 
 def pito_notu_uret(mod, ad="Genç Yazılımcı"):
     notlar = {
-        "merhaba": f"Selam {ad}! Bugün hangi kodu fethedeceğiz?",
-        "basari": f"Harikasın {ad}! Kodun tertemiz çalıştı. Sonucu aşağıya bıraktım.",
+        "merhaba": f"Selam {ad}! Bugün Python dünyasında hangi kapıları açacağız?",
+        "basari": f"Vay canına {ad}! Kodun tertemiz çalıştı. Çıktıyı aşağıya bıraktım.",
         "hata": f"Ufak bir yazım kazası {ad}... Python biraz titizdir, bir daha bak.",
-        "dusunuyor": f"Bu görev terletiyor mu? Merak etme, çözüm ve çıktı seni bekliyor.",
+        "dusunuyor": f"Bu görev biraz terletiyor mu? Merak etme, çözüm seni bekliyor.",
         "mezun": f"İnanılmaz! Artık gerçek bir Python Bilgesisin!"
     }
     return notlar.get(mod, notlar["merhaba"])
@@ -152,7 +153,7 @@ def pito_gorseli_yukle(mod):
     if os.path.exists(img_path):
         st.image(img_path, use_container_width=True)
 
-# --- 4. VERİ VE SESSION STATE ---
+# --- 3. VERİ VE SESSION STATE ---
 KULLANICILAR_URL = "https://docs.google.com/spreadsheets/d/1lat8rO2qm9QnzEUYlzC_fypG3cRkGlJfSfTtwNvs318/edit#gid=0"
 KAYITLAR_URL = "https://docs.google.com/spreadsheets/d/14QoNr4FHZhSaUDUU-DDQEfNFHMo5Ge5t5lyDgqGRJ3k/edit#gid=0"
 
@@ -163,45 +164,41 @@ except:
     st.error("❌ Müfredat dosyası eksik!"); st.stop()
 
 if "user" not in st.session_state: st.session_state.user = None
-if "temp_user" not in st.session_state: st.session_state.temp_user = None
+if "temp_user" not in st.session_state: st.session_state.temp_user = None # Onay bekleme hafızası
 if "error_count" not in st.session_state: st.session_state.error_count = 0
 if "cevap_dogru" not in st.session_state: st.session_state.cevap_dogru = False
 if "pito_mod" not in st.session_state: st.session_state.pito_mod = "merhaba"
 if "last_code" not in st.session_state: st.session_state.last_code = ""
 
-# --- 5. İLERLEME KAYDETME MOTORU ---
+# --- 4. İLERLEME KAYDETME MOTORU ---
 def ilerleme_kaydet(puan, kod, egz_id, n_id, n_m):
     try:
         df_u = conn.read(spreadsheet=KULLANICILAR_URL, ttl=0)
         u_idx = df_u[df_u['ogrenci_no'] == st.session_state.user['ogrenci_no']].index[0]
         yeni_xp = int(float(df_u.at[u_idx, 'toplam_puan'])) + puan
         
-        # Rütbe
+        # Rütbe Sistemi
         if yeni_xp >= 1000: r = "🏆 Bilge"
         elif yeni_xp >= 500: r = "🔥 Savaşçı"
         elif yeni_xp >= 200: r = "🐍 Pythonist"
         else: r = "🥚 Çömez"
         
-        df_u.at[u_idx, 'toplam_puan'] = yeni_xp
-        df_u.at[u_idx, 'mevcut_egzersiz'] = str(n_id)
-        df_u.at[u_idx, 'mevcut_modul'] = int(float(n_m))
-        df_u.at[u_idx, 'rutbe'] = r
-        
+        df_u.at[u_idx, 'toplam_puan'], df_u.at[u_idx, 'mevcut_egzersiz'], df_u.at[u_idx, 'mevcut_modul'], df_u.at[u_idx, 'rutbe'] = yeni_xp, str(n_id), int(float(n_m)), r
         conn.update(spreadsheet=KULLANICILAR_URL, data=df_u)
         
-        # Log
+        # Log Kaydı
         df_k = conn.read(spreadsheet=KAYITLAR_URL, ttl=0)
         yeni_log = pd.DataFrame([{"kayit_id": f"{st.session_state.user['ogrenci_no']}_{egz_id}", "ogrenci_no": int(st.session_state.user['ogrenci_no']), "alinan_puan": int(puan), "basarili_kod": kod, "tarih": datetime.now().strftime("%Y-%m-%d %H:%M")}])
         conn.update(spreadsheet=KAYITLAR_URL, data=pd.concat([df_k, yeni_log], ignore_index=True))
         
         st.session_state.user = df_u.iloc[u_idx].to_dict()
-        st.session_state.error_count, st.session_state.cevap_dogru, st.session_state.pito_mod, st.session_state.last_code = 0, False, "merhaba", ""
+        st.session_state.error_count, st.session_state.cevap_dogru, st.session_state.pito_mod = 0, False, "merhaba"
         st.cache_data.clear() # Liderlik tablosu güncellensin
         st.rerun()
-    except Exception as e:
-        st.error(f"Kayıt sırasında kota hatası oluştu. Lütfen tekrar dene!")
+    except Exception:
+        st.error("⚠️ Kota doldu! Pito: 'Lütfen birkaç saniye sonra tekrar dene.'")
 
-# --- 6. ANA AKIŞ ---
+# --- 5. ANA AKIŞ ---
 
 if st.session_state.user is None:
     # --- GİRİŞ VE AKILLI ONAY EKRANI ---
@@ -211,22 +208,26 @@ if st.session_state.user is None:
         st.markdown('<div class="academy-title">Pito Python Akademi</div>', unsafe_allow_html=True)
         pito_gorseli_yukle("merhaba")
         
+        # DURUM A: NUMARA GİRİŞİ VEYA KAYIT
         if st.session_state.temp_user is None:
             numara = st.number_input("Okul Numaranı Gir:", step=1, value=0)
             if numara > 0 and st.button("Akademi Kapısını Aç 🔑"):
-                df_u = veri_oku_akilli(KULLANICILAR_URL)
+                df_u = veri_cek_akilli(KULLANICILAR_URL)
                 if df_u is not None:
                     u_data = df_u[df_u['ogrenci_no'] == numara]
                     if not u_data.empty:
-                        st.session_state.temp_user = u_data.iloc[0].to_dict(); st.rerun()
+                        st.session_state.temp_user = u_data.iloc[0].to_dict()
+                        st.rerun()
                     else:
                         st.info("Seni tanımıyorum! Haydi kaydolalım.")
                         y_ad = st.text_input("Ad Soyad:")
                         y_sin = st.selectbox("Sınıfın:", ["9-A", "9-B", "10-A", "10-B", "11-A", "12-A"])
                         if st.button("Kaydı Tamamla 🎓") and y_ad:
-                            y_og = pd.DataFrame([{"ogrenci_no": int(numara), "ad_soyad": y_ad, "sinif": y_sin, "toplam_puan": 0, "mevcut_modul": 1, "mevcut_egzersiz": "1.1", "rutbe": "🥚 Çömez"}])
-                            conn.update(spreadsheet=KULLANICILAR_URL, data=pd.concat([df_u, y_og], ignore_index=True))
-                            st.session_state.user = y_og.iloc[0].to_dict(); st.rerun()
+                            y_new = pd.DataFrame([{"ogrenci_no": int(numara), "ad_soyad": y_ad, "sinif": y_sin, "toplam_puan": 0, "mevcut_modul": 1, "mevcut_egzersiz": "1.1", "rutbe": "🥚 Çömez"}])
+                            conn.update(spreadsheet=KULLANICILAR_URL, data=pd.concat([df_u, y_new], ignore_index=True))
+                            st.session_state.user = y_new.iloc[0].to_dict()
+                            st.rerun()
+        # DURUM B: ONAY EKRANI
         else:
             t_u = st.session_state.temp_user
             st.markdown(f"""
@@ -245,7 +246,7 @@ if st.session_state.user is None:
         st.markdown('</div>', unsafe_allow_html=True)
 
 else:
-    # --- ARENA: EĞİTİM VE LİDERLİK ---
+    # --- DASHBOARD: EĞİTİM VE LİDERLİK ---
     u = st.session_state.user
     col_main, col_leader = st.columns([7, 3])
 
@@ -294,7 +295,8 @@ else:
                 ilerleme_kaydet(p_pot, st.session_state.last_code, egz['id'], n_id, n_m)
         
         elif st.session_state.error_count >= 4:
-            st.error("🚫 Kilitlendi."); with st.expander("📖 Çözümü İncele", expanded=True):
+            st.error("🚫 Kilitlendi.")
+            with st.expander("📖 Çözümü İncele", expanded=True):
                 st.code(egz['cozum'], language="python")
                 st.markdown("<div style='color:#00FF00; font-family:monospace; margin-top:10px;'>🚀 Beklenen Çıktı:</div>", unsafe_allow_html=True)
                 st.markdown(f"<div style='background-color:#111; padding:10px; border-radius:5px; border:1px dashed #555;'>{egz.get('beklenen_cikti', '> Tanımsız.')}</div>", unsafe_allow_html=True)
@@ -304,7 +306,7 @@ else:
 
     with col_leader:
         st.markdown("<h3 style='text-align:center;'>🏆 ONUR KÜRSÜSÜ</h3>", unsafe_allow_html=True)
-        df_all = veri_oku_akilli(KULLANICILAR_URL)
+        df_all = veri_cek_akilli(KULLANICILAR_URL)
         if df_all is not None:
             df_all['toplam_puan'] = pd.to_numeric(df_all['toplam_puan'], errors='coerce').fillna(0).astype(int)
             s_an = df_all.groupby('sinif').agg(xp=('toplam_puan','sum'), sayi=('ogrenci_no','count'))
