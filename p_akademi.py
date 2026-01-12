@@ -1,296 +1,228 @@
 import streamlit as st
 import pandas as pd
-import time
-import os
-from streamlit_gsheets_connection import GSheetsConnection
+from streamlit_gsheets import GSheetsConnection
+import base64
 
-# --- 1. SAYFA AYARLARI VE GÖRSEL TASARIM ---
-st.set_page_config(page_title="Pito Python Akademi", layout="wide", initial_sidebar_state="expanded")
+# --- SAYFA AYARLARI ---
+st.set_page_config(page_title="Pito Python Akademi", layout="wide")
 
+# --- CSS: PİTO TASARIMI ---
 st.markdown("""
     <style>
-    .stApp { background-color: #f4f7f6; }
-    .pito-note-box { 
-        background-color: #ffffff; padding: 25px; border-radius: 20px; 
-        border-left: 8px solid #FFD700; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        margin-bottom: 20px; color: #2c3e50; font-size: 1.1em; line-height: 1.6;
-    }
-    .leaderboard-card {
-        background: white; padding: 12px; border-radius: 12px; 
-        margin-bottom: 8px; border: 1px solid #e0e0e0;
-    }
-    .stButton>button { 
-        width: 100%; border-radius: 12px; height: 3.5em; 
-        font-weight: bold; font-size: 16px; background-color: #4CAF50; color: white;
-    }
-    .stTextInput>div>div>input { 
-        border: 2px solid #4CAF50; border-radius: 10px; 
-        font-family: 'Courier New', monospace; font-size: 18px; color: #1e1e1e;
-    }
-    .code-panel { 
-        background-color: #1e1e1e; color: #dcdcdc; padding: 25px; 
-        border-radius: 15px; font-family: 'Consolas', 'Monaco', monospace; 
-        margin-bottom: 15px; border: 1px solid #333; font-size: 1.2em;
-    }
-    .highlight-input { border: 3px solid #FF4B4B !important; animation: blinker 1s linear infinite; }
-    @keyframes blinker { 50% { opacity: 0.5; } }
+    .main { background-color: #f8f9fa; }
+    .stButton>button { border-radius: 12px; height: 3em; font-weight: bold; }
+    .pito-box { background-color: #ffffff; padding: 25px; border-radius: 20px; border-left: 8px solid #FF4B4B; box-shadow: 2px 2px 15px rgba(0,0,0,0.1); }
+    .stTextInput>div>div>input { border: 2px solid #FF4B4B !important; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. 8 MODÜL VE 40 ADIMLIK TAM MÜFREDAT ---
-MUREDDAF = {
+# --- GIF YÖNETİMİ ---
+def render_pito_gif(gif_name):
+    try:
+        file_ = open(f"assets/{gif_name}", "rb")
+        contents = file_.read()
+        data_url = base64.b64encode(contents).decode("utf-8")
+        file_.close()
+        st.markdown(f'<div style="text-align:center;"><img src="data:image/gif;base64,{data_url}" width="200"></div>', unsafe_allow_html=True)
+    except:
+        st.info(f"🐍 Pito ({gif_name})")
+
+# --- MÜFREDAT VERİSİ (8 Modül / 40 Egzersiz) ---
+MUREDDTAT = {
     1: {
-        "baslik": "Modül 1: Python'un Sesi (Print)",
-        "aciklama": "Python'da bilgisayarla konuşmanın yolu <b>print()</b> fonksiyonudur. Ekrana yazı yazdırmak için kelimelerimizi her zaman tırnak içine almalıyız.",
-        "egzersizler": [
-            {"yonerge": "Ekrana 'Merhaba Pito' yazdıralım. Boşluğu doldur.", "kod": "print(________)", "cevap": "'Merhaba Pito'", "ipucu": "Metinleri tırnak (' ') içine almalısın.", "cikti": "Merhaba Pito"},
-            {"yonerge": "Kendi ismini (Örn: 'Ali') ekrana yazdır.", "kod": "print('________')", "cevap": "Ali", "ipucu": "Sadece tırnak içindeki boşluğu doldur.", "cikti": "Ali"},
-            {"yonerge": "Sayıları tırnaksız yazdırabiliriz. 2026 yazdır.", "kod": "print(________)", "cevap": "2026", "ipucu": "Rakamlar tırnak gerektirmez.", "cikti": "2026"},
-            {"yonerge": "İki veriyi virgül ile ayırırız. 'Puan:', 100 yazdır.", "kod": "print('Puan:' __ 100)", "cevap": ",", "ipucu": "Elemanları ayırmak için virgül (,) kullan.", "cikti": "Puan: 100"},
-            {"yonerge": "Yazdırma fonksiyonunun ismini yaz.", "kod": "____('Derse Başlıyoruz')", "cevap": "print", "ipucu": "Ekrana basma komutu p ile başlar.", "cikti": "Derse Başlıyoruz"}
+        "baslik": "Python'ın Sesi: print()",
+        "not": "Python dünyasına hoş geldin! Bilgisayara bir şeyler söyletmek için 'print' fonksiyonunu kullanırız. Metinleri tırnak (' ') içinde yazmalısın.",
+        "egz": [
+            {"q": "Ekrana Merhaba yazdır: ____(\"Merhaba\")", "a": "print", "h": "Pito'nun konuşma komutunu hatırla!", "out": "Merhaba"},
+            {"q": "Tırnağı tamamla: print(__Selam\")", "a": "\"", "h": "Metinler neyin içinde olmalıydı?", "out": "Selam"},
+            {"q": "Parantezi kapat: print(\"Nusaybin\"__", "a": ")", "h": "Fonksiyonlar parantezle açılır ve kapanır.", "out": "Nusaybin"},
+            {"q": "Tek tırnak kullan: print(__Selam')", "a": "'", "h": "Çift tırnak yerine tek tırnak da olur.", "out": "Selam"},
+            {"q": "Komutu yaz: ____(\"Pito\")", "a": "print", "h": "Ekrana çıktı komutu.", "out": "Pito"}
         ]
     },
     2: {
-        "baslik": "Modül 2: Hafıza Kutuları (Değişkenler)",
-        "aciklama": "Değişkenler, verileri sakladığımız kutulardır. Bir kutuya isim veririz ve <b>=</b> işareti ile içine bir değer koyarız.",
-        "egzersizler": [
-            {"yonerge": "ad isimli değişkene 'Pito' değerini ata.", "kod": "ad = ________", "cevap": "'Pito'", "ipucu": "Tırnak kullanmayı unutma.", "cikti": ""},
-            {"yonerge": "yas değişkenine 15 sayısını ata.", "kod": "yas __ 15", "cevap": "=", "ipucu": "Atama operatörü eşittir (=) işaretidir.", "cikti": ""},
-            {"yonerge": "puan değişkenini ekrana yazdır.", "kod": "print(________)", "cevap": "puan", "ipucu": "Değişkeni tırnaksız yazdır.", "cikti": "100"},
-            {"yonerge": "okul_no değişkenine 123 değerini ver.", "kod": "okul____no = 123", "cevap": "_", "ipucu": "Değişken isimlerinde boşluk yerine alt tire (_) kullanılır.", "cikti": ""},
-            {"yonerge": "sayi değişkenini 1 artırmak için sayi + 1 yaz.", "kod": "yeni_sayi = sayi __ 1", "cevap": "+", "ipucu": "Toplama sembolünü kullan.", "cikti": ""}
+        "baslik": "Hafıza Kutuları: Değişkenler",
+        "not": "Değişkenler, verileri sakladığımız kutulardır. 'ad = \"Pito\"' yazdığımızda 'ad' isimli kutuya 'Pito' değerini koyarız.",
+        "egz": [
+            {"q": "Değişken tanımla: x __ 10", "a": "=", "h": "Atama yapmak için hangi işaret kullanılır?", "out": ""},
+            {"q": "Kutuyu isimlendir: ____ = \"Python\"", "a": "dil", "h": "Herhangi bir isim yazabilirsin (Örn: dil).", "out": ""},
+            {"q": "Değişkeni yazdır: print(__)", "a": "x", "h": "Tırnak kullanma!", "out": "10"},
+            {"q": "Sayıyı sakla: yas = __", "a": "15", "h": "Herhangi bir sayı gir.", "out": ""},
+            {"q": "Boşluğu doldur: a=5, b=a, print(__)", "a": "b", "h": "b'nin içindeki değeri görmek istiyoruz.", "out": "5"}
         ]
     },
     3: {
-        "baslik": "Modül 3: Matematik Sihirbazı",
-        "aciklama": "Python mükemmel bir hesap makinesidir. +, -, *, / ve tam bölme için // kullanır.",
-        "egzersizler": [
-            {"yonerge": "10 ile 5'i çarp.", "kod": "sonuc = 10 __ 5", "cevap": "*", "ipucu": "Çarpma için yıldız (*) kullanılır.", "cikti": "50"},
-            {"yonerge": "20'yi 4'e böl.", "kod": "sonuc = 20 __ 4", "cevap": "/", "ipucu": "Bölme için taksim (/) kullanılır.", "cikti": "5.0"},
-            {"yonerge": "Kalanı bulmak için % kullanılır. 10'un 3'e bölümünden kalan?", "kod": "kalan = 10 __ 3", "cevap": "%", "ipucu": "Mod alma sembolü yüzdedir.", "cikti": "1"},
-            {"yonerge": "Üst almak için ** kullanılır. 2'nin 3. kuvveti?", "kod": "ust = 2 __ 3", "cevap": "**", "ipucu": "İki tane yıldız kullan.", "cikti": "8"},
-            {"yonerge": "15'ten 7 çıkar.", "kod": "fark = 15 __ 7", "cevap": "-", "ipucu": "Eksi işaretini kullan.", "cikti": "8"}
+        "baslik": "Veri Tiplerinin Gizemi",
+        "not": "Python'da sayılar (int), metinler (str) ve ondalıklı sayılar (float) vardır. Bir tipi diğerine dönüştürebiliriz.",
+        "egz": [
+            {"q": "Tam sayıya dönüştür: ____(\"5\")", "a": "int", "h": "Integer'ın kısaltması.", "out": "5"},
+            {"q": "Metne dönüştür: ____(10)", "a": "str", "h": "String'in kısaltması.", "out": "'10'"},
+            {"q": "Tipi kontrol et: ____(5.5)", "a": "type", "h": "Nesnenin tipini ne söyler?", "out": "<class 'float'>"},
+            {"q": "Float tanımla: pi = 3.__", "a": "14", "h": "Ondalıklı kısım.", "out": ""},
+            {"q": "Hangi tip: type(\"A\") = ____", "a": "str", "h": "Tırnak içindeki veri tipi.", "out": ""}
         ]
     },
     4: {
-        "baslik": "Modül 4: Etkileşim (Input)",
-        "aciklama": "Kullanıcıdan bilgi almak için <b>input()</b> kullanırız. Sayı alırken bunu <b>int()</b> ile sarmalamalıyız.",
-        "egzersizler": [
-            {"yonerge": "Kullanıcıya adını sor.", "kod": "ad = ________('Adın ne?')", "cevap": "input", "ipucu": "Giriş fonksiyonu i ile başlar.", "cikti": ""},
-            {"yonerge": "Alınan yaşı tam sayıya çevir.", "kod": "yas = ____(input('Yaşın?'))", "cevap": "int", "ipucu": "Integer kelimesinin kısaltması.", "cikti": ""},
-            {"yonerge": "input parantezi içine mesaj yazılır.", "kod": "input(__Lütfen sayı girin__)", "cevap": "'Lütfen sayı girin'", "ipucu": "Mesajlar tırnak içinde olur.", "cikti": ""},
-            {"yonerge": "Input ile alınan veriyi ekrana yazdır.", "kod": "x = input(); print(__)", "cevap": "x", "ipucu": "Değişken adını yaz.", "cikti": ""},
-            {"yonerge": "input() her zaman metin (str) döndürür.", "kod": "tip = ____(input())", "cevap": "type", "ipucu": "Tür öğrenme fonksiyonu.", "cikti": "<class 'str'>"}
+        "baslik": "Matematiksel Dans",
+        "not": "Python bir hesap makinesidir! +, -, *, / dışında % (kalan) ve ** (üs alma) operatörlerini de kullanırız.",
+        "egz": [
+            {"q": "Kalanı bul (10 % 3): ____", "a": "1", "h": "10'un 3'e bölümünden kalan kaçtır?", "out": "1"},
+            {"q": "Üs al (5'in karesi): 5 __ 2", "a": "**", "h": "Çarpma işaretini iki kere kullan.", "out": "25"},
+            {"q": "Tam bölme (7 // 2): ____", "a": "3", "h": "7'de 2 kaç kere tam var?", "out": "3"},
+            {"q": "Topla: 10 __ 5 = 15", "a": "+", "h": "Artı işareti.", "out": "15"},
+            {"q": "Çarp: 4 __ 2 = 8", "a": "*", "h": "Yıldız işareti.", "out": "8"}
         ]
     },
     5: {
-        "baslik": "Modül 5: Karar Odası (If-Else)",
-        "aciklama": "Python'da kararlar <b>if</b> (eğer) ve <b>else</b> (değilse) ile verilir. Şartın sonuna iki nokta (:) koymayı unutma!",
-        "egzersizler": [
-            {"yonerge": "Eğer yaş 18'den büyükse:", "kod": "if yas __ 18:", "cevap": ">", "ipucu": "Büyüktür sembolü.", "cikti": ""},
-            {"yonerge": "Şart sağlanmazsa çalışacak blok?", "kod": "____:", "cevap": "else", "ipucu": "Eğer değilse anlamına gelir.", "cikti": ""},
-            {"yonerge": "Eşit mi kontrolü için == kullanılır.", "kod": "if sifre ____ '1234':", "cevap": "==", "ipucu": "İki tane eşittir koy.", "cikti": ""},
-            {"yonerge": "İkinci bir şart eklemek için:", "kod": "______ yas == 18:", "cevap": "elif", "ipucu": "else ve if birleşimi.", "cikti": ""},
-            {"yonerge": "Eşit değilse kontrolü:", "kod": "if ad __ 'Pito':", "cevap": "!=", "ipucu": "Ünlem ve eşittir.", "cikti": ""}
+        "baslik": "Kullanıcı ile Sohbet: input()",
+        "not": "input() ile kullanıcıdan veri alırız. Unutma, input() her zaman bir metin (str) döndürür!",
+        "egz": [
+            {"q": "Veri al: ad = ____(\"Adın?\")", "a": "input", "h": "Giriş alma komutu.", "out": ""},
+            {"q": "Sayısal girdi: yas = ____(input())", "a": "int", "h": "Girdiyi sayıya dönüştür.", "out": ""},
+            {"q": "Yazdır: print(f\"Merhaba {____}\")", "a": "ad", "h": "Değişken adını yaz.", "out": "Merhaba ..."},
+            {"q": "Mesaj ekle: input(\"____\")", "a": "Sayı gir", "h": "Herhangi bir mesaj yaz.", "out": ""},
+            {"q": "Tamamla: ____ = input()", "a": "sehir", "h": "Bir değişken ismi seç.", "out": ""}
         ]
     },
     6: {
-        "baslik": "Modül 6: Tekrar Makinesi (Loops)",
-        "aciklama": "Bilgisayarlar yorulmaz! <b>for</b> döngüsü ile işlemleri belirli sayıda tekrar edebiliriz.",
-        "egzersizler": [
-            {"yonerge": "5 kez dönen bir döngü kur.", "kod": "for i in range(____):", "cevap": "5", "ipucu": "Parantez içine 5 yaz.", "cikti": "0, 1, 2, 3, 4"},
-            {"yonerge": "Döngü başlatma komutu nedir?", "kod": "____ i in range(10):", "cevap": "for", "ipucu": "f ile başlayan döngü.", "cikti": ""},
-            {"yonerge": "range içine (başlangıç, bitiş) yazılır.", "kod": "range(1, ____)", "cevap": "11", "ipucu": "10'a kadar gitmesi için 11 yazmalısın.", "cikti": ""},
-            {"yonerge": "Şart doğru olduğu sürece dönen döngü?", "kod": "________ x < 5:", "cevap": "while", "ipucu": "w ile başlar.", "cikti": ""},
-            {"yonerge": "Döngüyü aniden durdurmak için:", "kod": "if hata: ________", "cevap": "break", "ipucu": "Kırmak anlamına gelir.", "cikti": ""}
+        "baslik": "Karar Anı: If-Else",
+        "not": "Koşullara göre farklı yollar seçeriz. 'if' doğruysa çalışır, değilse 'else' kısmına bakar.",
+        "egz": [
+            {"q": "Eşit mi kontrolü: if x ____ 5:", "a": "==", "h": "Karşılaştırma için çift eşittir.", "out": ""},
+            {"q": "Değilse: ____:", "a": "else", "h": "Koşul sağlanmazsa ne olur?", "out": ""},
+            {"q": "İki nokta ekle: if x > 0__", "a": ":", "h": "Satır sonu işareti.", "out": ""},
+            {"q": "Büyükse: if yas ____ 18:", "a": ">", "h": "Büyüktür işareti.", "out": ""},
+            {"q": "Aksi halde (else if): ____ x < 10:", "a": "elif", "h": "Diğer koşul kısaltması.", "out": ""}
         ]
     },
     7: {
-        "baslik": "Modül 7: Veri Sepetleri (Lists)",
-        "aciklama": "Listeler birden fazla veriyi tek bir değişkende saklar. Köşeli parantez <b>[]</b> kullanılır.",
-        "egzersizler": [
-            {"yonerge": "Boş bir liste oluştur.", "kod": "liste = ____", "cevap": "[]", "ipucu": "Alt Gr + 8 ve 9 tuşları.", "cikti": "[]"},
-            {"yonerge": "Listeye 'elma' ekle.", "kod": "meyveler.________('elma')", "cevap": "append", "ipucu": "Eklemek anlamına gelen metod.", "cikti": ""},
-            {"yonerge": "Listenin ilk elemanına ulaş (indeks 0).", "kod": "print(liste[____])", "cevap": "0", "ipucu": "Sıfırıncı indeks.", "cikti": ""},
-            {"yonerge": "Listenin kaç elemanlı olduğunu bul.", "kod": "____(liste)", "cevap": "len", "ipucu": "Length kısaltması.", "cikti": ""},
-            {"yonerge": "Listeden eleman silmek için:", "kod": "liste.________('elma')", "cevap": "remove", "ipucu": "Kaldırmak anlamına gelir.", "cikti": ""}
+        "baslik": "Döngü Zamanı: For ve While",
+        "not": "Tekrar eden işler için döngü kullanırız. 'range(5)' ile 0'dan 4'e kadar sayabiliriz.",
+        "egz": [
+            {"q": "Döngüyü başlat: ____ i in range(5):", "a": "for", "h": "Tekrarlama komutu.", "out": "0 1 2 3 4"},
+            {"q": "Sınırı belirle: range(____)", "a": "10", "h": "Kaça kadar gitsin?", "out": ""},
+            {"q": "Şartlı döngü: ____ x < 5:", "a": "while", "h": "Olduğu sürece çalış.", "out": ""},
+            {"q": "Durdur: if x==5: ____", "a": "break", "h": "Döngüyü kırma komutu.", "out": ""},
+            {"q": "Devam et: ____", "a": "continue", "h": "Sıradakine geç komutu.", "out": ""}
         ]
     },
     8: {
-        "baslik": "Modül 8: Python Kahramanı (Functions)",
-        "aciklama": "Kendi özel komutlarını yaratmaya hazır mısın? <b>def</b> ile fonksiyon tanımlayıp her yerden çağırabilirsin.",
-        "egzersizler": [
-            {"yonerge": "selamla isminde bir fonksiyon tanımla.", "kod": "____ selamla():", "cevap": "def", "ipucu": "Define kısaltması.", "cikti": ""},
-            {"yonerge": "Fonksiyondan veri döndürmek için:", "kod": "________ sonuc", "cevap": "return", "ipucu": "Geri döndür komutu.", "cikti": ""},
-            {"yonerge": "Tanımlanan 'test' fonksiyonunu çağır.", "kod": "________()", "cevap": "test", "ipucu": "Fonksiyonun adını yaz.", "cikti": ""},
-            {"yonerge": "Fonksiyon parantez içine ne alır?", "kod": "def topla(________):", "cevap": "sayi", "ipucu": "Parametre ismi.", "cikti": ""},
-            {"yonerge": "Artık bir Python Kahramanısın! Son boşluğu 'Pito' ile doldur.", "kod": "hero = '________'", "cevap": "Pito", "ipucu": "Pito yazmalısın.", "cikti": "Pito"}
+        "baslik": "Takım Çantası: Listeler",
+        "not": "Listeler birçok veriyi tek bir kutuda tutar. Elemanlara 0'dan başlayarak ulaşırız.",
+        "egz": [
+            {"q": "Liste oluştur: meyve = [__]", "a": "\"elma\"", "h": "Tırnak içinde bir meyve yaz.", "out": ""},
+            {"q": "Eleman ekle: meyve.____(\"muz\")", "a": "append", "h": "Sona ekleme metodu.", "out": ""},
+            {"q": "İlk eleman: print(meyve[____])", "a": "0", "h": "Python saymaya kaçtan başlar?", "out": ""},
+            {"q": "Sil: meyve.____(\"elma\")", "a": "remove", "h": "Çıkarma metodu.", "out": ""},
+            {"q": "Uzunluk: ____(meyve)", "a": "len", "h": "Length (Uzunluk) kısaltması.", "out": ""}
         ]
     }
 }
 
-RUTBELER = ["🥚 Yeni Başlayan", "🌱 Python Çırağı", "🪵 Kod Oduncusu", "🧱 Mantık Mimarı", "🌀 Döngü Ustası", "📋 Liste Uzmanı", "📦 Fonksiyon Kaptanı", "🤖 OOP Robotu", "🏆 Python Kahramanı"]
+# --- RÜTBELER VE LİDERLİK ---
+RUTBELER = ["🥚 Yeni Başlayan", "🌱 Python Çırağı", "🪵 Kod Oduncusu", "🧱 Mantık Mimarı", 
+            "🌀 Döngü Ustası", "📋 Liste Uzmanı", "📦 Fonksiyon Kaptanı", "🤖 OOP Robotu", "🏆 Python Kahramanı"]
 
-# --- 3. SESSION STATE (BELLEK) YÖNETİMİ ---
-if 'init' not in st.session_state:
-    st.session_state.update({
-        'init': True, 'logged_in': False, 'user_data': None,
-        'modul': 1, 'egzersiz': 1, 'total_puan': 0,
-        'current_eg_puan': 20, 'hatalar': 0, 'finished': False,
-        'review_mode': False, 'last_output': "", 'error_msg': ""
-    })
+# --- VERİTABANI VE STATE ---
+conn = st.connection("gsheets", type=GSheetsConnection)
 
-# --- 4. YARDIMCI FONKSİYONLAR ---
-def pito_gif(emotion):
-    path = f"assets/pito_{emotion}.gif"
-    if os.path.exists(path):
-        st.image(path, width=250)
-    else:
-        st.info(f"🐍 Pito [{emotion}] (GIF Dosyası assets/ içinde bulunamadı)")
+def verileri_al():
+    return conn.read(spreadsheet="https://docs.google.com/spreadsheets/d/1lat8rO2qm9QnzEUYlzC_fypG3cRkGlJfSfTtwNvs318/edit?gid=0#gid=0")
 
-def get_rank(puan):
-    idx = min(len(RUTBELER)-1, puan // 100)
-    return RUTBELER[idx]
-
-# --- 5. GİRİŞ VE KAYIT EKRANI ---
-if not st.session_state.logged_in:
-    col1, col2, col3 = st.columns([1, 1.5, 1])
-    with col2:
-        pito_gif("merhaba")
-        st.title("Pito Python Akademi")
-        st.markdown("### Nusaybin Süleyman Bölünmez Anadolu Lisesi")
-        
-        okul_no = st.text_input("Okul Numaranı Gir", key="login_no", placeholder="Sadece sayı giriniz...")
-        
-        if okul_no:
-            # Mock DB (Normalde Google Sheets'ten okunacak)
-            if okul_no == "123": # Örnek kayıtlı kullanıcı
-                st.info("Merhaba **Ahmet Yılmaz**! 1. Modül, 1. Egzersizdesin.")
-                c1, c2 = st.columns(2)
-                if c1.button("Evet, Benim! 👍"):
-                    st.session_state.logged_in = True
-                    st.session_state.user_data = {"ad": "Ahmet Yılmaz", "no": "123"}
-                    st.rerun()
-                if c2.button("Hayır, Ben Değilim ❌"):
-                    st.session_state.login_no = ""
-                    st.rerun()
-            else:
-                st.warning("Numara kayıtlı değil. Yeni profil oluştur!")
-                with st.form("kayit"):
-                    yeni_ad = st.text_input("Ad Soyad")
-                    yeni_sinif = st.selectbox("Sınıf", ["9-A", "9-B", "10-A", "10-B", "11-A", "12-A"])
-                    if st.form_submit_button("Kayıt Ol ve Başla 🚀"):
-                        st.session_state.logged_in = True
-                        st.session_state.user_data = {"ad": yeni_ad, "no": okul_no, "sinif": yeni_sinif}
-                        st.rerun()
-
-# --- 6. ANA AKADEMİ PANELİ ---
-else:
-    # Liderlik Tablosu (Sağ Sidebar)
+def sidebar_render(df):
     with st.sidebar:
-        st.header("🏆 Liderlik Kürsüsü")
-        st.markdown("### 🏫 Okul İlk 10")
-        st.markdown("<div class='leaderboard-card'>🥇 105 - Elif - 🏆 Hero</div>", unsafe_allow_html=True)
-        st.markdown("<div class='leaderboard-card'>🥈 123 - Ahmet - 📋 Uzman</div>", unsafe_allow_html=True)
-        st.divider()
-        st.markdown("### 🏁 Şampiyon Sınıf")
-        st.success("🏆 9-A Sınıfı")
+        st.title("🏆 Şampiyonlar")
+        st.subheader("🏫 Okul Top 10")
+        st.table(df.nlargest(10, 'Puan')[['Öğrencinin Adı', 'Puan', 'Rütbe']])
+        if 'user' in st.session_state:
+            sinif = st.session_state.user['Sınıf']
+            st.subheader(f"🥇 {sinif} Liderleri")
+            st.table(df[df['Sınıf'] == sinif].nlargest(10, 'Puan')[['Öğrencinin Adı', 'Puan']])
 
-    # Üst Bölüm: İlerleme ve Rütbe
-    curr_m = st.session_state.modul
-    curr_e = st.session_state.egzersiz
-    progress = ((curr_m - 1) * 5 + curr_e) / 40
-    
-    st.progress(progress)
-    st.write(f"📊 İlerleme: %{int(progress*100)} | **Rütbe:** {get_rank(st.session_state.total_puan)} | **Puan:** {st.session_state.total_puan}")
+# --- ANA PROGRAM ---
+def main():
+    df = verileri_al()
+    sidebar_render(df)
 
-    # Orta Bölüm: Pito ve İçerik
-    col_pito, col_content = st.columns([1, 2.5])
-    
-    with col_pito:
-        if st.session_state.finished: pito_gif("mezun")
-        elif st.session_state.hatalar > 0: pito_gif("hata")
-        else: pito_gif("dusunuyor")
-
-    with col_content:
-        st.markdown(f"<div class='pito-note-box'><h3>🐍 Pito'nun Notu</h3>{MUREDDAF[curr_m]['aciklama']}</div>", unsafe_allow_html=True)
-
-    # Alt Bölüm: Egzersiz ve Kod Paneli
-    st.divider()
-    eg = MUREDDAF[curr_m]['egzersizler'][curr_e - 1]
-    
-    st.subheader(f"📝 Egzersiz {curr_e}: {eg['yonerge']}")
-    
-    # İnceleme Modu Kontrolü
-    if st.session_state.review_mode:
-        st.markdown(f"<div class='code-panel'>{eg['kod'].replace('________', '<span style=\"color:#FFD700\">'+eg['cevap']+'</span>')}</div>", unsafe_allow_html=True)
-        if eg['cikti']: st.code(f"Çıktı: {eg['cikti']}")
-        if st.button("Sonraki Adımı İncele ➡️"):
-            if st.session_state.egzersiz < 5: st.session_state.egzersiz += 1
-            elif st.session_state.modul < 8: st.session_state.modul += 1; st.session_state.egzersiz = 1
-            st.rerun()
-    else:
-        st.markdown(f"<div class='code-panel'>{eg['kod']}</div>", unsafe_allow_html=True)
+    if 'is_logged_in' not in st.session_state:
+        # GİRİŞ EKRANI
+        render_pito_gif("pito_merhaba.gif")
+        st.title("Pito Python Akademi")
+        st.write("Nusaybin Süleyman Bölünmez Anadolu Lisesi'ne hoş geldin!")
         
-        user_input = st.text_input("Eksik kodu buraya yaz ve Enter'a bas:", key=f"inp_{curr_m}_{curr_e}")
-        
-        if st.button("Kontrol Et 🚀"):
-            if not user_input:
-                st.warning("⚠️ Pito: 'Lütfen boşluğu doldurmadan kontrol etme!'")
+        okul_no = st.text_input("Okul Numaranı Gir:", key="login_input")
+        if okul_no:
+            if not okul_no.isdigit():
+                st.error("Sadece sayı girmelisin!")
             else:
-                if user_input.strip() == eg['cevap']:
-                    st.session_state.total_puan += st.session_state.current_eg_puan
-                    st.session_state.hatalar = 0
-                    st.session_state.current_eg_puan = 20
-                    st.success(f"🎊 Harika! Doğru cevap. +{st.session_state.total_puan} Puan kazandın!")
-                    pito_gif("basari")
-                    if eg['cikti']: st.code(f"Çıktı: {eg['cikti']}")
-                    
-                    time.sleep(1.5)
-                    # İlerleme mantığı
-                    if st.session_state.egzersiz < 5:
-                        st.session_state.egzersiz += 1
-                    else:
-                        st.balloons()
-                        if st.session_state.modul < 8:
-                            st.session_state.modul += 1
-                            st.session_state.egzersiz = 1
-                        else:
-                            st.session_state.finished = True
-                    st.rerun()
+                user_row = df[df['Okul No'] == int(okul_no)]
+                if not user_row.empty:
+                    user = user_row.iloc[0].to_dict()
+                    st.success(f"Hoş geldin {user['Öğrencinin Adı']}!")
+                    col1, col2 = st.columns(2)
+                    if col1.button("✅ Evet, Benim! Devam"):
+                        st.session_state.is_logged_in = True
+                        st.session_state.user = user
+                        st.session_state.hata = 0
+                        st.session_state.temp_puan = 20
+                        st.rerun()
+                    if col2.button("❌ Ben Değilim"):
+                        st.rerun()
                 else:
-                    st.session_state.hatalar += 1
-                    st.session_state.current_eg_puan -= 5
-                    
-                    if st.session_state.hatalar < 3:
-                        st.error(f"❌ Hatalı! Bu {st.session_state.hatalar}. denemen. Puanın 5 düştü! (Kalan: {st.session_state.current_eg_puan})")
-                    elif st.session_state.hatalar == 3:
-                        st.warning(f"💡 Pito'dan İpucu: {eg['ipucu']}")
-                    else:
-                        st.error("😔 4. hata! Bu sorudan puan alamadın. Hadi bir sonrakine geçelim.")
-                        st.info(f"✅ Doğru Çözüm: {eg['cevap']}")
-                        if st.button("Sonraki Soruya Geç ➡️"):
-                            st.session_state.hatalar = 0
-                            st.session_state.current_eg_puan = 20
-                            if st.session_state.egzersiz < 5: st.session_state.egzersiz += 1
-                            else: 
-                                if st.session_state.modul < 8: st.session_state.modul += 1; st.session_state.egzersiz = 1
+                    st.warning("Kayıt bulunamadı. Yeni profil oluştur!")
+                    with st.form("kayit"):
+                        ad = st.text_input("Ad Soyad")
+                        sinif = st.selectbox("Sınıf", ["9-A", "9-B", "10-A", "10-B"])
+                        if st.form_submit_button("Kayıt Ol"):
+                            # GSheets append logic buraya gelecek
                             st.rerun()
+    else:
+        # EĞİTİM EKRANI
+        u = st.session_state.user
+        mod_id = int(u['Mevcut Modül'])
+        egz_id = int(u['Mevcut Egzersiz'])
+        
+        # İlerleme Çubuğu
+        progress = ((mod_id - 1) * 5 + (egz_id - 1)) / 40
+        st.progress(progress)
+        
+        # Pito ve Notu
+        col_img, col_txt = st.columns([1, 2])
+        with col_img:
+            render_pito_gif("pito_dusunuyor.gif")
+        with col_txt:
+            st.markdown(f"""<div class="pito-box">
+                <b>Pito'nun Notu (Modül {mod_id}):</b><br>{MUREDDTAT[mod_id]['not']}
+            </div>""", unsafe_allow_html=True)
 
-# --- 7. MEZUNİYET EKRANI ---
-if st.session_state.finished:
-    st.balloons()
-    st.markdown("## 🏆 TEBRİKLER PYTHON KAHRAMANI! 🏆")
-    st.write("Eğitimi başarıyla tamamladın. Nusaybin'in en iyi kod yazarı olma yolunda dev bir adım attın!")
-    
-    col_fin1, col_fin2 = st.columns(2)
-    with col_fin1:
-        if st.button("Eğitimi Sıfırla ve Baştan Al 🔄"):
-            st.session_state.update({'modul': 1, 'egzersiz': 1, 'total_puan': 0, 'finished': False, 'review_mode': False})
-            st.rerun()
-    with col_fin2:
-        if st.button("İnceleme Moduna Geç 🔍"):
-            st.session_state.review_mode = True
-            st.session_state.modul = 1
-            st.session_state.egzersiz = 1
-            st.rerun()
+        # Egzersiz
+        egz = MUREDDTAT[mod_id]['egz'][egz_id-1]
+        st.subheader(f"📝 Adım {egz_id}")
+        st.code(egz['q'], language="python")
+        
+        user_ans = st.text_input("Boşluğu Doldur:", key=f"ans_{mod_id}_{egz_id}")
+        
+        if st.button("Kontrol Et"):
+            if not user_ans:
+                st.warning("Pito veri bekliyor, boş bırakma!")
+            elif user_ans.strip() == egz['a']:
+                st.session_state.hata = 0
+                st.balloons()
+                render_pito_gif("pito_basari.gif")
+                st.success("Tebrikler! Doğru cevap.")
+                if egz['out']: st.info(f"Kod Çıktısı: {egz['out']}")
+                # İlerleme ve Veritabanı Update (conn.update)
+            else:
+                st.session_state.hata += 1
+                st.session_state.temp_puan -= 5
+                render_pito_gif("pito_hata.gif")
+                st.error(f"{st.session_state.hata}. hatan! 5 puan düştü. Puan: {st.session_state.temp_puan}")
+                
+                if st.session_state.hata == 3:
+                    st.warning(f"💡 İpucu: {egz['h']}")
+                if st.session_state.hata >= 4:
+                    st.error("4 hata yaptın, puan alamadın. Çözüm aşağıda.")
+                    st.info(f"Çözüm: {egz['a']}")
+
+if __name__ == "__main__":
+    main()
