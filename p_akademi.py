@@ -1,61 +1,53 @@
 import streamlit as st
-from streamlit_gsheets import GSheetsConnection # GSheets kütüphanesi
+from streamlit_gsheets import GSheetsConnection
 import pandas as pd
 import json
 import os
 from datetime import datetime
 
-# --- 1. AYARLAR VE VERİ KONTROLÜ ---
+# --- 1. AYARLAR VE MÜFREDAT ---
 ASSETS_DIR = "assets"
-MÜFREDAT_DOSYASI = "mufredat.json"
+DATABASE_FILE = "mufredat.json"
 
 def get_asset_path(filename):
     return os.path.join(ASSETS_DIR, filename)
 
 def mufredat_yukle():
-    if not os.path.exists(MÜFREDAT_DOSYASI):
-        st.error(f"⚠️ '{MÜFREDAT_DOSYASI}' bulunamadı!")
+    if not os.path.exists(DATABASE_FILE):
+        st.error(f"⚠️ '{DATABASE_FILE}' dosyası bulunamadı!")
         return None
-    with open(MÜFREDAT_DOSYASI, 'r', encoding='utf-8') as f:
+    with open(DATABASE_FILE, 'r', encoding='utf-8') as f:
         return json.load(f)
 
-# --- GOOGLE SHEETS BAĞLANTISI ---
+# --- 2. DOĞRUDAN GOOGLE SHEETS BAĞLANTISI ---
 conn = st.connection("gsheets", type=GSheetsConnection)
 
-def veritabani_yukle():
-    """Google Sheets tablosunu canlı olarak çeker."""
+def veritabani_islem(islem_tipi="oku", yeni_df=None):
+    """CSV kullanmadan doğrudan Google Sheets ile konuşur."""
     try:
-        # worksheet adı Pito_Akademi_Skorlar olmalı
-        return conn.read(worksheet="Pito_Akademi_Skorlar", ttl="0")
-    except:
-        # Eğer tablo boşsa başlıkları oluşturur
-        return pd.DataFrame(columns=[
-            "Okul No", "Öğrencinin Adı", "Sınıf", "Puan", 
-            "Rütbe", "Tamamlanan Modüller", "Mevcut Modül", 
-            "Mevcut Egzersiz", "Tarih"
-        ])
-
-def veritabani_kaydet(df):
-    """Verileri Google Sheets üzerine yazar."""
-    try:
-        conn.update(worksheet="Pito_Akademi_Skorlar", data=df)
-        st.cache_data.clear() # Önbelleği temizle ki yeni veri hemen görünsün
+        if islem_tipi == "oku":
+            # ttl=0 verinin her seferinde taze gelmesini sağlar
+            return conn.read(worksheet="Pito_Akademi_Skorlar", ttl=0)
+        elif islem_tipi == "kaydet":
+            conn.update(worksheet="Pito_Akademi_Skorlar", data=yeni_df)
+            st.cache_data.clear() # Önbelleği temizle
     except Exception as e:
-        st.error(f"Google Sheets kayıt hatası: {e}")
+        st.error(f"⚠️ Veritabanı Bağlantı Hatası: {e}")
+        return pd.DataFrame()
 
-# --- 2. SESSION STATE ---
+# --- 3. SESSION STATE BAŞLATMA ---
 if "initialized" not in st.session_state:
     st.session_state.update({
-        "initialized": True, "modul_idx": 0, "adim_idx": 0, "hata_sayisi": 0,
+        "initialized": True,
+        "modul_idx": 0, "adim_idx": 0, "hata_sayisi": 0,
         "mevcut_puan": 20, "toplam_puan": 0, "kilitli": False,
         "giris_yapildi": False, "ogrenci_no": "", "adim_tamamlandi": False,
         "pito_mesaj": "", "pito_mesaj_turu": "", "aktif_gif": "pito_merhaba.gif"
     })
 
 mufredat = mufredat_yukle()
-df_skorlar = veritabani_yukle()
 
-# --- 3. KONTROL MEKANİZMASI ---
+# --- 4. KONTROL MEKANİZMASI ---
 def kontrol_et(girilen_kod, dogru_kod, ipucu):
     t_giris = girilen_kod.strip().replace('"', "'").replace(" ", "")
     t_cozum = dogru_kod.strip().replace('"', "'").replace(" ", "")
@@ -63,7 +55,7 @@ def kontrol_et(girilen_kod, dogru_kod, ipucu):
     if t_giris == t_cozum:
         st.session_state.adim_tamamlandi = True
         st.session_state.aktif_gif = "pito_basari.gif"
-        st.session_state.pito_mesaj = f"🎉 Harika! Nusaybin'in gururusun. +{st.session_state.mevcut_puan} Puan kazandın."
+        st.session_state.pito_mesaj = f"🎉 Harika! Nusaybin SBAL'in gururusun. +{st.session_state.mevcut_puan} Puan!"
         st.session_state.pito_mesaj_turu = "success"
     else:
         st.session_state.hata_sayisi += 1
@@ -81,27 +73,19 @@ def kontrol_et(girilen_kod, dogru_kod, ipucu):
             st.session_state.pito_mesaj = f"❌ Pito: Küçük bir hata ama pes etmek yok! Kalan Puan: {st.session_state.mevcut_puan}"
             st.session_state.pito_mesaj_turu = "error"
 
-# --- 4. SİDEBAR ---
-with st.sidebar:
-    st.title("🐍 Pito Panel")
-    if st.session_state.giris_yapildi:
-        gif_yolu = get_asset_path(st.session_state.aktif_gif)
-        if os.path.exists(gif_yolu): st.image(gif_yolu)
-        st.subheader(f"No: {st.session_state.ogrenci_no}")
-        st.write(f"🏆 Puan: **{st.session_state.toplam_puan}**")
-        if st.button("Çıkış Yap"):
-            st.session_state.clear()
-            st.rerun()
-
-# --- 5. ANA EKRAN ---
+# --- 5. ANA EKRAN AKIŞI ---
 if not st.session_state.giris_yapildi:
     st.title("🎓 Pito Akademi Giriş")
-    no = st.text_input("Okul Numaranızı Girin:")
+    gif_yolu = get_asset_path("pito_merhaba.gif")
+    if os.path.exists(gif_yolu): st.image(gif_yolu, width=200)
+    
+    no = st.text_input("Okul Numaranı Gir (Sadece Sayı):")
     if st.button("Eğitime Başla"):
         if no.isdigit():
-            # Tabloyu metin olarak kontrol et
-            df_skorlar["Okul No"] = df_skorlar["Okul No"].astype(str)
-            ogrenci = df_skorlar[df_skorlar["Okul No"] == str(no)]
+            df = veritabani_islem("oku")
+            # Okul No karşılaştırmasını metin üzerinden yapıyoruz
+            df["Okul No"] = df["Okul No"].astype(str)
+            ogrenci = df[df["Okul No"] == str(no)]
             
             if not ogrenci.empty:
                 satir = ogrenci.iloc[0]
@@ -114,33 +98,44 @@ if not st.session_state.giris_yapildi:
             else:
                 st.session_state.ogrenci_no = str(no)
                 st.session_state.yeni_kayit_modu = True
-        else: st.error("Sadece sayı giriniz.")
+        else: st.error("Lütfen sayı giriniz.")
 
     if st.session_state.get("yeni_kayit_modu"):
-        ad = st.text_input("Adınız Soyadınız:")
-        sinif = st.selectbox("Sınıfınız:", ["9-A", "9-B", "10-A", "11-A", "12-A"])
+        ad = st.text_input("Ad Soyad:")
+        sinif = st.selectbox("Sınıf:", ["9-A", "9-B", "10-A", "11-A", "12-A"])
         if st.button("Kaydı Tamamla"):
-            yeni_satir = pd.DataFrame([{
-                "Okul No": str(st.session_state.ogrenci_no), "Öğrencinin Adı": ad, 
-                "Sınıf": sinif, "Puan": 0, "Rütbe": "Egg 🥚", 
-                "Mevcut Modül": 0, "Mevcut Egzersiz": 0,
+            df = veritabani_islem("oku")
+            yeni_veri = pd.DataFrame([{
+                "Okul No": st.session_state.ogrenci_no, "Öğrencinin Adı": ad, "Sınıf": sinif, 
+                "Puan": 0, "Rütbe": "Egg 🥚", "Mevcut Modül": 0, "Mevcut Egzersiz": 0,
                 "Tarih": datetime.now().strftime("%d-%m-%Y")
             }])
-            df_son = pd.concat([df_skorlar, yeni_satir], ignore_index=True)
-            veritabani_kaydet(df_son) # Online Kayıt
+            veritabani_islem("kaydet", pd.concat([df, yeni_veri], ignore_index=True))
             st.session_state.update({"giris_yapildi": True, "yeni_kayit_modu": False})
             st.rerun()
-else:
-    # Ders İçeriği (Mevcut mantık devam eder)
-    if mufredat:
-        modul_adlari = list(mufredat.keys())
-        aktif_modul = modul_adlari[st.session_state.modul_idx]
-        adim = mufredat[aktif_modul][st.session_state.adim_idx]
 
-        st.header(f"📍 {aktif_modul}")
+else:
+    # --- DERS EKRANI (BOŞ EKRAN ÇÖZÜLDÜ) ---
+    with st.sidebar:
+        st.title("🐍 Pito Panel")
+        gif_yolu = get_asset_path(st.session_state.aktif_gif)
+        if os.path.exists(gif_yolu): st.image(gif_yolu)
+        st.write(f"🏆 Puan: **{st.session_state.toplam_puan}**")
+        if st.button("Güvenli Çıkış"):
+            st.session_state.clear()
+            st.rerun()
+
+    if mufredat:
+        moduller = list(mufredat.keys())
+        modul_adi = moduller[st.session_state.modul_idx]
+        adim = mufredat[modul_adi][st.session_state.adim_idx]
+
+        st.header(f"📍 {modul_adi}")
         st.subheader(adim['baslik'])
-        
-        # Pito Notu ve Kod Alanı...
+        with st.chat_message("assistant", avatar="🐍"):
+            st.markdown(f"**Pito:** {adim['pito_notu']}")
+
+        st.divider()
         if st.session_state.pito_mesaj:
             if st.session_state.pito_mesaj_turu == "success": st.success(st.session_state.pito_mesaj)
             elif st.session_state.pito_mesaj_turu == "warning": st.warning(st.session_state.pito_mesaj)
@@ -149,26 +144,25 @@ else:
         user_code = st.text_area("Boşlukları Doldur:", value=adim['taslak'], key=f"ed_{st.session_state.modul_idx}_{st.session_state.adim_idx}", disabled=st.session_state.kilitli)
         
         if not st.session_state.adim_tamamlandi and not st.session_state.kilitli:
-            if st.button("Çalıştır", type="primary"):
+            if st.button("Kodu Çalıştır", type="primary"):
                 kontrol_et(user_code, adim['cozum'], adim['ipucu'])
                 st.rerun()
 
         if st.session_state.adim_tamamlandi:
             if st.button("Sonraki Adım ➡️"):
                 st.session_state.toplam_puan += st.session_state.mevcut_puan
-                # İlerlemeyi güncelle
                 if st.session_state.adim_idx < 4: st.session_state.adim_idx += 1
                 else: st.session_state.adim_idx, st.session_state.modul_idx = 0, st.session_state.modul_idx + 1
                 
-                # Google Sheets Güncelleme
-                df = veritabani_yukle()
+                # --- GOOGLE SHEETS CANLI GÜNCELLEME ---
+                df = veritabani_islem("oku")
                 df["Okul No"] = df["Okul No"].astype(str)
                 idx = df[df["Okul No"] == str(st.session_state.ogrenci_no)].index
                 if not idx.empty:
                     df.at[idx[0], "Puan"] = st.session_state.toplam_puan
                     df.at[idx[0], "Mevcut Modül"] = st.session_state.modul_idx
                     df.at[idx[0], "Mevcut Egzersiz"] = st.session_state.adim_idx
-                    veritabani_kaydet(df)
+                    veritabani_islem("kaydet", df)
                 
                 st.session_state.update({"adim_tamamlandi": False, "hata_sayisi": 0, "mevcut_puan": 20, "kilitli": False, "pito_mesaj": ""})
                 st.rerun()
