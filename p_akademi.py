@@ -14,27 +14,25 @@ st.markdown("""
     <style>
     .stApp { background-color: #0E1117; color: #FFFFFF; }
     
-    /* STREAMLIT MENÜSÜNÜ GİZLE (İstenmeyen Obje) */
+    /* STREAMLIT MENÜSÜNÜ GİZLE */
     .stApp > header { display: none; }
     
-    /* Giriş Kartı */
-    .login-card {
-        background: rgba(30, 30, 47, 0.95);
-        padding: 40px;
-        border-radius: 20px;
-        border: 2px solid #00FF00;
-        box-shadow: 0 0 30px rgba(0, 255, 0, 0.1);
+    /* Giriş Alanı Tasarımı (Kutu ve Kontur Kaldırıldı) */
+    .login-container {
+        padding: 20px;
         text-align: center;
         max-width: 550px;
         margin: auto;
     }
+    
     .academy-title { 
-        font-size: 2.8em; 
+        font-size: 3em; 
         font-weight: 800; 
-        margin-bottom: 25px; 
+        margin-bottom: 20px; 
         background: linear-gradient(90deg, #00FF00, #00CCFF); 
         -webkit-background-clip: text; 
         -webkit-text-fill-color: transparent; 
+        text-shadow: 2px 2px 10px rgba(0, 255, 0, 0.2);
     }
     
     /* Dashboard ve Paneller */
@@ -46,7 +44,7 @@ st.markdown("""
     .pito-notu { background-color: #1E1E2F; border-radius: 10px; padding: 15px; border-left: 5px solid #00FF00; margin-top: 10px; font-style: italic; color: #E0E0E0; }
     
     /* Butonlar ve Girdiler */
-    .stButton>button { border-radius: 10px; background-color: #00FF00 !important; color: black !important; font-weight: bold; width: 100%; height: 3.2em; transition: 0.3s; }
+    .stButton>button { border-radius: 10px; background-color: #00FF00 !important; color: black !important; font-weight: bold; width: 100%; height: 3.5em; transition: 0.3s; }
     .stButton>button:hover { transform: scale(1.02); box-shadow: 0 0 20px #00FF00; }
     .stTextArea>div>div>textarea { background-color: #1E1E1E; color: #00FF00; font-family: 'Courier New', Courier, monospace; font-size: 16px; }
     </style>
@@ -83,12 +81,8 @@ KULLANICILAR_URL = "https://docs.google.com/spreadsheets/d/1lat8rO2qm9QnzEUYlzC_
 KAYITLAR_URL = "https://docs.google.com/spreadsheets/d/14QoNr4FHZhSaUDUU-DDQEfNFHMo5Ge5t5lyDgqGRJ3k/edit#gid=0"
 conn = st.connection("gsheets", type=GSheetsConnection)
 
-try:
-    with open('mufredat.json', 'r', encoding='utf-8') as f:
-        mufredat = json.load(f)
-except Exception as e:
-    st.error(f"❌ Müfredat dosyası yüklenemedi: {e}")
-    st.stop()
+with open('mufredat.json', 'r', encoding='utf-8') as f:
+    mufredat = json.load(f)
 
 # --- 4. SESSION STATE ---
 if "user" not in st.session_state: st.session_state.user = None
@@ -123,10 +117,10 @@ def ilerleme_kaydet(puan, kod, egz_id, m_id, n_id, n_m):
 
 # --- 6. ANA AKIŞ ---
 if st.session_state.user is None:
-    # --- GİRİŞ EKRANI (Pito Geri Döndü) ---
+    # --- YENİ KUTUSUZ GİRİŞ EKRANI ---
     empty_l, col_mid, empty_r = st.columns([1, 2, 1])
     with col_mid:
-        st.markdown('<div class="login-card">', unsafe_allow_html=True)
+        st.markdown('<div class="login-container">', unsafe_allow_html=True)
         st.markdown('<div class="academy-title">Pito Python Akademi</div>', unsafe_allow_html=True)
         pito_gorseli_yukle("merhaba")
         st.markdown(f'<div class="pito-notu">💬 <b>Pito:</b> "Selam genç yazılımcı! Geleceğin kodlarını birlikte yazmaya hazır mısın?"</div>', unsafe_allow_html=True)
@@ -141,13 +135,12 @@ if st.session_state.user is None:
                     st.session_state.user = u_data.iloc[0].to_dict(); st.rerun()
                 else:
                     st.info("Seni tanımıyorum! Haydi kaydolalım.")
-                    with st.container():
-                        y_ad = st.text_input("Ad Soyad:")
-                        y_sinif = st.selectbox("Sınıfın:", ["9-A", "9-B", "10-A", "10-B", "11-A", "12-A"])
-                        if st.button("Kaydı Tamamla 🎓") and y_ad:
-                            yeni_o = pd.DataFrame([{"ogrenci_no": int(numara), "ad_soyad": y_ad, "sinif": y_sinif, "toplam_puan": 0, "mevcut_modul": 1, "mevcut_egzersiz": "1.1", "rutbe": "🥚 Çömez"}])
-                            conn.update(spreadsheet=KULLANICILAR_URL, data=pd.concat([df_u, yeni_o], ignore_index=True))
-                            st.session_state.user = yeni_o.iloc[0].to_dict(); st.rerun()
+                    y_ad = st.text_input("Ad Soyad:")
+                    y_sinif = st.selectbox("Sınıfın:", ["9-A", "9-B", "10-A", "10-B", "11-A", "12-A"])
+                    if st.button("Kaydı Tamamla 🎓") and y_ad:
+                        y_og = pd.DataFrame([{"ogrenci_no": int(numara), "ad_soyad": y_ad, "sinif": y_sinif, "toplam_puan": 0, "mevcut_modul": 1, "mevcut_egzersiz": "1.1", "rutbe": "🥚 Çömez"}])
+                        conn.update(spreadsheet=KULLANICILAR_URL, data=pd.concat([df_u, y_og], ignore_index=True))
+                        st.session_state.user = y_og.iloc[0].to_dict(); st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
 else:
@@ -207,9 +200,9 @@ else:
             with st.expander("📖 Çözümü İncele", expanded=True):
                 st.code(egz['cozum'], language="python")
                 st.markdown("<div style='color:#00FF00; font-family:monospace; margin-top:10px;'>🚀 Beklenen Çıktı:</div>", unsafe_allow_html=True)
-                st.markdown(f"<div class='background-color:#111; padding:10px; border-radius:5px; border:1px dashed #555;'>{egz.get('beklenen_cikti', '> Tanımsız.')}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='background-color:#111; padding:10px; border-radius:5px; border:1px dashed #555;'>{egz.get('beklenen_cikti', '> Tanımsız.')}</div>", unsafe_allow_html=True)
             n_id, n_m = (egz_liste[sira]['id'], u['mevcut_modul']) if sira < len(egz_liste) else (f"{m_idx + 2}.1", m_idx + 2)
-            if st.button("Anladım, Sıradaki ➡️"): ilerleme_kaydet(0, "Çözüm İncelendi", egz['id'], u['mevcut_modul'], n_id, n_m)
+            if st.button("Anladım, Sıradaki ➡️"): ilerleme_kaydet(0, "Çözüm İncelemesi Yapıldı", egz['id'], u['mevcut_modul'], n_id, n_m)
 
     with col_leader:
         st.markdown("<h3 style='text-align:center;'>🏆 ONUR KÜRSÜSÜ</h3>", unsafe_allow_html=True)
