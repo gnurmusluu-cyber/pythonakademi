@@ -25,7 +25,7 @@ st.markdown("""
 # --- 2. YARDIMCI MOTORLAR (HELPERS) ---
 
 def kod_normalize_et(kod):
-    """Boşlukları ve büyük/küçük harf farklarını silerek adil kontrol sağlar."""
+    """Boşlukları ve parantez farklarını yok sayarak adil kontrol sağlar."""
     return re.sub(r'\s+', '', str(kod)).strip().lower()
 
 def pito_notu_uret(mod, ad="Genç Yazılımcı"):
@@ -33,7 +33,7 @@ def pito_notu_uret(mod, ad="Genç Yazılımcı"):
         "merhaba": f"Selam {ad}! Bugün Python'un gizemli dünyasında hangi kapıları açacağız?",
         "basari": f"Harikasın {ad}! Kodun tertemiz, tıpkı bir usta işi gibi. Sonraki göreve uçalım!",
         "hata": f"Ufak bir yazım kazası {ad}... Python biraz titizdir, boşluklara ve parantezlere dikkat et.",
-        "dusunuyor": f"Hımm, bu görev biraz terletiyor mu? Merak etme, çözüm hemen parmaklarının ucunda.",
+        "dusunuyor": f"Hımm, bu görev biraz terletiyor mu? Merak etme, çözüm hemen aşağıda seni bekliyor.",
         "mezun": f"Gözlerime inanamıyorum! Nusaybin'in gururu {ad} artık bir Python Bilgesi!"
     }
     return notlar.get(mod, notlar["merhaba"])
@@ -148,9 +148,18 @@ else:
         with c_e:
             st.info(f"**GÖREV {egz['id']}:**\n{egz['yonerge']}")
             st.markdown(f"<div class='pito-notu'>💬 <b>Pito:</b> {pito_notu_uret(st.session_state.pito_mod, u['ad_soyad'].split()[0])}</div>", unsafe_allow_html=True)
-            if st.session_state.error_count == 3: st.warning(f"💡 İpucu: {egz['ipucu']}")
+            
+            # --- HATA VE İPUCU BÖLÜMÜ (DÜZELTİLDİ) ---
+            if st.session_state.error_count == 1:
+                st.error("🤫 Pito: 'Yazımı kontrol et, ufak bir hata var!'")
+            elif st.session_state.error_count == 2:
+                st.error("🧐 Pito: 'Dikkat et dostum, bir şeyler eksik sanki!'")
+            elif st.session_state.error_count == 3:
+                st.warning(f"💡 İpucu: {egz['ipucu']}")
 
         p_pot = max(0, 20 - (st.session_state.error_count * 5))
+        
+        # DURUM 1: DENEME ANI
         if not st.session_state.cevap_dogru and st.session_state.error_count < 4:
             k_in = st.text_area("Kodunu Yaz:", value=egz['sablon'], height=200, key="editor")
             if st.button("Kontrol Et"):
@@ -163,12 +172,14 @@ else:
                     st.session_state.pito_mod = "hata" if st.session_state.error_count < 4 else "dusunuyor"
                     st.rerun()
         
+        # DURUM 2: BAŞARI
         elif st.session_state.cevap_dogru:
             st.success(f"🌟 +{p_pot} XP Kazandın!")
             n_id, n_m = (egz_liste[sira]['id'], u['mevcut_modul']) if sira < len(egz_liste) else (f"{m_idx + 2}.1", m_idx + 2)
             if st.button("Sonraki Göreve Geç ➡️"):
                 ilerleme_kaydet(p_pot, st.session_state.last_code, egz['id'], u['mevcut_modul'], n_id, n_m)
         
+        # DURUM 3: KİLİTLENME (4 HATA)
         elif st.session_state.error_count >= 4:
             st.error("🚫 Görev Kilitlendi.")
             with st.expander("📖 Çözümü İncele", expanded=True):
@@ -177,6 +188,7 @@ else:
             if st.button("Anladım, Sıradaki Göreve Geç ➡️"):
                 ilerleme_kaydet(0, "Çözüm İncelendi", egz['id'], u['mevcut_modul'], n_id, n_m)
 
+    # --- SAĞ TARAF: ONUR KÜRSÜSÜ ---
     with col_leader:
         st.markdown("<h3 style='text-align:center;'>🏆 ONUR KÜRSÜSÜ</h3>", unsafe_allow_html=True)
         df_all = veri_oku_akilli(KULLANICILAR_URL)
