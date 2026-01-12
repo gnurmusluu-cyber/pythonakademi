@@ -1,6 +1,3 @@
 streamlit
-pandas
-streamlit-ace
 st-gsheets-connection
-streamlit-lottie
-requests
+pandas 
