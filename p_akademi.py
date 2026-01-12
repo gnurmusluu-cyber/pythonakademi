@@ -28,7 +28,7 @@ def pito_gorseli_yukle(mod):
     else:
         st.error(f"🖼️ Görsel Eksik: assets/pito_{mod}.gif")
 
-# --- 3. VERİTABANI BAĞLANTILARI ---
+# --- 3. VERİTABANI VE MÜFREDAT BAĞLANTILARI ---
 KULLANICILAR_URL = "https://docs.google.com/spreadsheets/d/1lat8rO2qm9QnzEUYlzC_fypG3cRkGlJfSfTtwNvs318/edit#gid=0"
 KAYITLAR_URL = "https://docs.google.com/spreadsheets/d/14QoNr4FHZhSaUDUU-DDQEfNFHMo5Ge5t5lyDgqGRJ3k/edit#gid=0"
 
@@ -51,21 +51,29 @@ if "last_code" not in st.session_state: st.session_state.last_code = ""
 # --- 5. VERİ YAZMA MOTORU ---
 def ilerleme_kaydet(puan, kod, egz_id, m_id, n_id, n_m):
     try:
-        # Profil Güncelleme
+        # A. Kullanıcı Profilini Güncelle
         df_u = conn.read(spreadsheet=KULLANICILAR_URL, ttl=0)
-        idx = df_u[df_u['ogrenci_no'] == st.session_state.user['ogrenci_no']].index[0]
-        df_u.at[idx, 'toplam_puan'] = int(float(df_u.at[idx, 'toplam_puan'])) + puan
-        df_u.at[idx, 'mevcut_egzersiz'] = str(n_id)
-        df_u.at[idx, 'mevcut_modul'] = int(float(n_m))
+        u_idx = df_u[df_u['ogrenci_no'] == st.session_state.user['ogrenci_no']].index[0]
+        df_u.at[u_idx, 'toplam_puan'] = int(float(df_u.at[u_idx, 'toplam_puan'])) + puan
+        df_u.at[u_idx, 'mevcut_egzersiz'] = str(n_id)
+        df_u.at[u_idx, 'mevcut_modul'] = int(float(n_m))
         conn.update(spreadsheet=KULLANICILAR_URL, data=df_u)
 
-        # Aktivite Güncelleme
+        # B. Kayıt Güncelleme (Aktivite Logu)
         df_k = conn.read(spreadsheet=KAYITLAR_URL, ttl=0)
-        yeni_log = pd.DataFrame([{"kayit_id": f"{st.session_state.user['ogrenci_no']}_{egz_id}", "ogrenci_no": int(st.session_state.user['ogrenci_no']), "modul_id": int(float(m_id)), "egzersiz_id": str(egz_id), "alinan_puan": int(puan), "basarili_kod": kod, "tarih": datetime.now().strftime("%Y-%m-%d %H:%M")}])
+        yeni_log = pd.DataFrame([{
+            "kayit_id": f"{st.session_state.user['ogrenci_no']}_{egz_id}",
+            "ogrenci_no": int(st.session_state.user['ogrenci_no']),
+            "modul_id": int(float(m_id)),
+            "egzersiz_id": str(egz_id),
+            "alinan_puan": int(puan),
+            "basarili_kod": kod,
+            "tarih": datetime.now().strftime("%Y-%m-%d %H:%M")
+        }])
         conn.update(spreadsheet=KAYITLAR_URL, data=pd.concat([df_k, yeni_log], ignore_index=True))
         
-        # Session State Temizliği
-        st.session_state.user = df_u.iloc[idx].to_dict()
+        # Hafıza Reset
+        st.session_state.user = df_u.iloc[u_idx].to_dict()
         st.session_state.error_count, st.session_state.cevap_dogru, st.session_state.pito_mod = 0, False, "merhaba"
         st.session_state.last_code = ""
         st.rerun()
@@ -73,55 +81,71 @@ def ilerleme_kaydet(puan, kod, egz_id, m_id, n_id, n_m):
 
 # --- 6. ANA AKIŞ ---
 mufredat = load_mufredat()
+if not mufredat: st.error("Müfredat JSON Bulunamadı!"); st.stop()
 
+# GİRİŞ VE YENİ KAYIT EKRANI
 if st.session_state.user is None:
     st.title("🐍 Pito Python Akademi")
     pito_gorseli_yukle("merhaba")
-    numara = st.number_input("Öğrenci Numaranız:", step=1, value=0)
-    if st.button("Akademiye Giriş Yap"):
+    
+    numara = st.number_input("Öğrenci Numarası:", step=1, value=0)
+    
+    if numara > 0:
         df_u = conn.read(spreadsheet=KULLANICILAR_URL, ttl=0)
-        user = df_u[df_u['ogrenci_no'] == numara]
-        if not user.empty:
-            st.session_state.user = user.iloc[0].to_dict()
-            st.rerun()
-        else: st.warning("Numara bulunamadı!")
+        user_data = df_u[df_u['ogrenci_no'] == numara]
+
+        if not user_data.empty:
+            if st.button("Akademiye Giriş Yap 🚀"):
+                st.session_state.user = user_data.iloc[0].to_dict()
+                st.rerun()
+        else:
+            st.warning("🧐 Pito: 'Seni listemde bulamadım. Yeni bir kayıt oluşturmaya ne dersin?'")
+            c1, c2 = st.columns(2)
+            with c1: yeni_ad = st.text_input("Adın ve Soyadın:")
+            with c2: yeni_sinif = st.selectbox("Sınıfın:", ["9-A", "9-B", "9-C", "10-A", "10-B", "11-A", "12-A"])
+            
+            if st.button("Kayıt Ol ve Başla 🎓"):
+                if yeni_ad.strip() != "":
+                    yeni_ogrenci = pd.DataFrame([{
+                        "ogrenci_no": int(numara), "ad_soyad": yeni_ad, "sinif": yeni_sinif,
+                        "toplam_puan": 0, "mevcut_modul": 1, "mevcut_egzersiz": "1.1", "rutbe": "🥚"
+                    }])
+                    df_guncel = pd.concat([df_u, yeni_ogrenci], ignore_index=True)
+                    conn.update(spreadsheet=KULLANICILAR_URL, data=df_guncel)
+                    st.session_state.user = yeni_ogrenci.iloc[0].to_dict()
+                    st.rerun()
+                else: st.error("Lütfen ad soyad girin!")
+
+# EĞİTİM PANELİ
 else:
     u = st.session_state.user
     m_idx = int(float(u['mevcut_modul'])) - 1
     
-    # Mezuniyet Kontrolü
     if m_idx >= len(mufredat['pito_akademi_mufredat']):
-        st.balloons()
-        pito_gorseli_yukle("mezun")
-        st.success("🏆 MEZUN OLDUN! Nusaybin'in gururusun!")
-        st.stop()
+        st.balloons(); pito_gorseli_yukle("mezun"); st.success("🏆 MEZUN OLDUN!"); st.stop()
 
     modul = mufredat['pito_akademi_mufredat'][m_idx]
     egz = next((e for e in modul['egzersizler'] if e['id'] == str(u['mevcut_egzersiz'])), modul['egzersizler'][0])
 
-    # Hero Header
-    st.markdown(f"<div class='hero-panel'><h3>🚀 {u['ad_soyad']} | {u['rutbe']}</h3><p>XP: {int(float(u['toplam_puan']))} | Modül: {m_idx+1}</p></div>", unsafe_allow_html=True)
+    # Kahraman Paneli
+    st.markdown(f"<div class='hero-panel'><h3>🚀 {u['ad_soyad']} | {u['sinif']}</h3><p>🏆 Rütbe: {u['rutbe']} | 📊 XP: {int(float(u['toplam_puan']))}</p></div>", unsafe_allow_html=True)
 
-    # ÖNCE SÜTUNLARI TANIMLIYORUZ (NameError: col2 Çözümü)
     col1, col2 = st.columns([1, 2])
-
     with col1:
         pito_gorseli_yukle(st.session_state.pito_mod)
         st.info(f"**GÖREV {egz['id']}:** {egz['yonerge']}")
-        # Kademeli Dönütler
-        if st.session_state.error_count == 1: st.error("🤫 Pito: 'Ufak bir hata! Yazım kurallarını kontrol et.'")
-        elif st.session_state.error_count == 2: st.error("🧐 Pito: 'Hadi dostum, odaklan! Küçük bir eksik var.'")
+        if st.session_state.error_count == 1: st.error("🤫 Pito: 'Ufak bir hata! Yazımı kontrol et.'")
+        elif st.session_state.error_count == 2: st.error("🧐 Pito: 'Dikkatli bak, küçük bir eksik var!'")
         elif st.session_state.error_count == 3: st.warning(f"💡 İpucu: {egz['ipucu']}")
 
     with col2:
-        # Puanlama: KazanılanPuan = max(0, 20 - (Hata * 5))
         puan_pot = max(0, 20 - (st.session_state.error_count * 5))
         st.write(f"🎯 Potansiyel Puan: **{puan_pot} XP**")
 
         if not st.session_state.cevap_dogru and st.session_state.error_count < 4:
             kod_input = st.text_area("Kodunu Yaz:", value=egz['sablon'], height=200, key="editor")
             if st.button("Kontrol Et"):
-                st.session_state.last_code = kod_input # Hafızaya mühürle
+                st.session_state.last_code = kod_input
                 if kod_input.strip() == egz['dogru_cevap_kodu'].strip():
                     st.session_state.cevap_dogru, st.session_state.pito_mod = True, "basari"
                     st.rerun()
@@ -138,9 +162,8 @@ else:
                 ilerleme_kaydet(puan_pot, st.session_state.last_code, egz['id'], u['mevcut_modul'], n_id, n_m)
 
         elif st.session_state.error_count >= 4:
-            st.error("🚫 Kilitlendi. Çözümü incele.")
-            with st.expander("📖 Çözüm"): st.code(egz['cozum'])
+            st.error("🚫 Kilitlendi. Çözümü incele."); with st.expander("📖 Çözüm"): st.code(egz['cozum'])
             idx = modul['egzersizler'].index(egz)
             n_id, n_m = (modul['egzersizler'][idx+1]['id'], u['mevcut_modul']) if idx+1 < len(modul['egzersizler']) else (f"{m_idx + 2}.1", m_idx + 2)
-            if st.button("Anladım, Sıradaki Göreve Geç ➡️"):
+            if st.button("Sıradaki Göreve Geç ➡️"):
                 ilerleme_kaydet(0, "Çözüm İncelendi", egz['id'], u['mevcut_modul'], n_id, n_m)
