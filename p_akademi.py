@@ -160,3 +160,76 @@ else:
             n_id, n_m = (modul['egzersizler'][idx+1]['id'], u['mevcut_modul']) if idx+1 < len(modul['egzersizler']) else (f"{m_idx + 2}.1", m_idx + 2)
             if st.button("Sıradaki Göreve Geç ➡️"):
                 ilerleme_kaydet(0, "Çözüm İncelendi", egz['id'], u['mevcut_modul'], n_id, n_m)
+                # --- LİDERLİK TABLOLARI VE ŞAMPİYONLUK PANELİ ---
+
+def liderlik_tablosu_goster():
+    st.markdown("---")
+    st.header("🏆 Pito Onur Kürsüsü")
+    
+    # Güncel veriyi çek
+    df_liderlik = conn.read(spreadsheet=KULLANICILAR_URL, ttl=0)
+    
+    # Veri tiplerini temizle (Sayısal işlemler için)
+    df_liderlik['toplam_puan'] = pd.to_numeric(df_liderlik['toplam_puan'], errors='coerce').fillna(0).astype(int)
+
+    tab1, tab2, tab3 = st.tabs(["👥 Sınıfım", "🏫 Okul Geneli", "🔥 Şampiyon Sınıf"])
+
+    # --- TAB 1: SINIF LİDERLİK TABLOSU ---
+    with tab1:
+        st.subheader(f"📍 {st.session_state.user['sinif']} Sınıfı Sıralaması")
+        sinif_df = df_liderlik[df_liderlik['sinif'] == st.session_state.user['sinif']]
+        sinif_df = sinif_df.sort_values(by='toplam_puan', ascending=False).reset_index(drop=True)
+        sinif_df.index += 1 # 1'den başlasın
+        
+        st.table(sinif_df[['ad_soyad', 'toplam_puan', 'rutbe']].rename(columns={
+            'ad_soyad': 'Öğrenci', 
+            'toplam_puan': 'Toplam XP', 
+            'rutbe': 'Rütbe'
+        }))
+
+    # --- TAB 2: OKUL LİDERLİK TABLOSU (TOP 10) ---
+    with tab2:
+        st.subheader("🌍 Okul Geneli En İyi 10")
+        okul_top10 = df_liderlik.sort_values(by='toplam_puan', ascending=False).head(10).reset_index(drop=True)
+        okul_top10.index += 1
+        
+        # Madalya emojileri ekleyelim
+        def madalya_ver(rank):
+            if rank == 1: return "🥇 "
+            if rank == 2: return "🥈 "
+            if rank == 3: return "🥉 "
+            return ""
+
+        okul_top10['Öğrenci'] = [madalya_ver(i) + name for i, name in zip(okul_top10.index, okul_top10['ad_soyad'])]
+        
+        st.dataframe(okul_top10[['Öğrenci', 'sinif', 'toplam_puan', 'rutbe']], use_container_width=True)
+
+    # --- TAB 3: ŞAMPİYON SINIF PANOSU (ADALETLİ HESAPLAMA) ---
+    with tab3:
+        st.subheader("⚔️ Sınıfların Savaşı")
+        
+        # Sınıf bazlı toplam puan ve öğrenci sayısı hesaplama
+        sinif_analiz = df_liderlik.groupby('sinif').agg(
+            toplam_xp=('toplam_puan', 'sum'),
+            ogrenci_sayisi=('ogrenci_no', 'count')
+        )
+        
+        # Adaletli puan: Sınıfın toplam puanı / Sınıf mevcudu (Ortalama başarı)
+        sinif_analiz['ortalama_basari'] = (sinif_analiz['toplam_xp'] / sinif_analiz['ogrenci_sayisi']).round(1)
+        sinif_analiz = sinif_analiz.sort_values(by='ortalama_basari', ascending=False)
+
+        # Şampiyon Sınıf Kartı
+        sampiyon_sinif = sinif_analiz.index[0]
+        sampiyon_puan = sinif_analiz.iloc[0]['ortalama_basari']
+        
+        st.markdown(f"""
+            <div style='background: linear-gradient(45deg, #FFD700, #FFA500); padding: 30px; border-radius: 20px; text-align: center; color: black;'>
+                <h1 style='margin: 0;'>⭐ ŞAMPİYON SINIF ⭐</h1>
+                <h2 style='margin: 10px 0;'>{sampiyon_sinif}</h2>
+                <p style='font-size: 20px;'>Ortalama: <b>{sampiyon_puan} XP</b></p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        st.write("---")
+        st.write("**Sınıf Başarı Puanları (Ortalama):**")
+        st.bar_chart(sinif_analiz['ortalama_basari'], color="#00FF00")
