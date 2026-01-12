@@ -14,41 +14,46 @@ st.markdown("""
     <style>
     .stApp { background-color: #0E1117; color: #FFFFFF; }
     
+    /* STREAMLIT MENÜSÜNÜ GİZLE (İstenmeyen Obje) */
+    .stApp > header { display: none; }
+    
     /* Giriş Kartı */
     .login-card {
         background: rgba(30, 30, 47, 0.95);
-        padding: 50px;
+        padding: 40px;
         border-radius: 20px;
         border: 2px solid #00FF00;
-        box-shadow: 0 0 40px rgba(0, 255, 0, 0.1);
+        box-shadow: 0 0 30px rgba(0, 255, 0, 0.1);
         text-align: center;
         max-width: 550px;
         margin: auto;
     }
     .academy-title { 
-        font-size: 3em; 
+        font-size: 2.8em; 
         font-weight: 800; 
-        margin-bottom: 40px; 
+        margin-bottom: 25px; 
         background: linear-gradient(90deg, #00FF00, #00CCFF); 
         -webkit-background-clip: text; 
         -webkit-text-fill-color: transparent; 
     }
     
-    /* Dashboard Panelleri */
+    /* Dashboard ve Paneller */
     .hero-panel { background: linear-gradient(90deg, #1E1E2F 0%, #2D2D44 100%); padding: 25px; border-radius: 15px; border-left: 8px solid #00FF00; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,255,0,0.2); }
     .status-bar { display: flex; justify-content: space-between; background-color: #262730; padding: 12px; border-radius: 10px; border: 1px solid #4B4B4B; margin-bottom: 15px; }
     .console-box { background-color: #1E1E1E; border: 1px solid #333; border-radius: 0 0 10px 10px; padding: 15px; font-family: 'Courier New', Courier, monospace; color: #00FF00; }
     .console-header { background-color: #333; padding: 5px 15px; border-radius: 10px 10px 0 0; font-size: 12px; color: #AAA; font-weight: bold; }
-    .sampiyon-kart { background: linear-gradient(45deg, #FFD700, #FFA500); padding: 20px; border-radius: 12px; text-align: center; color: black; margin-bottom: 20px; font-weight: bold; }
+    .sampiyon-kart { background: linear-gradient(45deg, #FFD700, #FFA500); padding: 20px; border-radius: 12px; text-align: center; color: black; margin-bottom: 20px; font-weight: bold; box-shadow: 0 0 15px #FFD700; }
     .pito-notu { background-color: #1E1E2F; border-radius: 10px; padding: 15px; border-left: 5px solid #00FF00; margin-top: 10px; font-style: italic; color: #E0E0E0; }
     
-    /* Girdiler */
-    .stButton>button { border-radius: 10px; background-color: #00FF00 !important; color: black !important; font-weight: bold; width: 100%; height: 3.5em; transition: 0.3s; }
+    /* Butonlar ve Girdiler */
+    .stButton>button { border-radius: 10px; background-color: #00FF00 !important; color: black !important; font-weight: bold; width: 100%; height: 3.2em; transition: 0.3s; }
+    .stButton>button:hover { transform: scale(1.02); box-shadow: 0 0 20px #00FF00; }
     .stTextArea>div>div>textarea { background-color: #1E1E1E; color: #00FF00; font-family: 'Courier New', Courier, monospace; font-size: 16px; }
     </style>
     """, unsafe_allow_html=True)
 
 # --- 2. YARDIMCI MOTORLAR ---
+
 def kod_normalize_et(kod):
     return re.sub(r'\s+', '', str(kod)).strip().lower()
 
@@ -118,11 +123,14 @@ def ilerleme_kaydet(puan, kod, egz_id, m_id, n_id, n_m):
 
 # --- 6. ANA AKIŞ ---
 if st.session_state.user is None:
-    # --- YENİ MİNİMALİST GİRİŞ EKRANI ---
+    # --- GİRİŞ EKRANI (Pito Geri Döndü) ---
     empty_l, col_mid, empty_r = st.columns([1, 2, 1])
     with col_mid:
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown('<div class="academy-title">Pito Python Akademi</div>', unsafe_allow_html=True)
+        pito_gorseli_yukle("merhaba")
+        st.markdown(f'<div class="pito-notu">💬 <b>Pito:</b> "Selam genç yazılımcı! Geleceğin kodlarını birlikte yazmaya hazır mısın?"</div>', unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
         
         numara = st.number_input("Okul Numaranı Gir:", step=1, value=0)
         if numara > 0:
@@ -143,7 +151,7 @@ if st.session_state.user is None:
         st.markdown('</div>', unsafe_allow_html=True)
 
 else:
-    # ARENA (Eğitim ve Liderlik alanı aynen devam ediyor)
+    # ARENA BÖLÜMÜ (Aynen devam ediyor)
     u = st.session_state.user
     col_main, col_leader = st.columns([7, 3])
 
@@ -199,7 +207,7 @@ else:
             with st.expander("📖 Çözümü İncele", expanded=True):
                 st.code(egz['cozum'], language="python")
                 st.markdown("<div style='color:#00FF00; font-family:monospace; margin-top:10px;'>🚀 Beklenen Çıktı:</div>", unsafe_allow_html=True)
-                st.markdown(f"<div style='background-color:#111; padding:10px; border-radius:5px; border:1px dashed #555;'>{egz.get('beklenen_cikti', '> Tanımsız.')}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='background-color:#111; padding:10px; border-radius:5px; border:1px dashed #555;'>{egz.get('beklenen_cikti', '> Tanımsız.')}</div>", unsafe_allow_html=True)
             n_id, n_m = (egz_liste[sira]['id'], u['mevcut_modul']) if sira < len(egz_liste) else (f"{m_idx + 2}.1", m_idx + 2)
             if st.button("Anladım, Sıradaki ➡️"): ilerleme_kaydet(0, "Çözüm İncelendi", egz['id'], u['mevcut_modul'], n_id, n_m)
 
