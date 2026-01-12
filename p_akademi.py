@@ -27,7 +27,6 @@ st.markdown("""
 # --- 2. YARDIMCI MOTORLAR ---
 
 def kod_normalize_et(kod):
-    """Boşluk ve parantez farklarını yok sayarak esnek kontrol sağlar."""
     return re.sub(r'\s+', '', str(kod)).strip().lower()
 
 def pito_notu_uret(mod, ad="Genç Yazılımcı"):
@@ -127,7 +126,6 @@ else:
         egz_liste = modul['egzersizler']
         egz = next((e for e in egz_liste if e['id'] == str(u['mevcut_egzersiz'])), egz_liste[0])
 
-        # Hero Header ve İlerleme
         st.markdown(f"<div class='hero-panel'><h3>🚀 {u['ad_soyad']} | {u['sinif']}</h3><p>{u['rutbe']} • {int(float(u['toplam_puan']))} XP</p></div>", unsafe_allow_html=True)
         sira = egz_liste.index(egz) + 1
         st.write(f"📊 **Modül İlerlemesi:** {sira}/{len(egz_liste)}")
@@ -164,9 +162,9 @@ else:
         
         elif st.session_state.cevap_dogru:
             st.success(f"🌟 +{p_pot} XP Kazandın!")
-            # --- JSON'DAN ÇIKTI ÇEKME (BAŞARI) ---
+            # --- "beklenen_cikti" ÇEKME (BAŞARI) ---
             st.markdown("<div class='console-header'>💻 Kodunun Çıktısı:</div>", unsafe_allow_html=True)
-            st.markdown(f"<div class='console-box'>{egz.get('cikti', '> Çıktı bulunamadı.')}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='console-box'>{egz.get('beklenen_cikti', '> Çıktı tanımlanmamış.')}</div>", unsafe_allow_html=True)
             
             n_id, n_m = (egz_liste[sira]['id'], u['mevcut_modul']) if sira < len(egz_liste) else (f"{m_idx + 2}.1", m_idx + 2)
             if st.button("Sonraki Göreve Geç ➡️"): ilerleme_kaydet(p_pot, st.session_state.last_code, egz['id'], u['mevcut_modul'], n_id, n_m)
@@ -175,9 +173,9 @@ else:
             st.error("🚫 Kilitlendi.")
             with st.expander("📖 Çözümü ve Beklenen Çıktıyı İncele", expanded=True):
                 st.code(egz['cozum'], language="python")
-                # --- JSON'DAN ÇIKTI ÇEKME (ÇÖZÜM) ---
+                # --- "beklenen_cikti" ÇEKME (ÇÖZÜM) ---
                 st.markdown("<div style='color:#00FF00; font-family:monospace; margin-top:10px;'>🚀 Beklenen Çıktı:</div>", unsafe_allow_html=True)
-                st.markdown(f"<div style='background-color:#111; padding:10px; border-radius:5px; border:1px dashed #555;'>{egz.get('cikti', '> Beklenen çıktı tanımlanmamış.')}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='background-color:#111; padding:10px; border-radius:5px; border:1px dashed #555;'>{egz.get('beklenen_cikti', '> Çıktı tanımlanmamış.')}</div>", unsafe_allow_html=True)
             
             n_id, n_m = (egz_liste[sira]['id'], u['mevcut_modul']) if sira < len(egz_liste) else (f"{m_idx + 2}.1", m_idx + 2)
             if st.button("Anladım, Sıradaki ➡️"): ilerleme_kaydet(0, "Çözüm İncelendi", egz['id'], u['mevcut_modul'], n_id, n_m)
