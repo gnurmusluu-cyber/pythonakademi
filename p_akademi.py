@@ -1,107 +1,166 @@
 import streamlit as st
 import json
+import os
 
-# --- 1. VERİ YÜKLEME ---
-def verileri_yukle():
-    try:
-        with open('mufredat.json', 'r', encoding='utf-8') as f:
-            return json.load(f)
-    except FileNotFoundError:
-        st.error("Hata: 'mufredat.json' bulunamadı!")
+# --- 1. AYARLAR VE YOL TANIMLAMALARI ---
+ASSETS_DIR = "assets"
+DATABASE_FILE = "mufredat.json"
+
+def get_asset_path(filename):
+    """Assets klasörü içindeki dosya yolunu döndürür."""
+    return os.path.join(ASSETS_DIR, filename)
+
+# --- 2. VERİ YÜKLEME ---
+def mufredat_yukle():
+    if not os.path.exists(DATABASE_FILE):
+        st.error(f"⚠️ '{DATABASE_FILE}' bulunamadı! Lütfen dosyayı ana dizine ekleyin.")
         return None
+    with open(DATABASE_FILE, 'r', encoding='utf-8') as f:
+        return json.load(f)
 
-# --- 2. SESSION STATE ---
+def gif_goster(gif_name, width=None):
+    """GIF dosyasını assets klasöründen güvenli bir şekilde yükler."""
+    path = get_asset_path(gif_name)
+    if os.path.exists(path):
+        if width:
+            st.image(path, width=width)
+        else:
+            st.image(path, use_container_width=True)
+    else:
+        st.warning(f"🖼️ {gif_name} bulunamadı! Konum: {path}")
+
+# --- 3. OTURUM YÖNETİMİ (PİTO PROTOKOLÜ) ---
+#
 if "initialized" not in st.session_state:
     st.session_state.update({
-        "modul_idx": 0, "adim_idx": 0, "hata_sayisi": 0,
-        "mevcut_puan": 20, "toplam_puan": 0, "kilitli": False,
-        "giris_yapildi": False, "ogrenci_no": "", "adim_tamamlandi": False,
-        "aktif_gif": "pito_merhaba.gif" # Başlangıç GIF'i
+        "initialized": True,
+        "modul_idx": 0, 
+        "adim_idx": 0, 
+        "hata_sayisi": 0,
+        "mevcut_puan": 20, 
+        "toplam_puan": 0, 
+        "kilitli": False,
+        "giris_yapildi": False, 
+        "ogrenci_no": "", 
+        "adim_tamamlandi": False,
+        "aktif_gif": "pito_merhaba.gif"
     })
 
-mufredat = verileri_yukle()
+mufredat = mufredat_yukle()
 
-# --- 3. SİDEBAR VE LİDERLİK ---
+# --- 4. SİDEBAR (SABİT PANEL) ---
 def sidebar_goster():
     with st.sidebar:
         st.title("🐍 Pito Panel")
+        # Sidebar liderlik listesi giriş ekranı dahil her an sabittir
         if st.session_state.giris_yapildi:
-            st.image(st.session_state.aktif_gif, use_container_width=True) # Pito Sidebar'da!
-            st.subheader(f"No: {st.session_state.ogrenci_no}")
+            gif_goster(st.session_state.aktif_gif)
+            st.subheader(f"Öğrenci No: {st.session_state.ogrenci_no}")
             
-            ilerleme = (st.session_state.modul_idx * 5) + (st.session_state.adim_idx + 1)
-            st.progress(ilerleme / 45)
-            st.write(f"🏆 Puan: **{st.session_state.toplam_puan}**")
+            # 9 Modül x 5 Adım = 45 Adım İlerlemesi
+            toplam_adim = (st.session_state.modul_idx * 5) + (st.session_state.adim_idx + 1)
+            # Rütbeler Egg'den Python Hero'ya kadardır
+            rutbeler = ["Egg 🥚", "Hatchling 🐣", "Coder 💻", "Developer 🚀", "Engineer 🛠️", "Master 🧙", "Python Hero 👑"]
+            rutbe_idx = min(len(rutbeler)-1, (toplam_adim - 1) // 7)
+            
+            st.metric("Mevcut Rütbe", rutbeler[rutbe_idx])
+            st.progress(min(toplam_adim / 45, 1.0))
+            st.write(f"🏆 Toplam Puan: **{st.session_state.toplam_puan}**")
+            
             st.divider()
-            st.table({"Sıra": [1, 2, 3], "Öğrenci": ["Mehmet", "Ayşe", "Siz"], "Puan": [920, 850, st.session_state.toplam_puan]})
+            st.subheader("📊 Liderlik Tablosu")
+            st.table({"Öğrenci": ["Ali 12/A", "Merve 11/B", "Siz"], "Puan": [880, 820, st.session_state.toplam_puan]})
+            
+            if st.button("Eğitimi Sıfırla"):
+                st.session_state.clear()
+                st.rerun() # Her buton tetikleyicisi st.rerun() içermeli
 
-# --- 4. HATA VE GIF MANTIĞI ---
+# --- 5. KONTROL MEKANİZMASI ---
+#
 def kontrol_et(girilen_kod, dogru_kod, ipucu):
-    # Boşlukları ve tırnak farklarını yok say
     t_giris = girilen_kod.strip().replace('"', "'").replace(" ", "")
     t_cozum = dogru_kod.strip().replace('"', "'").replace(" ", "")
     
     if t_giris == t_cozum:
         st.session_state.adim_tamamlandi = True
-        st.session_state.aktif_gif = "pito_basari.gif" # Başarı GIF'i
+        st.session_state.aktif_gif = "pito_basari.gif"
     else:
+        # Her hata 5 puan düşürür
         st.session_state.hata_sayisi += 1
         st.session_state.mevcut_puan = max(0, st.session_state.mevcut_puan - 5)
         
         if st.session_state.hata_sayisi < 3:
-            st.session_state.aktif_gif = "pito_dusunuyor.gif" # Düşünme GIF'i
-        else:
-            st.session_state.aktif_gif = "pito_hata.gif" # Hata/İpucu GIF'i
-            if st.session_state.hata_sayisi >= 4:
-                st.session_state.kilitli = True
+            st.session_state.aktif_gif = "pito_dusunuyor.gif"
+        elif st.session_state.hata_sayisi == 3:
+            st.session_state.aktif_gif = "pito_hata.gif"
+            # 3. hatada sarı kutuda ipucu
+            st.warning(f"💡 Pito'dan İpucu: {ipucu}")
+        
+        if st.session_state.hata_sayisi >= 4:
+            # 4. hatada editör kilitlenip kırmızı kutuda doğru çözüm
+            st.session_state.kilitli = True
+            st.session_state.aktif_gif = "pito_hata.gif"
 
-# --- 5. ANA EKRAN ---
+# --- 6. ANA EKRAN AKIŞI ---
 sidebar_goster()
 
 if mufredat:
     if not st.session_state.giris_yapildi:
         st.title("🎓 Pito Akademi Giriş")
-        st.image("pito_merhaba.gif", width=200)
-        no = st.text_input("Okul Numaran:")
-        if st.button("Başla") and no.isdigit():
-            st.session_state.ogrenci_no, st.session_state.giris_yapildi = no, True
-            st.rerun()
+        gif_goster("pito_merhaba.gif", width=200)
+        # Okul numarası sadece sayısal olmalı
+        no = st.text_input("Okul Numaranızı Girin:")
+        if st.button("Eğitime Başla"):
+            if no.isdigit():
+                st.session_state.ogrenci_no = no
+                st.session_state.giris_yapildi = True
+                st.rerun()
+            else:
+                st.error("Lütfen sadece sayısal bir numara giriniz!")
     else:
-        modul_adlari = list(mufredat.keys())
-        if st.session_state.modul_idx < len(modul_adlari):
-            aktif_modul = modul_adlari[st.session_state.modul_idx]
-            adim = mufredat[aktif_modul][st.session_state.adim_idx]
+        moduller = list(mufredat.keys())
+        if st.session_state.modul_idx < len(moduller):
+            modul_adi = moduller[st.session_state.modul_idx]
+            adim = mufredat[modul_adi][st.session_state.adim_idx]
             
-            st.header(f"📍 {aktif_modul}")
+            st.header(f"📍 {modul_adi}")
             st.subheader(adim['baslik'])
             
+            # Pito terimleri derinlemesine ve örneklerle açıklar
             with st.chat_message("assistant", avatar="🐍"):
                 st.markdown(f"**Pito:** {adim['pito_notu']}")
             
+            st.divider()
             st.info(f"📝 **GÖREV:** {adim['egzersiz']}")
-            user_code = st.text_area("Kod Paneli:", value=adim['taslak'], key=f"e_{st.session_state.modul_idx}_{st.session_state.adim_idx}", disabled=st.session_state.kilitli)
             
+            ed_key = f"ed_{st.session_state.modul_idx}_{st.session_state.adim_idx}"
+            user_code = st.text_area("Boşlukları Doldur:", value=adim['taslak'], key=ed_key, disabled=st.session_state.kilitli)
+            
+            # Kod Paneli Üzerinde Geri Bildirim
             if not st.session_state.adim_tamamlandi and not st.session_state.kilitli:
                 if st.button("Çalıştır", type="primary"):
                     kontrol_et(user_code, adim['cozum'], adim['ipucu'])
                     st.rerun()
 
             if st.session_state.kilitli:
-                st.error(f"🛑 Çözüm: {adim['cozum']}")
+                st.error(f"🛑 4. Hata! Doğru Çözüm: {adim['cozum']}")
                 if st.button("Anladım, Geç"):
                     st.session_state.adim_tamamlandi, st.session_state.mevcut_puan = True, 0
                     st.rerun()
 
             if st.session_state.adim_tamamlandi:
-                st.success(f"🎉 Harika! +{st.session_state.mevcut_puan} Puan.")
+                st.success(f"🎉 Harika! +{st.session_state.mevcut_puan} Puan kazandın.")
                 if st.button("Sonraki Adım ➡️"):
                     st.session_state.toplam_puan += st.session_state.mevcut_puan
-                    if st.session_state.adim_idx < 4: st.session_state.adim_idx += 1
-                    else: st.session_state.adim_idx, st.session_state.modul_idx = 0, st.session_state.modul_idx + 1
+                    # Bir sonraki egzersize geçildiğinde puan 20'ye resetlenir
+                    if st.session_state.adim_idx < 4:
+                        st.session_state.adim_idx += 1
+                    else:
+                        st.session_state.adim_idx, st.session_state.modul_idx = 0, st.session_state.modul_idx + 1
                     
                     st.session_state.update({"adim_tamamlandi": False, "hata_sayisi": 0, "mevcut_puan": 20, "kilitli": False, "aktif_gif": "pito_merhaba.gif"})
                     st.rerun()
         else:
             st.title("🏆 MEZUN OLDUN!")
-            st.image("pito_mezun.gif", use_container_width=True)
+            gif_goster("pito_mezun.gif")
             st.balloons()
