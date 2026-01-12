@@ -17,40 +17,38 @@ st.markdown("""
     /* Giriş Kartı */
     .login-card {
         background: rgba(30, 30, 47, 0.95);
-        padding: 40px;
+        padding: 50px;
         border-radius: 20px;
         border: 2px solid #00FF00;
-        box-shadow: 0 0 30px rgba(0, 255, 0, 0.1);
+        box-shadow: 0 0 40px rgba(0, 255, 0, 0.1);
         text-align: center;
         max-width: 550px;
         margin: auto;
     }
     .academy-title { 
-        font-size: 2.8em; 
+        font-size: 3em; 
         font-weight: 800; 
-        margin-bottom: 25px; 
+        margin-bottom: 40px; 
         background: linear-gradient(90deg, #00FF00, #00CCFF); 
         -webkit-background-clip: text; 
         -webkit-text-fill-color: transparent; 
     }
     
-    /* Dashboard ve Paneller */
+    /* Dashboard Panelleri */
     .hero-panel { background: linear-gradient(90deg, #1E1E2F 0%, #2D2D44 100%); padding: 25px; border-radius: 15px; border-left: 8px solid #00FF00; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,255,0,0.2); }
     .status-bar { display: flex; justify-content: space-between; background-color: #262730; padding: 12px; border-radius: 10px; border: 1px solid #4B4B4B; margin-bottom: 15px; }
     .console-box { background-color: #1E1E1E; border: 1px solid #333; border-radius: 0 0 10px 10px; padding: 15px; font-family: 'Courier New', Courier, monospace; color: #00FF00; }
     .console-header { background-color: #333; padding: 5px 15px; border-radius: 10px 10px 0 0; font-size: 12px; color: #AAA; font-weight: bold; }
-    .sampiyon-kart { background: linear-gradient(45deg, #FFD700, #FFA500); padding: 20px; border-radius: 12px; text-align: center; color: black; margin-bottom: 20px; font-weight: bold; box-shadow: 0 0 15px #FFD700; }
+    .sampiyon-kart { background: linear-gradient(45deg, #FFD700, #FFA500); padding: 20px; border-radius: 12px; text-align: center; color: black; margin-bottom: 20px; font-weight: bold; }
     .pito-notu { background-color: #1E1E2F; border-radius: 10px; padding: 15px; border-left: 5px solid #00FF00; margin-top: 10px; font-style: italic; color: #E0E0E0; }
     
-    /* Butonlar ve Girdiler */
-    .stButton>button { border-radius: 10px; background-color: #00FF00 !important; color: black !important; font-weight: bold; width: 100%; height: 3.2em; transition: 0.3s; }
-    .stButton>button:hover { transform: scale(1.02); box-shadow: 0 0 20px #00FF00; }
+    /* Girdiler */
+    .stButton>button { border-radius: 10px; background-color: #00FF00 !important; color: black !important; font-weight: bold; width: 100%; height: 3.5em; transition: 0.3s; }
     .stTextArea>div>div>textarea { background-color: #1E1E1E; color: #00FF00; font-family: 'Courier New', Courier, monospace; font-size: 16px; }
     </style>
     """, unsafe_allow_html=True)
 
 # --- 2. YARDIMCI MOTORLAR ---
-
 def kod_normalize_et(kod):
     return re.sub(r'\s+', '', str(kod)).strip().lower()
 
@@ -87,14 +85,14 @@ except Exception as e:
     st.error(f"❌ Müfredat dosyası yüklenemedi: {e}")
     st.stop()
 
-# --- 4. SESSION STATE (HAFIZA) ---
+# --- 4. SESSION STATE ---
 if "user" not in st.session_state: st.session_state.user = None
 if "error_count" not in st.session_state: st.session_state.error_count = 0
 if "cevap_dogru" not in st.session_state: st.session_state.cevap_dogru = False
 if "pito_mod" not in st.session_state: st.session_state.pito_mod = "merhaba"
 if "last_code" not in st.session_state: st.session_state.last_code = ""
 
-# --- 5. İLERLEME KAYDETME MOTORU ---
+# --- 5. İLERLEME KAYDETME ---
 def ilerleme_kaydet(puan, kod, egz_id, m_id, n_id, n_m):
     try:
         df_u = conn.read(spreadsheet=KULLANICILAR_URL, ttl=0)
@@ -115,21 +113,16 @@ def ilerleme_kaydet(puan, kod, egz_id, m_id, n_id, n_m):
         
         st.session_state.user = df_u.iloc[u_idx].to_dict()
         st.session_state.error_count, st.session_state.cevap_dogru, st.session_state.pito_mod, st.session_state.last_code = 0, False, "merhaba", ""
-        st.cache_data.clear()
-        st.rerun()
+        st.cache_data.clear(); st.rerun()
     except Exception as e: st.error(f"Kayıt Hatası: {e}")
 
-# --- 6. ANA PROGRAM AKIŞI ---
-
+# --- 6. ANA AKIŞ ---
 if st.session_state.user is None:
-    # --- YENİ SADE GİRİŞ EKRANI ---
+    # --- YENİ MİNİMALİST GİRİŞ EKRANI ---
     empty_l, col_mid, empty_r = st.columns([1, 2, 1])
     with col_mid:
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown('<div class="academy-title">Pito Python Akademi</div>', unsafe_allow_html=True)
-        pito_gorseli_yukle("merhaba")
-        st.markdown(f'<div class="pito-notu">💬 <b>Pito:</b> "Selam genç yazılımcı! Geleceğin kodlarını birlikte yazmaya hazır mısın?"</div>', unsafe_allow_html=True)
-        st.markdown("<br>", unsafe_allow_html=True)
         
         numara = st.number_input("Okul Numaranı Gir:", step=1, value=0)
         if numara > 0:
@@ -137,8 +130,7 @@ if st.session_state.user is None:
                 df_u = conn.read(spreadsheet=KULLANICILAR_URL, ttl=0)
                 u_data = df_u[df_u['ogrenci_no'] == numara]
                 if not u_data.empty:
-                    st.session_state.user = u_data.iloc[0].to_dict()
-                    st.rerun()
+                    st.session_state.user = u_data.iloc[0].to_dict(); st.rerun()
                 else:
                     st.info("Seni tanımıyorum! Haydi kaydolalım.")
                     with st.container():
@@ -147,12 +139,11 @@ if st.session_state.user is None:
                         if st.button("Kaydı Tamamla 🎓") and y_ad:
                             yeni_o = pd.DataFrame([{"ogrenci_no": int(numara), "ad_soyad": y_ad, "sinif": y_sinif, "toplam_puan": 0, "mevcut_modul": 1, "mevcut_egzersiz": "1.1", "rutbe": "🥚 Çömez"}])
                             conn.update(spreadsheet=KULLANICILAR_URL, data=pd.concat([df_u, yeni_o], ignore_index=True))
-                            st.session_state.user = yeni_o.iloc[0].to_dict()
-                            st.rerun()
+                            st.session_state.user = yeni_o.iloc[0].to_dict(); st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
 else:
-    # ARENA BÖLÜMÜ (Önceki kararlı yapıyla devam eder)
+    # ARENA (Eğitim ve Liderlik alanı aynen devam ediyor)
     u = st.session_state.user
     col_main, col_leader = st.columns([7, 3])
 
@@ -170,7 +161,6 @@ else:
         st.write(f"📊 **Modül İlerlemesi:** {sira}/{len(egz_liste)}")
         st.progress(sira / len(egz_liste))
 
-        # Görev Bilgi Çubuğu
         p_pot = max(0, 20 - (st.session_state.error_count * 5))
         st.markdown(f"""<div class="status-bar">
             <div style="color: #00FF00; font-weight: bold;">📍 Modül {u['mevcut_modul']} | Görev {egz['id']}</div>
