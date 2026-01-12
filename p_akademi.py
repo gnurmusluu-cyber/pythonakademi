@@ -5,65 +5,81 @@ import base64
 # --- 1. SAYFA AYARLARI ---
 st.set_page_config(page_title="Pito Python Akademi", layout="wide")
 
-# --- 2. ÖZEL CSS: CODESIGNAL EDİTÖR TEMASI VE GÖRSEL DÜZEN ---
+# --- 2. GELİŞMİŞ CSS: CODESIGNAL PANEL VE OKUNABİLİRLİK İYİLEŞTİRMESİ ---
 st.markdown("""
     <style>
-    .stApp { background-color: #F4F7F9; }
+    .stApp { background-color: #F8F9FA; }
+    
+    /* Pito Notu Alanı */
     .pito-note {
         background-color: #FFFFFF;
-        padding: 25px;
-        border-radius: 15px;
+        padding: 20px;
+        border-radius: 12px;
         border-left: 6px solid #2E7D32;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        margin-bottom: 20px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        margin-bottom: 25px;
         color: #1B5E20;
         font-size: 1.1rem;
     }
+
     /* CodeSignal Tarzı Komut Paneli */
     .editor-container {
         background-color: #1E1E1E;
-        border-radius: 8px 8px 0 0;
+        border-radius: 10px 10px 0 0;
         border: 1px solid #333;
-        margin-top: 10px;
+        margin-top: 15px;
     }
     .editor-header {
         background-color: #2D2D2D;
         color: #D4D4D4;
-        padding: 8px 15px;
-        border-radius: 8px 8px 0 0;
+        padding: 10px 20px;
+        border-radius: 10px 10px 0 0;
         font-family: 'Consolas', monospace;
-        font-size: 12px;
+        font-size: 13px;
         border-bottom: 1px solid #3F3F3F;
     }
     .editor-tab {
         background-color: #1E1E1E;
-        padding: 8px 20px;
+        padding: 8px 25px;
         display: inline-block;
         color: #FFF;
         border-right: 1px solid #333;
+        font-weight: bold;
     }
-    /* Textarea Özelleştirme */
+
+    /* Kod Giriş Alanı ve Disabled Renk İyileştirmesi */
     .stTextArea textarea {
         background-color: #1E1E1E !important;
-        color: #D4D4D4 !important;
-        font-family: 'Consolas', 'Monaco', monospace !important;
-        font-size: 16px !important;
-        border-radius: 0 0 8px 8px !important;
+        color: #D4D4D4 !important; /* Normal metin rengi */
+        font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
+        font-size: 17px !important;
+        border-radius: 0 0 10px 10px !important;
         border: 1px solid #333 !important;
-        padding: 15px !important;
+        padding: 20px !important;
+        line-height: 1.5 !important;
     }
+
+    /* Kilitlendiğinde (Doğru Cevap) Metin Rengini Koruma */
+    .stTextArea textarea:disabled {
+        color: #A6E22E !important; /* Doğru cevapta metin yeşilimsi tonda kalır */
+        -webkit-text-fill-color: #A6E22E !important;
+        opacity: 1 !important;
+        background-color: #1A1A1A !important;
+    }
+
+    /* Liderlik Kartları */
     .leaderboard-card {
         background-color: #FFFFFF;
         padding: 12px;
         border-radius: 10px;
         border-left: 5px solid #FFD700;
-        margin-bottom: 8px;
+        margin-bottom: 10px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 3. VERİ VE RÜTBE MANTIĞI ---
+# --- 3. VERİ VE RÜTBE SİSTEMİ ---
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1lat8rO2qm9QnzEUYlzC_fypG3cRkGlJfSfTtwNvs318/export?format=csv"
 
 def get_rank(points):
@@ -87,10 +103,10 @@ def render_gif(name):
     except:
         st.info(f"[{name}.gif yüklenemedi]")
 
-# --- 4. EKSİKSİZ 8 MODÜL VE 40 EGZERSİZ VERİSİ ---
+# --- 4. EKSİKSİZ 40 ADIMLIK MÜFREDAT ---
 training_data = [
     {"module_title": "1. İletişim: print() ve Çıktı Dünyası", "exercises": [
-        {"msg": "Python'da ekrana mesaj yazdırmak için `print()` fonksiyonunu kullanırız. Metinleri mutlaka tırnak (' ') içine almalısın.", "task": "print('___')", "solution": "print('Merhaba Pito')", "hint": "Metinleri tırnak işaretleri arasına yazmalısın."},
+        {"msg": "Python'da ekrana mesaj yazdırmak için `print()` fonksiyonunu kullanırız. Metinleri tırnak (' ') içine almalısın.", "task": "print('___')", "solution": "print('Merhaba Pito')", "hint": "Metinleri tırnak işaretleri arasına yazmalısın."},
         {"msg": "Sayılar tırnak gerektirmez. Boşluğa sadece **100** yaz.", "task": "print(___)", "solution": "print(100)", "hint": "Sayıları yazarken tırnak kullanma!"},
         {"msg": "Virgül (`,`) farklı verileri birleştirir. 'Puan:' metni ile **100** sayısını yanyana bas.", "task": "print('Puan:', ___)", "solution": "print('Puan:', 100)", "hint": "Virgülden sonra tırnaksız 100 yaz."},
         {"msg": "`#` işareti yorum satırıdır. Başına **#** işaretini koy.", "task": "___ bu bir yoldur", "solution": "# bu bir yoldur", "hint": "Kare (diyez) işaretini en başa koy."},
@@ -147,7 +163,7 @@ training_data = [
     ]}
 ]
 
-# --- 5. DURUM YÖNETİMİ ---
+# --- 5. DURUM YÖNETİMİ (SESSION STATE) ---
 if 'user' not in st.session_state:
     st.session_state.user = None
     st.session_state.errors = 0
@@ -165,7 +181,7 @@ def show_side_leaderboard():
     except:
         st.sidebar.info("Liderlik tablosu yükleniyor...")
 
-# --- 6. GİRİŞ VE KAYIT EKRANI ---
+# --- 6. GİRİŞ VE ANA PANEL ---
 if st.session_state.user is None:
     cl, cr = st.columns([2, 1])
     with cl:
@@ -173,8 +189,8 @@ if st.session_state.user is None:
         st.title("Pito Python Akademi")
         okul_no = st.text_input("Okul Numaranı Gir:", placeholder="Örn: 12")
         if okul_no:
-            # Örnek Giriş/Kayıt
-            st.session_state.user = {"Okul No": okul_no, "Ad": "Genç Yazılımcı", "Mevcut Modül": 1, "Mevcut Egzersiz": 1, "Puan": 0}
+            # Başlangıç verisi
+            st.session_state.user = {"Okul No": okul_no, "Ad": "Öğrenci", "Mevcut Modül": 1, "Mevcut Egzersiz": 1, "Puan": 0}
             st.rerun()
     with cr: show_side_leaderboard()
 
@@ -199,13 +215,14 @@ else:
 
         st.markdown(f'<div class="pito-note"><b>🐍 Pito\'nun Notu:</b><br>{curr_ex["msg"]}</div>', unsafe_allow_html=True)
         
+        # Geri bildirimlerin (feedback) metin olarak görüntülenmesi
         if st.session_state.feedback_msg:
             if st.session_state.feedback_type == "error": st.error(st.session_state.feedback_msg)
             elif st.session_state.feedback_type == "warning": st.warning(st.session_state.feedback_msg)
 
-        # CODESIGNAL TARZI KOMUT PANELİ
+        # CODESIGNAL PANELİ
         st.markdown('<div class="editor-container"><div class="editor-header"><div class="editor-tab">solution.py</div></div></div>', unsafe_allow_html=True)
-        ans = st.text_area("Kod Girişi:", value=curr_ex['task'], height=120, key=f"e_{m_idx}_{e_idx}", disabled=st.session_state.is_completed, label_visibility="collapsed")
+        ans = st.text_area("Kod Girişi:", value=curr_ex['task'], height=130, key=f"e_{m_idx}_{e_idx}", disabled=st.session_state.is_completed, label_visibility="collapsed")
 
         if not st.session_state.is_completed:
             if st.button("Kontrol Et"):
@@ -240,10 +257,10 @@ else:
             if st.session_state.errors >= 4:
                 st.info(f"✅ Doğru Çözüm: `{curr_ex['solution']}`")
             else:
-                st.success(f"✨ Harika! Doğru cevap.")
-                # SyntaxError'u önleyen çıktı temizliği
-                clean_out = curr_ex['solution'].replace('print(', '').replace(')', '').replace("'", "").replace('"', "")
-                st.code(f"Kod Çıktısı:\n{clean_out}")
+                st.success("✨ Harika! Doğru cevap.")
+                # f-string hatasını önlemek için değişkeni dışarıda işle
+                output_val = curr_ex['solution'].replace('print(', '').replace(')', '').replace("'", "").replace('"', "")
+                st.code(f"Kod Çıktısı:\n{output_val}")
 
             if st.button("Sonraki Adıma Geç ➡️"):
                 if e_idx < 4: u["Mevcut Egzersiz"] += 1
