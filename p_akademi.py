@@ -1,4 +1,4 @@
-import streamlit as st  # Hata 1 Çözümü: Kütüphane tanımı en üstte
+import streamlit as st  # NameError çözüm: Kütüphane tanımı en üstte
 from streamlit_gsheets import GSheetsConnection
 import pandas as pd
 import json
@@ -21,11 +21,10 @@ def mufredat_yukle():
         return json.load(f)
 
 # --- 2. DOĞRUDAN GOOGLE SHEETS BAĞLANTISI ---
-# .streamlit/secrets.toml içindeki linki kullanır
+# Görseldeki Pito_Akademi_Skorlar tablosuyla canlı bağlantı kurar
 conn = st.connection("gsheets", type=GSheetsConnection)
 
 def veritabani_islem(islem_tipi="oku", yeni_df=None):
-    """CSV kullanmadan doğrudan Google Sheets ile konuşur."""
     try:
         if islem_tipi == "oku":
             # ttl=0 verinin her seferinde online tablodan taze gelmesini sağlar
@@ -35,7 +34,6 @@ def veritabani_islem(islem_tipi="oku", yeni_df=None):
             st.cache_data.clear() # Yeni verinin hemen görünmesi için önbelleği temizler
     except Exception as e:
         st.error(f"⚠️ Veritabanı Bağlantı Hatası: {e}")
-        # Hata anında sistemin çökmemesi için boş bir şablon döner
         return pd.DataFrame(columns=["Okul No", "Öğrencinin Adı", "Sınıf", "Puan", "Mevcut Modül", "Mevcut Egzersiz"])
 
 # --- 3. SESSION STATE BAŞLATMA ---
@@ -50,7 +48,7 @@ if "initialized" not in st.session_state:
 
 mufredat = mufredat_yukle()
 
-# --- 4. KONTROL MEKANİZMASI ---
+# --- 4. KONTROL MEKANİZMASI (ÖZEL HATA MESAJLARI) ---
 def kontrol_et(girilen_kod, dogru_kod, ipucu):
     t_giris = girilen_kod.strip().replace('"', "'").replace(" ", "")
     t_cozum = dogru_kod.strip().replace('"', "'").replace(" ", "")
@@ -64,6 +62,7 @@ def kontrol_et(girilen_kod, dogru_kod, ipucu):
         st.session_state.hata_sayisi += 1
         st.session_state.mevcut_puan = max(0, st.session_state.mevcut_puan - 5)
         
+        # 4. HATA ÖZEL KURALI
         if st.session_state.hata_sayisi >= 4:
             st.session_state.kilitli = True
             st.session_state.aktif_gif = "pito_hata.gif"
@@ -79,16 +78,15 @@ def kontrol_et(girilen_kod, dogru_kod, ipucu):
 # --- 5. ANA EKRAN AKIŞI ---
 if not st.session_state.giris_yapildi:
     st.title("🎓 Pito Akademi Giriş")
-    # Hata 2 Çözümü: GIF yolu assets/ klasörüyle düzeltildi
     gif_yolu = get_asset_path("pito_merhaba.gif")
-    if os.path.exists(gif_yolu): st.image(gif_yolu, width=200)
+    if os.path.exists(gif_yolu): st.image(gif_yolu, width=200) #
     
     no = st.text_input("Okul Numaranızı Girin (Sadece Sayı):")
     if st.button("Eğitime Başla"):
         if no.isdigit():
             df = veritabani_islem("oku")
             if not df.empty and "Okul No" in df.columns:
-                df["Okul No"] = df["Okul No"].astype(str)
+                df["Okul No"] = df["Okul No"].astype(str) # KeyError ve Tip Hatası Çözümü
                 ogrenci = df[df["Okul No"] == str(no)]
                 
                 if not ogrenci.empty:
@@ -113,7 +111,7 @@ if not st.session_state.giris_yapildi:
             df = veritabani_islem("oku")
             yeni_veri = pd.DataFrame([{
                 "Okul No": st.session_state.ogrenci_no, "Öğrencinin Adı": ad, "Sınıf": sinif, 
-                "Puan": 0, "Rütbe": "Yeni Başlayan", "Mevcut Modül": 0, "Mevcut Egzersiz": 0,
+                "Puan": 0, "Rütbe": "Egg 🥚", "Mevcut Modül": 0, "Mevcut Egzersiz": 0,
                 "Tarih": datetime.now().strftime("%d-%m-%Y")
             }])
             veritabani_islem("kaydet", pd.concat([df, yeni_veri], ignore_index=True))
@@ -121,20 +119,20 @@ if not st.session_state.giris_yapildi:
             st.rerun()
 
 else:
-    # --- DERS EKRANI (BOŞ EKRAN SORUNU ÇÖZÜLDÜ) ---
+    # --- DERS EKRANI (BOŞ EKRAN ÇÖZÜLDÜ) ---
     with st.sidebar:
         st.title("🐍 Pito Panel")
         gif_yolu = get_asset_path(st.session_state.aktif_gif)
         if os.path.exists(gif_yolu): st.image(gif_yolu)
-        st.write(f"🏆 Puan: **{st.session_state.toplam_puan}**")
+        st.write(f"🏆 Toplam Puan: **{st.session_state.toplam_puan}**")
         if st.button("Güvenli Çıkış"):
             st.session_state.clear()
             st.rerun()
 
     if mufredat:
-        moduller = list(mufredat.keys())
-        if st.session_state.modul_idx < len(moduller):
-            modul_adi = moduller[st.session_state.modul_idx]
+        modul_adlari = list(mufredat.keys())
+        if st.session_state.modul_idx < len(modul_adlari):
+            modul_adi = modul_adlari[st.session_state.modul_idx]
             adim = mufredat[modul_adi][st.session_state.adim_idx]
 
             st.header(f"📍 {modul_adi}")
@@ -168,7 +166,7 @@ else:
                     if st.session_state.adim_idx < 4: st.session_state.adim_idx += 1
                     else: st.session_state.adim_idx, st.session_state.modul_idx = 0, st.session_state.modul_idx + 1
                     
-                    # --- GOOGLE SHEETS CANLI GÜNCELLEME ---
+                    # --- CANLI GÜNCELLEME ---
                     df = veritabani_islem("oku")
                     df["Okul No"] = df["Okul No"].astype(str)
                     idx = df[df["Okul No"] == str(st.session_state.ogrenci_no)].index
@@ -182,6 +180,4 @@ else:
                     st.rerun()
         else:
             st.title("🏆 MEZUN OLDUN!")
-            gif_mezun = get_asset_path("pito_mezun.gif")
-            if os.path.exists(gif_mezun): st.image(gif_mezun)
             st.balloons()
