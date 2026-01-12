@@ -142,7 +142,7 @@ if st.session_state.user is None:
                 if res.data:
                     st.session_state.temp_user = res.data[0]; st.rerun()
                 else:
-                    st.warning("Numaranı bulamadım, yeni profil oluşturalım!")
+                    st.warning("Numaranı bulamadım, haydi yeni profil oluşturalım!")
                     y_ad = st.text_input("Ad Soyad:")
                     y_sin = st.selectbox("Sınıfın:", ["9-A", "9-B", "10-A", "10-B", "11-A", "12-A"])
                     if st.button("Kaydı Tamamla 🎓") and y_ad:
@@ -173,6 +173,7 @@ else:
             if st.button("🔄 Akademiyi Sıfırla (En Baştan Başla)"):
                 akademi_sifirla()
         else:
+            # --- NORMAL EĞİTİM AKIŞI ---
             modul = mufredat['pito_akademi_mufredat'][m_idx]
             egz = next((e for e in modul['egzersizler'] if e['id'] == str(u['mevcut_egzersiz'])), modul['egzersizler'][0])
             
@@ -207,14 +208,17 @@ else:
                     n_id, n_m = (modul['egzersizler'][sira]['id'], u['mevcut_modul']) if sira < len(modul['egzersizler']) else (f"{m_idx + 2}.1", m_idx + 2)
                     ilerleme_kaydet(p_pot, k_in, egz['id'], n_id, n_m)
             elif st.session_state.error_count >= 4:
-                st.error("🚫 Puan kazanılamadı."); with st.expander("📖 Doğru Çözümü İncele", expanded=True): st.code(egz['cozum'], language="python")
+                # Düzeltilen Satır (SyntaxError Çözüldü):
+                st.error("🚫 Puan kazanılamadı.")
+                with st.expander("📖 Doğru Çözümü İncele", expanded=True):
+                    st.code(egz['cozum'], language="python")
                 if st.button("Anladım, Sıradaki ➡️"):
                     sira = modul['egzersizler'].index(egz) + 1
                     n_id, n_m = (modul['egzersizler'][sira]['id'], u['mevcut_modul']) if sira < len(modul['egzersizler']) else (f"{m_idx + 2}.1", m_idx + 2)
                     ilerleme_kaydet(0, "Çözüm İncelendi", egz['id'], n_id, n_m)
 
     with col_side:
-        # --- LİDERLİK TABLOLARI ---
+        # --- 3 KADEMELİ LİDERLİK PANOLARI ---
         st.markdown("<h3 style='text-align:center;'>🏆 ONUR KÜRSÜSÜ</h3>", unsafe_allow_html=True)
         t_okul, t_sinif, t_pano = st.tabs(["🌍 Okul", "📍 Sınıfım", "🏫 Sınıflar"])
         
@@ -233,9 +237,9 @@ else:
                     st.markdown(f"<div class='leader-card'><span>#{i} {r.ad_soyad}</span><code>{int(r.toplam_puan)} XP</code></div>", unsafe_allow_html=True)
 
             with t_pano:
-                # Sınıf bazlı toplam puan panosu
-                
+                # Sınıf bazlı toplam puan (Lider Sınıf Panosu)
                 df_p = df.groupby('sinif')['toplam_puan'].sum().sort_values(ascending=False).reset_index()
                 for i, r in enumerate(df_p.itertuples(), 1):
                     st.markdown(f"<div class='leader-card'><span>#{i} {r.sinif}</span><code>{int(r.toplam_puan)} XP</code></div>", unsafe_allow_html=True)
-        except: st.write("Tablolar yükleniyor...")
+        except:
+            st.write("Tablolar yükleniyor...")
