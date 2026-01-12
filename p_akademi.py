@@ -16,10 +16,16 @@ st.markdown("""
     
     /* STREAMLIT MENÜSÜNÜ GİZLE */
     .stApp > header { display: none; }
+
+    /* 🔥 YENİ: Sayfanın en üstündeki varsayılan boşluğu azalt */
+    .block-container {
+        padding-top: 1rem !important; 
+        padding-bottom: 1rem !important;
+    }
     
-    /* Giriş Alanı Tasarımı (Kutu ve Kontur Kaldırıldı) */
+    /* Giriş Alanı Tasarımı */
     .login-container {
-        padding: 20px;
+        padding: 10px; /* İç boşluk biraz azaltıldı */
         text-align: center;
         max-width: 550px;
         margin: auto;
@@ -27,7 +33,8 @@ st.markdown("""
     
     .academy-title { 
         font-size: 3em; 
-        font-weight: 800; 
+        font-weight: 800;
+        margin-top: 10px; /* Başlığın kendi üst boşluğu ayarlandı */
         margin-bottom: 20px; 
         background: linear-gradient(90deg, #00FF00, #00CCFF); 
         -webkit-background-clip: text; 
@@ -81,8 +88,12 @@ KULLANICILAR_URL = "https://docs.google.com/spreadsheets/d/1lat8rO2qm9QnzEUYlzC_
 KAYITLAR_URL = "https://docs.google.com/spreadsheets/d/14QoNr4FHZhSaUDUU-DDQEfNFHMo5Ge5t5lyDgqGRJ3k/edit#gid=0"
 conn = st.connection("gsheets", type=GSheetsConnection)
 
-with open('mufredat.json', 'r', encoding='utf-8') as f:
-    mufredat = json.load(f)
+try:
+    with open('mufredat.json', 'r', encoding='utf-8') as f:
+        mufredat = json.load(f)
+except Exception as e:
+    st.error(f"❌ Müfredat dosyası yüklenemedi: {e}")
+    st.stop()
 
 # --- 4. SESSION STATE ---
 if "user" not in st.session_state: st.session_state.user = None
@@ -117,7 +128,7 @@ def ilerleme_kaydet(puan, kod, egz_id, m_id, n_id, n_m):
 
 # --- 6. ANA AKIŞ ---
 if st.session_state.user is None:
-    # --- YENİ KUTUSUZ GİRİŞ EKRANI ---
+    # --- YENİ MİNİMALİST GİRİŞ EKRANI (Daha Az Boşluklu) ---
     empty_l, col_mid, empty_r = st.columns([1, 2, 1])
     with col_mid:
         st.markdown('<div class="login-container">', unsafe_allow_html=True)
@@ -135,12 +146,13 @@ if st.session_state.user is None:
                     st.session_state.user = u_data.iloc[0].to_dict(); st.rerun()
                 else:
                     st.info("Seni tanımıyorum! Haydi kaydolalım.")
-                    y_ad = st.text_input("Ad Soyad:")
-                    y_sinif = st.selectbox("Sınıfın:", ["9-A", "9-B", "10-A", "10-B", "11-A", "12-A"])
-                    if st.button("Kaydı Tamamla 🎓") and y_ad:
-                        y_og = pd.DataFrame([{"ogrenci_no": int(numara), "ad_soyad": y_ad, "sinif": y_sinif, "toplam_puan": 0, "mevcut_modul": 1, "mevcut_egzersiz": "1.1", "rutbe": "🥚 Çömez"}])
-                        conn.update(spreadsheet=KULLANICILAR_URL, data=pd.concat([df_u, y_og], ignore_index=True))
-                        st.session_state.user = y_og.iloc[0].to_dict(); st.rerun()
+                    with st.container():
+                        y_ad = st.text_input("Ad Soyad:")
+                        y_sinif = st.selectbox("Sınıfın:", ["9-A", "9-B", "10-A", "10-B", "11-A", "12-A"])
+                        if st.button("Kaydı Tamamla 🎓") and y_ad:
+                            yeni_o = pd.DataFrame([{"ogrenci_no": int(numara), "ad_soyad": y_ad, "sinif": y_sinif, "toplam_puan": 0, "mevcut_modul": 1, "mevcut_egzersiz": "1.1", "rutbe": "🥚 Çömez"}])
+                            conn.update(spreadsheet=KULLANICILAR_URL, data=pd.concat([df_u, y_og], ignore_index=True))
+                            st.session_state.user = y_og.iloc[0].to_dict(); st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
 else:
