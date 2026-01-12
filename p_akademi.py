@@ -3,11 +3,12 @@ import pandas as pd
 import base64
 import re
 
-# --- 1. SAYFA AYARLARI VE CSS ---
+# --- 1. SAYFA AYARLARI VE ÖZEL CSS ---
 st.set_page_config(page_title="Pito Python Akademi", layout="wide")
 
 st.markdown("""
     <style>
+    /* CodeSignal Temalı Editör ve Okunabilirlik İyileştirmesi */
     .stApp { background-color: #F8F9FA; }
     .pito-note {
         background-color: #FFFFFF;
@@ -21,15 +22,15 @@ st.markdown("""
     .editor-container { background-color: #1E1E1E; border-radius: 10px 10px 0 0; border: 1px solid #333; margin-top: 15px; }
     .editor-header { background-color: #2D2D2D; color: #D4D4D4; padding: 10px 20px; border-radius: 10px 10px 0 0; font-family: 'Consolas', monospace; font-size: 13px; }
     .editor-tab { background-color: #1E1E1E; padding: 8px 25px; display: inline-block; color: #FFF; border-right: 1px solid #333; font-weight: bold; }
+    
+    /* Disabled durumunda metin okunabilirliği çözümü */
     .stTextArea textarea {
         background-color: #1E1E1E !important;
         color: #D4D4D4 !important;
         font-family: 'Consolas', monospace !important;
         font-size: 17px !important;
         border-radius: 0 0 10px 10px !important;
-        padding: 20px !important;
     }
-    /* Disabled durumunda metin okunabilirliği */
     .stTextArea textarea:disabled {
         color: #A6E22E !important;
         -webkit-text-fill-color: #A6E22E !important;
@@ -52,144 +53,128 @@ def render_gif(name):
         with open(f"assets/{name}.gif", "rb") as f:
             data = f.read()
             url = base64.b64encode(data).decode()
-            st.markdown(f'<img src="data:image/gif;base64,{url}" width="280">', unsafe_allow_html=True)
+            st.markdown(f'<img src="data:image/gif;base64,{url}" width="250">', unsafe_allow_html=True)
     except: st.info(f"[{name}.gif Hazırlanıyor...]")
 
-# --- 3. 8 MODÜL VE 40 ADIMLIK EKSİKSİZ MÜFREDAT ---
-# Müfredat: Bilgisayar Bilimi Kur 1 - 2. Bölüm standartlarına göre oluşturulmuştur[cite: 2, 4, 5].
+# --- 3. 40 ADIMLIK MÜFREDAT (PDF KAYNAKLI)  ---
 training_data = [
     {
-        "module_title": "1. Merhaba Python: Giriş ve Çıktı",
-        "intro": "Python dünyasına hoş geldin! Bu bölümde bilgisayarla iletişim kurmanın en temel yolu olan ekrana yazdırmayı öğreneceğiz.",
+        "module_title": "1. Python'a Giriş: Yazdırma Komutları",
+        "intro": "Python'da bilgisayarla iletişim kurmanın yolu `print()` fonksiyonudur. Metinler tırnak içinde, sayılar ise doğrudan yazılır.",
         "exercises": [
-            {"task": "print('___')", "solution": "print('Merhaba Pito')", "msg": "Ekrana tam olarak **'Merhaba Pito'** yazdır.", "hint": "Metinleri tırnak (' ') içine almalısın.", "output": "Merhaba Pito"},
-            {"task": "print(10 + ___)", "solution": "print(10 + 20)", "msg": "Ekrana 10 ve 20'nin toplamını yazdır.", "hint": "Sadece 20 yaz.", "output": "30"},
-            {"task": "___('Pito Python Akademi')", "solution": "print('Pito Python Akademi')", "msg": "Yazdırma komutu olan **print** fonksiyonunu kullan.", "hint": "Parantezden önce print yaz.", "output": "Pito Python Akademi"},
-            {"task": "print('Mardin', '___')", "solution": "print('Mardin', 'Nusaybin')", "hint": "Tırnak içinde Nusaybin yaz.", "msg": "Mardin ve Nusaybin kelimelerini virgül kullanarak yanyana yazdır.", "output": "Mardin Nusaybin"},
-            {"task": "# ___ satırı", "solution": "# Yorum satırı", "msg": "Python'ın görmezden gelmesi için bir yorum satırı oluştur.", "hint": "Diyez (#) işaretinden sonra 'Yorum' yaz.", "output": None}
+            {"task": "print('___')", "solution": "print('Merhaba Dünya')", "msg": "Ekrana 'Merhaba Dünya' yazdır.", "hint": "Metni tırnak içine almayı unutma.", "output": "Merhaba Dünya"},
+            {"task": "print(20 + ___)", "solution": "print(20 + 23)", "msg": "20 ile 23'ü toplayıp sonucu yazdır.", "hint": "Sadece 23 yaz.", "output": "43"},
+            {"task": "___('Pito Akademi')", "solution": "print('Pito Akademi')", "msg": "Yazdırma fonksiyonunu boşluğa yerleştir.", "hint": "Fonksiyonun adı print.", "output": "Pito Akademi"},
+            {"task": "# Bu bir ___ satırıdır", "solution": "# Bu bir yorum satırıdır", "msg": "Python'un okumayacağı bir yorum satırı oluştur.", "hint": "Yorum kelimesini kullan.", "output": None},
+            {"task": "print('Pito', '___')", "solution": "print('Pito', 'Akademi')", "msg": "Virgül kullanarak iki kelimeyi birleştir.", "hint": "Akademi yaz.", "output": "Pito Akademi"}
         ]
     },
     {
-        "module_title": "2. Veri Tipleri ve Değişkenler",
-        "intro": "Değişkenler, bilgileri sakladığımız hafıza kutularıdır. Python'da her verinin bir tipi (int, str, float) vardır.",
+        "module_title": "2. Değişkenler ve Veri Saklama",
+        "intro": "Değişkenler hafızadaki kutulardır. `=` işareti ile kutulara veri atarız.",
         "exercises": [
-            {"task": "puan = ___", "solution": "puan = 100", "msg": "**puan** değişkenine 100 değerini ata.", "hint": "Eşittir'den sonra 100 yaz.", "output": None},
-            {"task": "isim = '___'", "solution": "isim = 'Pito'", "msg": "**isim** değişkenine 'Pito' metnini ata.", "hint": "Tırnaklar arasına Pito yaz.", "output": None},
-            {"task": "print(type(___))", "solution": "print(type(5.5))", "msg": "Ondalıklı bir sayının (örn: 5.5) tipini ekrana yazdır.", "hint": "Parantez içine 5.5 yaz.", "output": "<class 'float'>"},
-            {"task": "sayi = ___('50')", "solution": "sayi = int('50')", "msg": "Metin halindeki '50'yi tam sayıya (integer) çevir.", "hint": "Dönüştürme komutu int() kullan.", "output": None},
-            {"task": "print(len('___'))", "solution": "print(len('Pito'))", "msg": "'Pito' kelimesinin kaç karakterden oluştuğunu bul.", "hint": "Tırnaklar içine Pito yaz.", "output": "4"}
+            {"task": "yas = ___", "solution": "yas = 15", "msg": "yas değişkenine 15 sayısını ata.", "hint": "Eşittir'den sonra 15 yaz.", "output": None},
+            {"task": "isim = '___'", "solution": "isim = 'Pito'", "msg": "isim değişkenine Pito değerini ver.", "hint": "Tırnaklar arasına Pito yaz.", "output": None},
+            {"task": "print(type(___))", "solution": "print(type(10))", "msg": "10 sayısının veri tipini ekrana bas.", "hint": "Parantez içine 10 yaz.", "output": "<class 'int'>"},
+            {"task": "sayi = ___('50')", "solution": "sayi = int('50')", "msg": "Metni tam sayıya (integer) dönüştür.", "hint": "Dönüşüm fonksiyonu int().", "output": None},
+            {"task": "print(len('___'))", "solution": "print(len('Python'))", "msg": "Python kelimesinin karakter uzunluğunu ölç.", "hint": "Tırnak içine Python yaz.", "output": "6"}
         ]
     },
     {
-        "module_title": "3. Matematiksel Operatörler",
-        "intro": "Python güçlü bir hesap makinesidir! Toplama (+), çıkarma (-), çarpma (*) ve bölme (/) işlemlerini yapabiliriz.",
+        "module_title": "3. Matematik Operatörleri",
+        "intro": "Python aritmetik işlemleri (+, -, *, /) kolayca yapabilir. // tam bölme, % kalan (mod) verir.",
         "exercises": [
-            {"task": "print(10 ___ 2)", "solution": "print(10 * 2)", "msg": "10 ile 2'yi çarpan operatörü yaz.", "hint": "Yıldız (*) işaretini kullan.", "output": "20"},
-            {"task": "print(15 ___ 4)", "solution": "print(15 // 4)", "msg": "15'in 4'e bölümünden sadece tam kısmı (taban bölme) al.", "hint": "Çift eğik çizgi (//) kullan.", "output": "3"},
-            {"task": "print(10 ___ 3)", "solution": "print(10 % 3)", "msg": "10'un 3'e bölümünden kalanı (mod) bul.", "hint": "Yüzde (%) işaretini kullan.", "output": "1"},
-            {"task": "print(2 ___ 3)", "solution": "print(2 ** 3)", "msg": "2'nin 3. kuvvetini (üssünü) hesapla.", "hint": "Çift yıldız (**) kullan.", "output": "8"},
-            {"task": "print( (5+5) ___ 2 )", "solution": "print( (5+5) * 2 )", "msg": "Önce parantez içini toplayıp sonra 2 ile çarpan kodu tamamla.", "hint": "Yıldız (*) işaretini koy.", "output": "20"}
+            {"task": "print(10 ___ 5)", "solution": "print(10 * 5)", "msg": "10 ile 5'i çarpan işareti koy.", "hint": "Yıldız (*) işareti.", "output": "50"},
+            {"task": "print(17 ___ 3)", "solution": "print(17 // 3)", "msg": "17'nin 3'e bölümünden tam kısmı al.", "hint": "Tam bölme operatörü //.", "output": "5"},
+            {"task": "print(10 ___ 3)", "solution": "print(10 % 3)", "msg": "10'un 3'e bölümünden kalanı bul.", "hint": "Mod alma operatörü %.", "output": "1"},
+            {"task": "print(2 ___ 4)", "solution": "print(2 ** 4)", "msg": "2'nin 4. kuvvetini (üssünü) hesapla.", "hint": "Üs operatörü **.", "output": "16"},
+            {"task": "print((5+5) ___ 2)", "solution": "print((5+5) / 2)", "msg": "Toplama işleminden sonra 2'ye böl.", "hint": "Bölme işareti /.", "output": "5.0"}
         ]
     },
     {
         "module_title": "4. Karar Yapıları: if-else",
-        "intro": "Programlarımızın karar vermesini sağlarız. 'Eğer hava yağmurluysa şemsiye al' mantığı burada çalışır.",
+        "intro": "Programlarımızın şartlara göre karar vermesi için if-elif-else yapılarını kullanırız.",
         "exercises": [
-            {"task": "if 10 ___ 10: print('Eşit')", "solution": "if 10 == 10: print('Eşit')", "msg": "Eşitlik kontrolü için gereken operatörü yaz.", "hint": "İki tane eşittir (==) kullan.", "output": "Eşit"},
-            {"task": "if 5 > 3: ___('Büyük')", "solution": "if 5 > 3: print('Büyük')", "msg": "Şart doğruysa ekrana 'Büyük' yazdır.", "hint": "print fonksiyonunu ekle.", "output": "Büyük"},
-            {"task": "if 10 < 5: pass\n___: print('Küçük değil')", "solution": "else: print('Küçük değil')", "msg": "Şart yanlışsa (else) çalışacak bloğu tamamla.", "hint": "else: yazmalısın.", "output": "Küçük değil"},
-            {"task": "notu = 60\nif notu < 50: pass\n___ notu > 50: print('Geçti')", "solution": "elif notu > 50: print('Geçti')", "msg": "Birden fazla şartı kontrol etmek için **elif** kullan.", "hint": "elif yaz ve şartı tamamla.", "output": "Geçti"},
-            {"task": "if 1==1 ___ 2==2: print('Ok')", "solution": "if 1==1 and 2==2: print('Ok')", "msg": "İki şartın da doğru olmasını bekleyen mantıksal operatörü yaz.", "hint": "and (ve) operatörünü kullan.", "output": "Ok"}
+            {"task": "if 10 ___ 10: print('Eşit')", "solution": "if 10 == 10: print('Eşit')", "msg": "Eşitlik kontrolü yap (==).", "hint": "Çift eşittir kullan.", "output": "Eşit"},
+            {"task": "if 5 > 10: pass\n___: print('B')", "solution": "else: print('B')", "msg": "Şart yanlışsa çalışacak (else) bloğu tamamla.", "hint": "else: yazmalısın.", "output": "B"},
+            {"task": "if 1<0: pass\n___ 1>0: print('C')", "solution": "elif 1>0: print('C')", "msg": "İkinci bir şartı (elif) ekle.", "hint": "elif yaz.", "output": "C"},
+            {"task": "if True ___ False: print('X')", "solution": "if True and False: print('X')", "msg": "İki şartın da doğru olmasını bekleyen operatörü yaz.", "hint": "and operatörü.", "output": None},
+            {"task": "if 5 ___ 3: print('Y')", "solution": "if 5 != 3: print('Y')", "msg": "Eşit değilse (!=) operatörünü kullan.", "hint": "Ünlem ve eşittir (!=).", "output": "Y"}
         ]
     },
     {
-        "module_title": "5. Listeler: Veri Gruplama",
-        "intro": "Listeler, birden fazla veriyi tek bir sepette tutmamıza yarar. Saymaya her zaman 0'dan başlarız!",
+        "module_title": "5. Listeler ile Veri Gruplama",
+        "intro": "Listeler birden fazla veriyi tek bir kutuda tutar. Elemanlara indeksleri ile ulaşırız.",
         "exercises": [
-            {"task": "meyveler = [___, 'Elma']", "solution": "meyveler = ['Muz', 'Elma']", "msg": "Listenin ilk elemanına 'Muz' ekle.", "hint": "Tırnak içinde Muz yaz.", "output": None},
-            {"task": "print(meyveler[___])", "solution": "print(meyveler[0])", "msg": "Listenin ilk elemanına (0. indeks) eriş.", "hint": "Sadece 0 yaz.", "output": "Muz"},
-            {"task": "meyveler.___('Çilek')", "solution": "meyveler.append('Çilek')", "msg": "Listeye yeni bir eleman ekleme metodunu yaz.", "hint": "append metodunu kullan.", "output": None},
-            {"task": "meyveler.pop(___)", "solution": "meyveler.pop(0)", "msg": "Listenin ilk elemanını sil.", "hint": "Parantez içine 0 yaz.", "output": None},
-            {"task": "print(___(meyveler))", "solution": "print(len(meyveler))", "msg": "Listenin toplam kaç elemanlı olduğunu bul.", "hint": "len() fonksiyonunu kullan.", "output": "2"}
+            {"task": "L = [___, 'Muz']", "solution": "L = ['Elma', 'Muz']", "msg": "Listenin başına 'Elma' ekle.", "hint": "Tırnak içinde Elma.", "output": None},
+            {"task": "print(L[___])", "solution": "print(L[0])", "msg": "Listenin ilk elemanına (0. indeks) eriş.", "hint": "Sadece 0.", "output": "Elma"},
+            {"task": "L.___('Çilek')", "solution": "L.append('Çilek')", "msg": "Listeye eleman ekleyen metodu yaz.", "hint": "append metodu.", "output": None},
+            {"task": "L.pop(___)", "solution": "L.pop(0)", "msg": "Listenin ilk elemanını sil.", "hint": "0 indeksini sil.", "output": None},
+            {"task": "print(___(L))", "solution": "print(len(L))", "msg": "Listenin boyutunu ekrana bas.", "hint": "len() fonksiyonu.", "output": "2"}
         ]
     },
     {
         "module_title": "6. Döngüler: for",
-        "intro": "Döngüler, aynı işlemi defalarca yapmamızı sağlayan otomasyon araçlarıdır.",
+        "intro": "Belirli işlemleri tekrar etmek için döngüleri kullanırız.",
         "exercises": [
-            {"task": "for i in ___(5): print(i)", "solution": "for i in range(5): print(i)", "msg": "0'dan 4'e kadar sayı üreten fonksiyonu yaz.", "hint": "range kullanmalısın.", "output": "0\n1\n2\n3\n4"},
-            {"task": "for harf ___ 'Pito': print(harf)", "solution": "for harf in 'Pito': print(harf)", "msg": "Kelimedeki harfleri gezen döngüdeki eksik kelimeyi yaz.", "hint": "in kelimesini ekle.", "output": "P\ni\nt\no"},
-            {"task": "for i in range(3): ___('Pito')", "solution": "for i in range(3): print('Pito')", "msg": "Ekrana 3 kez 'Pito' yazdır.", "hint": "print fonksiyonunu ekle.", "output": "Pito\nPito\nPito"},
-            {"task": "sayilar = [1, 2]\nfor x in sayilar: print(x ___ 10)", "solution": "for x in sayilar: print(x * 10)", "msg": "Listedeki her sayıyı 10 ile çarparak yazdır.", "hint": "Çarpma (*) operatörünü koy.", "output": "10\n20"},
-            {"task": "for i in range(5):\n if i == 2: ___\n print(i)", "solution": "if i == 2: break", "msg": "Döngü i değeri 2 olduğunda tamamen dursun.", "hint": "break komutunu kullan.", "output": "0\n1"}
+            {"task": "for i in ___(3): print(i)", "solution": "for i in range(3): print(i)", "msg": "0'dan 2'ye kadar sayı üreten fonksiyonu yaz.", "hint": "range kelimesi.", "output": "0\n1\n2"},
+            {"task": "for harf ___ 'Hi': print(harf)", "solution": "for harf in 'Hi': print(harf)", "msg": "Kelimedeki harfleri gezen operatörü yaz.", "hint": "in operatörü.", "output": "H\ni"},
+            {"task": "for i in range(2): ___('A')", "solution": "for i in range(2): print('A')", "msg": "Ekrana 2 kez 'A' yazdır.", "hint": "print fonksiyonu.", "output": "A\nA"},
+            {"task": "for i in [1, 2]: print(i ___ 5)", "solution": "for i in [1, 2]: print(i * 5)", "msg": "Sayıları 5 ile çarparak yazdır.", "hint": "Yıldız (*) koy.", "output": "5\n10"},
+            {"task": "for i in range(5):\n if i==1: ___\n print(i)", "solution": "if i==1: break", "msg": "Döngüyü i=1 olduğunda kır.", "hint": "break yaz.", "output": "0"}
         ]
     },
     {
         "module_title": "7. Döngüler: while",
-        "intro": "While döngüsü, bir şart doğru olduğu sürece çalışmaya devam eder.",
+        "intro": "Bir şart doğru olduğu sürece çalışmaya devam eden döngülerdir.",
         "exercises": [
-            {"task": "sayac = 0\n___ sayac < 3:\n print(sayac)\n sayac += 1", "solution": "while sayac < 3:", "msg": "Sayaç 3'ten küçük olduğu sürece dönen döngüyü başlat.", "hint": "while kelimesini yaz.", "output": "0\n1\n2"},
-            {"task": "while True:\n print('Tek sefer')\n ___", "solution": "break", "msg": "Sonsuz döngüyü tek seferde durdur.", "hint": "break yaz.", "output": "Tek sefer"},
-            {"task": "i = 0\nwhile i < 2:\n ___ += 1", "solution": "i += 1", "msg": "Döngünün sonsuza girmemesi için **i** değişkenini artır.", "hint": "i harfini yaz.", "output": None},
-            {"task": "while 1 ___ 2: print('Asla çalışmaz'); break", "solution": "while 1 == 2:", "msg": "Döngü şartını '1 eşit değildir 2' yerine '1 eşittir 2' yaparak hiç çalışmamasını sağla.", "hint": "== operatörünü koy.", "output": None},
-            {"task": "i = 0\nwhile i < 3:\n i += 1\n if i == 1: ___\n print(i)", "solution": "continue", "msg": "i değeri 1 olduğunda yazdırmayı atlayıp döngü başına dön.", "hint": "continue komutunu kullan.", "output": "2\n3"}
+            {"task": "i=0\n___ i<2: print(i); i+=1", "solution": "while i<2:", "msg": "Koşullu döngüyü başlat.", "hint": "while kelimesi.", "output": "0\n1"},
+            {"task": "while True: print('X'); ___", "solution": "break", "msg": "Sonsuz döngüyü anında durdur.", "hint": "break kelimesi.", "output": "X"},
+            {"task": "i=0\nwhile i<2:\n i ___ 1", "solution": "i += 1", "msg": "Sonsuza girmemesi için i'yi artır.", "hint": "+= operatörü.", "output": None},
+            {"task": "while 1 ___ 1: print('Y'); break", "solution": "while 1 == 1:", "msg": "Şart kısmına '1 eşittir 1' yaz.", "hint": "Çift eşittir (==).", "output": "Y"},
+            {"task": "while False: ___('Görünmez')", "solution": "while False: print('Görünmez')", "msg": "Döngü gövdesini tamamla.", "hint": "print yaz.", "output": None}
         ]
     },
     {
-        "module_title": "8. Fonksiyonlar ve Final",
-        "intro": "Fonksiyonlar, karmaşık işlemleri bir isim altında toplayıp ihtiyaç duyduğumuzda çağırmamızı sağlar.",
+        "module_title": "8. Fonksiyonlar ve Modüller",
+        "intro": "Kod parçalarını isimlendirip paketlemek için fonksiyonlar ve modüller kullanılır.",
         "exercises": [
-            {"task": "___ selamla(): print('Merhaba')", "solution": "def selamla(): print('Merhaba')", "msg": "Bir fonksiyon tanımlamak için gereken kelimeyi yaz.", "hint": "def yazmalısın.", "output": None},
-            {"task": "def topla(a, b):\n ___ a + b", "solution": "return a + b", "msg": "Fonksiyonun sonucunu dışarıya aktar.", "hint": "return kelimesini kullan.", "output": None},
-            {"task": "def hi(): print('Selam')\n___()", "solution": "hi()", "msg": "Tanımlanan 'hi' fonksiyonunu çalıştır (çağır).", "hint": "Fonksiyon ismini ve parantezleri yaz.", "output": "Selam"},
-            {"task": "import ___", "solution": "import math", "msg": "Matematik kütüphanesini (math) projene dahil et.", "hint": "math yaz.", "output": None},
-            {"task": "print(math.sqrt(___))", "solution": "print(math.sqrt(16))", "msg": "16 sayısının karekökünü hesapla.", "hint": "Parantez içine 16 yaz.", "output": "4.0"}
+            {"task": "___ hi(): print('Selam')", "solution": "def hi(): print('Selam')", "msg": "Fonksiyon tanımlama kelimesini yaz.", "hint": "def kelimesi.", "output": None},
+            {"task": "def topla(a, b): ___ a+b", "solution": "return a+b", "msg": "Sonucu dışarı fırlat.", "hint": "return kelimesi.", "output": None},
+            {"task": "import ___", "solution": "import math", "msg": "Matematik modülünü çağır.", "hint": "math yaz.", "output": None},
+            {"task": "print(math.sqrt(___))", "solution": "print(math.sqrt(9))", "msg": "9 sayısının karekökünü hesapla.", "hint": "9 yaz.", "output": "3.0"},
+            {"task": "print(math.pow(2, ___))", "solution": "print(math.pow(2, 3))", "msg": "2'nin 3. kuvvetini hesapla.", "hint": "3 yaz.", "output": "8.0"}
         ]
     }
 ]
 
-# --- 4. SESSION STATE YÖNETİMİ ---
+# --- 4. DURUM YÖNETİMİ VE HATA ÇÖZÜMÜ ---
 if 'user' not in st.session_state:
     st.session_state.user = None
     st.session_state.errors = 0
     st.session_state.score_pool = 20
     st.session_state.is_completed = False
-    st.session_state.feedback_msg = ""
-    st.session_state.feedback_type = ""
+    st.session_state.feedback_text = ""  # DeltaGenerator hatasını önleme
 
-# --- 5. LİDERLİK TABLOSU ---
-def show_leaderboard():
-    try:
-        df = pd.read_csv("https://docs.google.com/spreadsheets/d/1lat8rO2qm9QnzEUYlzC_fypG3cRkGlJfSfTtwNvs318/export?format=csv")
-        st.sidebar.markdown("### 🏆 Okul Liderliği")
-        for _, row in df.sort_values(by="Puan", ascending=False).head(10).iterrows():
-            st.sidebar.markdown(f'<div class="leaderboard-card"><b>{row["Öğrencinin Adı"]}</b><br>{row["Rütbe"]} | {row["Puan"]} P</div>', unsafe_allow_html=True)
-    except: st.sidebar.info("Sıralama yükleniyor...")
-
-# --- 6. GİRİŞ EKRANI ---
+# --- 5. ANA PANEL VE GİRİŞ ---
 if st.session_state.user is None:
     c1, c2 = st.columns([2, 1])
     with c1:
         render_gif("pito_merhaba")
         st.title("Pito Python Akademi")
-        okul_no = st.text_input("Okul Numaranı Gir:", placeholder="Örn: 123")
+        okul_no = st.text_input("Okul Numaranı Gir:")
         if okul_no:
-            # Okul numarası kontrolü ve kayıt mantığı buraya gelir
+            # KeyError çözüm: Sabit anahtar kullanımı
             st.session_state.user = {"Okul No": okul_no, "Ad": "Genç Yazılımcı", "Modül": 1, "Egzersiz": 1, "Puan": 0}
             st.rerun()
-    with c2: show_leaderboard()
-
-# --- 7. AKADEMİ PANELİ ---
 else:
     u = st.session_state.user
     m_idx, e_idx = int(u["Modül"]) - 1, int(u["Egzersiz"]) - 1
     curr_ex = training_data[m_idx]["exercises"][e_idx]
     
-    st.progress(((m_idx * 5) + e_idx) / 40)
-
     mc, sc = st.columns([2.5, 1])
     with mc:
-        # Pito Duygu Durumu
+        # Pito Durumu
         if st.session_state.is_completed:
             render_gif("pito_dusunuyor" if st.session_state.errors >= 4 else "pito_basari")
         elif st.session_state.errors > 0: render_gif("pito_hata")
@@ -197,34 +182,34 @@ else:
 
         st.markdown(f'<div class="pito-note"><b>🐍 Pito\'nun Notu:</b><br>{curr_ex["msg"]}</div>', unsafe_allow_html=True)
         
-        # Geri bildirim mesajları
-        if st.session_state.feedback_msg:
-            if st.session_state.feedback_type == "error": st.error(st.session_state.feedback_msg)
-            elif st.session_state.feedback_type == "warning": st.warning(st.session_state.feedback_msg)
+        if st.session_state.feedback_text:
+            st.error(st.session_state.feedback_text) if "Yanlış" in st.session_state.feedback_text else st.warning(st.session_state.feedback_text)
 
-        # CODESIGNAL PANELİ
+        # Editör Paneli
         st.markdown('<div class="editor-container"><div class="editor-header"><div class="editor-tab">solution.py</div></div></div>', unsafe_allow_html=True)
-        ans = st.text_area("Kod Girişi:", value=curr_ex['task'], height=130, key=f"ex_{m_idx}_{e_idx}", disabled=st.session_state.is_completed, label_visibility="collapsed")
+        ans = st.text_area("Kod Girişi:", value=curr_ex['task'], height=130, key=f"e_{m_idx}_{e_idx}", disabled=st.session_state.is_completed, label_visibility="collapsed")
 
         if not st.session_state.is_completed:
             if st.button("Kontrol Et"):
-                # Karşılaştırma Mantığı
+                # Karşılaştırma Mantığı Geliştirme (Whitespace/Quotes normalizasyonu)
                 clean_ans = re.sub(r"\s+", "", ans).replace("'", '"')
                 clean_sol = re.sub(r"\s+", "", curr_ex["solution"]).replace("'", '"')
                 
                 if clean_ans == clean_sol:
-                    st.session_state.is_completed, st.session_state.feedback_msg = True, ""
+                    st.session_state.is_completed = True
+                    st.session_state.feedback_text = ""
                     u["Puan"] += st.session_state.score_pool
                     st.rerun()
                 else:
                     st.session_state.errors += 1
                     st.session_state.score_pool = max(0, st.session_state.score_pool - 5)
                     if st.session_state.errors < 3:
-                        st.session_state.feedback_msg, st.session_state.feedback_type = f"❌ Yanlış! {st.session_state.errors}. hatan. -5 Puan.", "error"
+                        st.session_state.feedback_text = f"❌ Yanlış! {st.session_state.errors}. denemen. -5 Puan."
                     elif st.session_state.errors == 3:
-                        st.session_state.feedback_msg, st.session_state.feedback_type = f"💡 İpucu: {curr_ex['hint']}", "warning"
+                        st.session_state.feedback_text = f"💡 Pito'dan İpucu: {curr_ex['hint']}"
                     elif st.session_state.errors >= 4:
-                        st.session_state.is_completed, st.session_state.feedback_msg, st.session_state.feedback_type = True, "🚨 4 hata yaptın. Çözümü incele!", "error"
+                        st.session_state.is_completed = True
+                        st.session_state.feedback_text = "🚨 4 hata yaptın. Çözümü inceleyebilirsin."
                     st.rerun()
 
         if st.session_state.is_completed:
@@ -233,17 +218,16 @@ else:
                 st.info(f"✅ Doğru Çözüm: `{curr_ex['solution']}`")
             else:
                 st.success("✨ Tebrikler! Doğru cevap.")
-                # ÇIKTI KONTROLÜ: Sadece print içerenler çıktı verir
+                # SyntaxError Giderme: F-string dışına çıkarma
                 if curr_ex["output"]:
                     st.code(f"Kod Çıktısı:\n{curr_ex['output']}")
 
             if st.button("Sonraki Adıma Geç ➡️"):
                 if e_idx < 4: u["Egzersiz"] += 1
                 else: u["Modül"] += 1; u["Egzersiz"] = 1
-                st.session_state.is_completed, st.session_state.errors, st.session_state.score_pool, st.session_state.feedback_msg = False, 0, 20, ""
+                st.session_state.is_completed, st.session_state.errors, st.session_state.score_pool, st.session_state.feedback_text = False, 0, 20, ""
                 st.rerun()
 
     with sc:
         st.subheader(f"👤 {u['Ad']}")
         st.metric("Puan", u["Puan"]); st.write(f"**Rütbe:** {get_rank(u['Puan'])}")
-        st.divider(); show_leaderboard()
