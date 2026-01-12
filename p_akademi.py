@@ -1,51 +1,50 @@
 import streamlit as st
 import pandas as pd
 import base64
-import time
 
-# --- 1. SAYFA YAPILANDIRMASI VE STİL ---
+# --- 1. SAYFA AYARLARI ---
 st.set_page_config(page_title="Pito Python Akademi", layout="wide")
 
+# --- 2. CSS: GÖRSEL DÜZENLEME ---
 st.markdown("""
     <style>
     .stTextInput > div > div > input { border: 2px solid #FF4B4B; font-size: 18px; font-weight: bold; }
     .pito-note { background-color: #E8F5E9; padding: 25px; border-radius: 15px; border: 2px dashed #2E7D32; margin-bottom: 20px; color: #1B5E20; font-size: 1.1rem; }
-    .leaderboard-card { background-color: #F8F9FA; padding: 12px; border-radius: 10px; border-left: 5px solid #FFD700; margin-bottom: 8px; }
+    .leaderboard-card { background-color: #F8F9FA; padding: 12px; border-radius: 10px; border-left: 5px solid #FFD700; margin-bottom: 8px; font-size: 0.9rem; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. VERİ VE RÜTBE SİSTEMİ ---
-# Google Sheets URL
+# --- 3. VERİ VE RÜTBE SİSTEMİ ---
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1lat8rO2qm9QnzEUYlzC_fypG3cRkGlJfSfTtwNvs318/export?format=csv"
 
 def get_rank(points):
-    """Puan bazlı rütbe hiyerarşisi [cite: 1]"""
+    """Puan bazlı rütbe hiyerarşisi"""
     ranks = [
-        (4000, "🏆 Python Kahramanı"), (3500, "🤖 OOP Robotu"), (3000, "📦 Fonksiyon Kaptanı"),
-        (2500, "📋 Liste Uzmanı"), (2000, "🌀 Döngü Ustası"), (1500, "🧱 Mantık Mimarı"),
-        (1000, "🪵 Kod Oduncusu"), (500, "🌱 Python Çırağı"), (0, "🥚 Yeni Başlayan")
+        (800, "🏆 Python Kahramanı"), (700, "🤖 OOP Robotu"), (600, "📦 Fonksiyon Kaptanı"),
+        (500, "📋 Liste Uzmanı"), (400, "🌀 Döngü Ustası"), (300, "🧱 Mantık Mimarı"),
+        (200, "🪵 Kod Oduncusu"), (100, "🌱 Python Çırağı"), (0, "🥚 Yeni Başlayan")
     ]
     for limit, label in ranks:
         if points >= limit: return label
     return "🥚 Yeni Başlayan"
 
 def render_gif(name):
-    """GIF dosyasını base64 ile render eder (assets klasörü gereklidir) """
+    """GIF dosyasını base64 ile donmadan render eder"""
     try:
         with open(f"assets/{name}.gif", "rb") as f:
             data = f.read()
             url = base64.b64encode(data).decode()
             st.markdown(f'<img src="data:image/gif;base64,{url}" width="280">', unsafe_allow_html=True)
     except:
-        st.info(f"[{name}.gif yüklenemedi]")
+        st.info(f"[{name}.gif Hazırlanıyor...]")
 
-# --- 3. EKSİKSİZ MÜFREDAT (8 MODÜL / 40 ADIM) [cite: 4, 5] ---
+# --- 4. 8 MODÜL VE 40 ADIMLIK EKSİKSİZ MÜFREDAT ---
 training_data = [
     {"module_title": "1. İletişim: print() ve Çıktı Dünyası", "exercises": [
-        {"msg": "Python'da ekrana mesaj yazdırmak için `print()` fonksiyonunu kullanırız. Metinleri mutlaka tırnak (' ') içine almalısın.", "task": "print('___')", "solution": "print('Merhaba Pito')", "hint": "Metinleri mutlaka tırnak işaretleri arasına yazmalısın."},
-        {"msg": "Sayılar (Integer) tırnak gerektirmez. Boşluğa sadece **100** yaz.", "task": "print(___)", "solution": "print(100)", "hint": "Sayıları yazarken tırnak kullanma!"},
-        {"msg": "Virgül (`,`) farklı veri tiplerini birleştirir. 'Puan:' metni ile **100** sayısını yanyana bas.", "task": "print('Puan:', ___)", "solution": "print('Puan:', 100)", "hint": "Virgülden sonra tırnaksız 100 yaz."},
-        {"msg": "`#` işareti Python'da yorum satırıdır. Bilgisayar bu satırı okumaz. Başına **#** koy.", "task": "___ bu bir yorumdur", "solution": "# bu bir yorumdur", "hint": "Kare (diyez) işaretini en başa koy."},
+        {"msg": "Python'da ekrana mesaj yazdırmak için `print()` fonksiyonunu kullanırız. Metinleri mutlaka tırnak (' ') içine almalısın.", "task": "print('___')", "solution": "print('Merhaba Pito')", "hint": "Metinleri tırnak işaretleri arasına yazmalısın."},
+        {"msg": "Sayılar tırnak gerektirmez. Boşluğa sadece **100** yaz.", "task": "print(___)", "solution": "print(100)", "hint": "Sayıları yazarken tırnak kullanma!"},
+        {"msg": "Virgül (`,`) farklı verileri birleştirir. 'Puan:' metni ile **100** sayısını yanyana bas.", "task": "print('Puan:', ___)", "solution": "print('Puan:', 100)", "hint": "Virgülden sonra tırnaksız 100 yaz."},
+        {"msg": "`#` işareti Python'da yorum satırıdır. Başına **#** işaretini koy.", "task": "___ bu bir yoldur", "solution": "# bu bir yoldur", "hint": "Kare (diyez) işaretini en başa koy."},
         {"msg": "`\\n` karakteri metni alt satıra böler. Boşluğa **\\n** yaz.", "task": "print('Üst' + '___' + 'Alt')", "solution": "print('Üst\\nAlt')", "hint": "Tırnaklar içine \\n yazmalısın."}
     ]},
     {"module_title": "2. Hafıza: Değişkenler ve input()", "exercises": [
@@ -99,31 +98,32 @@ training_data = [
     ]}
 ]
 
-# --- 4. DURUM YÖNETİMİ ---
+# --- 5. SESSION STATE YÖNETİMİ ---
 if 'user' not in st.session_state:
     st.session_state.user = None
     st.session_state.errors = 0
     st.session_state.score_pool = 20
     st.session_state.is_completed = False
+    st.session_state.feedback = None  # Geri bildirim mesajları için
 
 def show_leaderboard():
     try:
         df = pd.read_csv(SHEET_URL)
-        st.sidebar.write("### 🎖️ Liderlik Tablosu")
+        st.sidebar.write("### 🏆 Liderlik Tablosu")
         for _, row in df.sort_values(by="Puan", ascending=False).head(10).iterrows():
             st.sidebar.markdown(f"""<div class="leaderboard-card"><b>{row['Öğrencinin Adı']}</b><br>{row['Rütbe']} | {row['Puan']} P</div>""", unsafe_allow_html=True)
     except:
         st.sidebar.info("Liderlik tablosu yükleniyor...")
 
-# --- 5. GİRİŞ VE ANA PANEL ---
+# --- 6. GİRİŞ VE ANA PANEL ---
 if st.session_state.user is None:
     col_l, col_r = st.columns([2, 1])
     with col_l:
         render_gif("pito_merhaba")
         st.title("Pito Python Akademi")
-        okul_no = st.text_input("Okul Numaranı Gir (Sadece Sayı):", placeholder="123")
+        okul_no = st.text_input("Okul Numaranı Gir (Sadece Sayı):", placeholder="Örn: 12")
         if okul_no:
-            # Örnek başlangıç verisi (GSheets senkronizasyonu bu aşamada tetiklenir)
+            # Örnek giriş (Gerçek uygulamada DB kontrolü yapılır)
             st.session_state.user = {"Okul No": okul_no, "Ad": "Genç Yazılımcı", "Mevcut Modül": 1, "Mevcut Egzersiz": 1, "Puan": 0}
             st.rerun()
     with col_r:
@@ -149,20 +149,19 @@ else:
     c_main, c_side = st.columns([2.5, 1])
 
     with c_main:
-        # --- GIF MANTIĞI GÜNCELLEMESİ ---
+        # Pito'nun Duygu Durumu
         if st.session_state.is_completed:
-            # 4. hatada çözüm gösterilirken Pito "düşünüyor" moduna geçsin
-            if st.session_state.errors >= 4:
-                render_gif("pito_dusunuyor")
-            else:
-                render_gif("pito_basari")
-        elif st.session_state.errors > 0:
-            render_gif("pito_hata")
-        else:
-            render_gif("pito_dusunuyor")
+            if st.session_state.errors >= 4: render_gif("pito_dusunuyor")
+            else: render_gif("pito_basari")
+        elif st.session_state.errors > 0: render_gif("pito_hata")
+        else: render_gif("pito_dusunuyor")
 
         st.markdown(f'<div class="pito-note">{curr_ex["msg"]}</div>', unsafe_allow_html=True)
         
+        # --- HATA MESAJLARININ GÖRÜNDÜĞÜ ALAN ---
+        if st.session_state.feedback:
+            st.write(st.session_state.feedback)
+
         ans = st.text_input(f"⌨️ Görev: {curr_ex['task']}", key=f"ans_{m_idx}_{e_idx}", disabled=st.session_state.is_completed)
 
         if not st.session_state.is_completed:
@@ -170,28 +169,37 @@ else:
                 if not ans:
                     st.warning("⚠️ Lütfen boşluğu doldur!")
                 else:
-                    # Normalizasyon ile kontrol
                     correct_norm = curr_ex["solution"].replace(" ", "").replace("'","").replace('"',"")
                     ans_norm = ans.replace(" ", "").replace("'","").replace('"',"")
                     
                     if ans_norm in correct_norm or correct_norm in ans_norm:
                         st.session_state.is_completed = True
+                        st.session_state.feedback = None
                         u["Puan"] += st.session_state.score_pool
                         st.rerun()
                     else:
                         st.session_state.errors += 1
                         st.session_state.score_pool -= 5
-                        if st.session_state.errors == 3: st.warning(f"💡 İpucu: {curr_ex['hint']}")
+                        if st.session_state.score_pool < 0: st.session_state.score_pool = 0
+                        
+                        # Hata Mesajları
+                        if st.session_state.errors < 3:
+                            st.session_state.feedback = st.error(f"❌ Yanlış cevap! Bu {st.session_state.errors}. hatan. Puanın 5 düştü!")
+                        elif st.session_state.errors == 3:
+                            st.session_state.feedback = st.warning(f"💡 Pito'dan İpucu: {curr_ex['hint']}")
                         elif st.session_state.errors >= 4:
                             st.session_state.is_completed = True
-                            st.rerun()
+                            st.session_state.feedback = st.error("🚨 4 kez hata yaptığın için bu sorudan puan alamadın. Çözümü incele!")
+                        st.rerun()
 
+        # Sonuç Paneli
         if st.session_state.is_completed:
             st.divider()
             if st.session_state.errors >= 4:
-                st.error(f"🚨 4 hata yaptın. Puan kazanamadın. Çözümü incele: `{curr_ex['solution']}`")
+                st.info(f"✅ Doğru Çözüm: `{curr_ex['solution']}`")
             else:
-                st.success(f"✨ Harika! +{st.session_state.score_pool} Puan Kazandın.")
+                st.balloons()
+                st.success(f"✨ Harika! Doğru cevap. +{st.session_state.score_pool} Puan Kazandın.")
                 out = curr_ex['solution'].replace("print(", "").replace(")", "").replace("'", "").replace('"', "")
                 st.code(f"Kod Çıktısı:\n{out}")
 
@@ -200,10 +208,10 @@ else:
                 else:
                     u["Mevcut Modül"] += 1
                     u["Mevcut Egzersiz"] = 1
-                    st.balloons()
                 st.session_state.is_completed = False
                 st.session_state.errors = 0
                 st.session_state.score_pool = 20
+                st.session_state.feedback = None
                 st.rerun()
 
     with c_side:
