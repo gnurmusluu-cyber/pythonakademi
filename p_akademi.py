@@ -10,7 +10,7 @@ from supabase import create_client, Client
 # --- 1. SİSTEM VE SİBER TASARIM ---
 st.set_page_config(page_title="Pito Python Akademi", layout="wide", initial_sidebar_state="collapsed")
 
-# Dinamik Padding: Giriş ekranında başlığı aşağı çeker (5rem), içeride ferahlık sağlar (3.5rem)
+# Dinamik Padding: Giriş ekranında başlığı aşağı çeker, içeride ferahlık sağlar
 top_pad = "5rem" if st.session_state.get("user") is None else "3.5rem"
 
 st.markdown(f"""
@@ -82,19 +82,16 @@ def ilerleme_kaydet(puan, kod, egz_id, n_id, n_m):
     yeni_xp = int(st.session_state.user['toplam_puan']) + puan
     r = "🏆 Bilge" if yeni_xp >= 1000 else "🔥 Savaşçı" if yeni_xp >= 500 else "🐍 Pythonist" if yeni_xp >= 200 else "🥚 Çömez"
     
-    # Kullanıcıyı Güncelle
     supabase.table("kullanicilar").update({
         "toplam_puan": yeni_xp, "mevcut_egzersiz": str(n_id), 
         "mevcut_modul": int(n_m), "rutbe": r
     }).eq("ogrenci_no", st.session_state.user['ogrenci_no']).execute()
     
-    # Log Kaydet
     supabase.table("egzersiz_kayitlari").insert({
         "ogrenci_no": st.session_state.user['ogrenci_no'], "egz_id": egz_id,
         "alinan_puan": puan, "basarili_kod": kod
     }).execute()
     
-    # State Güncelle
     st.session_state.user.update({"toplam_puan": yeni_xp, "mevcut_egzersiz": str(n_id), "mevcut_modul": int(n_m), "rutbe": r})
     st.session_state.error_count, st.session_state.cevap_dogru, st.session_state.pito_mod = 0, False, "merhaba"
     st.rerun()
@@ -150,6 +147,7 @@ else:
             st.markdown(f"<div class='hero-panel'><h3>🚀 {u['ad_soyad']} | {u['sinif']}</h3><p>{u['rutbe']} • {int(u['toplam_puan'])} XP</p></div>", unsafe_allow_html=True)
             p_pot = max(0, 20 - (st.session_state.error_count * 5))
             st.markdown(f'<div class="status-bar"><div>📍 Görev {egz["id"]}</div><div>💎 {p_pot} XP</div><div>⚠️ Hatalar: {st.session_state.error_count}/4</div></div>', unsafe_allow_html=True)
+            
             c_p, c_e = st.columns([1, 2])
             with c_p: pito_gorseli_yukle(st.session_state.pito_mod)
             with c_e:
@@ -158,8 +156,9 @@ else:
                 if st.session_state.error_count == 1: st.error("🤫 Yazımı kontrol et!")
                 elif st.session_state.error_count == 2: st.error("🧐 Bir şeyler eksik!")
                 elif st.session_state.error_count == 3: st.warning(f"💡 İpucu: {egz['ipucu']}")
+            
             if not st.session_state.cevap_dogru and st.session_state.error_count < 4:
-                k_in = st.text_area("Kodunu Yaz:", value=egz['sablon'], height=200)
+                k_in = st.text_area("Kodunu Yaz:", value=egz['sablon'], height=200, key="editor_v23")
                 if st.button("Kontrol Et"):
                     if kod_normalize_et(k_in) == kod_normalize_et(egz['dogru_cevap_kodu']):
                         st.session_state.cevap_dogru, st.session_state.pito_mod = True, "basari"; st.rerun()
@@ -175,7 +174,9 @@ else:
                     n_id, n_m = (modul['egzersizler'][sira]['id'], u['mevcut_modul']) if sira < len(modul['egzersizler']) else (f"{m_idx + 2}.1", m_idx + 2)
                     ilerleme_kaydet(p_pot, "Başarılı", egz['id'], n_id, n_m)
             elif st.session_state.error_count >= 4:
-                st.error("🚫 Kilitlendi."); with st.expander("📖 Çözüm", expanded=True): st.code(egz['cozum'])
+                st.error("🚫 Kilitlendi.")
+                with st.expander("📖 Çözüm", expanded=True):
+                    st.code(egz['cozum'])
                 if st.button("Anladım, Sıradaki ➡️"):
                     sira = modul['egzersizler'].index(egz) + 1
                     n_id, n_m = (modul['egzersizler'][sira]['id'], u['mevcut_modul']) if sira < len(modul['egzersizler']) else (f"{m_idx + 2}.1", m_idx + 2)
