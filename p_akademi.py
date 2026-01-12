@@ -71,10 +71,9 @@ if "cevap_dogru" not in st.session_state: st.session_state.cevap_dogru = False
 if "pito_mod" not in st.session_state: st.session_state.pito_mod = "merhaba"
 if "last_code" not in st.session_state: st.session_state.last_code = ""
 
-# --- 5. İLERLEME KAYDETME MOTORU (KALBİ) ---
+# --- 5. İLERLEME KAYDETME MOTORU ---
 def ilerleme_kaydet(puan, kod, egz_id, m_id, n_id, n_m):
     try:
-        # Taze veri al ve kullanıcıyı bul
         df_u = conn.read(spreadsheet=KULLANICILAR_URL, ttl=0)
         u_idx = df_u[df_u['ogrenci_no'] == st.session_state.user['ogrenci_no']].index[0]
         
@@ -83,22 +82,18 @@ def ilerleme_kaydet(puan, kod, egz_id, m_id, n_id, n_m):
         df_u.at[u_idx, 'mevcut_egzersiz'] = str(n_id)
         df_u.at[u_idx, 'mevcut_modul'] = int(float(n_m))
         
-        # Rütbe Algoritması
         if yeni_xp >= 1000: r = "🏆 Bilge"
         elif yeni_xp >= 500: r = "🔥 Savaşçı"
         elif yeni_xp >= 200: r = "🐍 Pythonist"
         else: r = "🥚 Çömez"
         df_u.at[u_idx, 'rutbe'] = r
         
-        # Google Sheets Güncelle
         conn.update(spreadsheet=KULLANICILAR_URL, data=df_u)
         
-        # Kayıt Logu
         df_k = conn.read(spreadsheet=KAYITLAR_URL, ttl=0)
         yeni_log = pd.DataFrame([{"kayit_id": f"{st.session_state.user['ogrenci_no']}_{egz_id}", "ogrenci_no": int(st.session_state.user['ogrenci_no']), "modul_id": int(float(m_id)), "egzersiz_id": str(egz_id), "alinan_puan": int(puan), "basarili_kod": kod, "tarih": datetime.now().strftime("%Y-%m-%d %H:%M")}])
         conn.update(spreadsheet=KAYITLAR_URL, data=pd.concat([df_k, yeni_log], ignore_index=True))
         
-        # Hafızayı Sıfırla ve Yeni Göreve Geç
         st.session_state.user = df_u.iloc[u_idx].to_dict()
         st.session_state.error_count, st.session_state.cevap_dogru, st.session_state.pito_mod, st.session_state.last_code = 0, False, "merhaba", ""
         st.cache_data.clear()
@@ -109,7 +104,6 @@ def ilerleme_kaydet(puan, kod, egz_id, m_id, n_id, n_m):
 # --- 6. ANA PROGRAM AKIŞI ---
 
 if st.session_state.user is None:
-    # --- GİRİŞ VE KAYIT EKRANI ---
     st.title("🐍 Pito Python Akademi")
     pito_gorseli_yukle("merhaba")
     numara = st.number_input("Öğrenci Numarası:", step=1, value=0)
@@ -130,28 +124,24 @@ if st.session_state.user is None:
                 conn.update(spreadsheet=KULLANICILAR_URL, data=pd.concat([df_u, yeni_og], ignore_index=True))
                 st.session_state.user = yeni_og.iloc[0].to_dict()
                 st.rerun()
-
 else:
-    # --- ARENA: EĞİTİM (SOL) VE ONUR KÜRSÜSÜ (SAĞ) ---
     u = st.session_state.user
     col_main, col_leader = st.columns([7, 3])
 
     with col_main:
         m_idx = int(float(u['mevcut_modul'])) - 1
         if m_idx >= len(mufredat['pito_akademi_mufredat']):
-            st.balloons(); pito_gorseli_yukle("mezun"); st.success("🏆 TEBRİKLER BİLGE! TÜM AKADEMİYİ BİTİRDİN!"); st.stop()
+            st.balloons(); pito_gorseli_yukle("mezun"); st.success("🏆 TEBRİKLER BİLGE!"); st.stop()
         
         modul = mufredat['pito_akademi_mufredat'][m_idx]
         egz_liste = modul['egzersizler']
         egz = next((e for e in egz_liste if e['id'] == str(u['mevcut_egzersiz'])), egz_liste[0])
 
-        # Hero Header ve İlerleme
         st.markdown(f"<div class='hero-panel'><h3>🚀 {u['ad_soyad']} | {u['sinif']}</h3><p>{u['rutbe']} • {int(float(u['toplam_puan']))} XP</p></div>", unsafe_allow_html=True)
         sira = egz_liste.index(egz) + 1
         st.write(f"📊 **Modül İlerlemesi:** {sira}/{len(egz_liste)}")
         st.progress(sira / len(egz_liste))
 
-        # Pito ve Görev Alanı
         c_p, c_e = st.columns([1, 2])
         with c_p:
             pito_gorseli_yukle(st.session_state.pito_mod)
@@ -160,7 +150,6 @@ else:
             st.markdown(f"<div class='pito-notu'>💬 <b>Pito:</b> {pito_notu_uret(st.session_state.pito_mod, u['ad_soyad'].split()[0])}</div>", unsafe_allow_html=True)
             if st.session_state.error_count == 3: st.warning(f"💡 İpucu: {egz['ipucu']}")
 
-        # Editör
         p_pot = max(0, 20 - (st.session_state.error_count * 5))
         if not st.session_state.cevap_dogru and st.session_state.error_count < 4:
             k_in = st.text_area("Kodunu Yaz:", value=egz['sablon'], height=200, key="editor")
@@ -176,31 +165,27 @@ else:
         
         elif st.session_state.cevap_dogru:
             st.success(f"🌟 +{p_pot} XP Kazandın!")
-            # Sonraki adres hesaplama
             n_id, n_m = (egz_liste[sira]['id'], u['mevcut_modul']) if sira < len(egz_liste) else (f"{m_idx + 2}.1", m_idx + 2)
             if st.button("Sonraki Göreve Geç ➡️"):
                 ilerleme_kaydet(p_pot, st.session_state.last_code, egz['id'], u['mevcut_modul'], n_id, n_m)
         
         elif st.session_state.error_count >= 4:
-            st.error("🚫 Görev Kilitlendi."); with st.expander("📖 Çözümü İncele", expanded=True): st.code(egz['cozum'])
+            st.error("🚫 Görev Kilitlendi.")
+            with st.expander("📖 Çözümü İncele", expanded=True):
+                st.code(egz['cozum'])
             n_id, n_m = (egz_liste[sira]['id'], u['mevcut_modul']) if sira < len(egz_liste) else (f"{m_idx + 2}.1", m_idx + 2)
             if st.button("Anladım, Sıradaki Göreve Geç ➡️"):
                 ilerleme_kaydet(0, "Çözüm İncelendi", egz['id'], u['mevcut_modul'], n_id, n_m)
 
-    # --- SAĞ TARAF: ONUR KÜRSÜSÜ ---
     with col_leader:
         st.markdown("<h3 style='text-align:center;'>🏆 ONUR KÜRSÜSÜ</h3>", unsafe_allow_html=True)
         df_all = veri_oku_akilli(KULLANICILAR_URL)
         if df_all is not None:
             df_all['toplam_puan'] = pd.to_numeric(df_all['toplam_puan'], errors='coerce').fillna(0).astype(int)
-            
-            # Şampiyon Sınıf
             s_an = df_all.groupby('sinif').agg(xp=('toplam_puan','sum'), sayi=('ogrenci_no','count'))
             s_an['ort'] = (s_an['xp'] / s_an['sayi']).round(1)
             s_an = s_an.sort_values(by='ort', ascending=False)
-            
             st.markdown(f"<div class='sampiyon-kart'>⭐ ŞAMPİYON SINIF ⭐<br><span style='font-size:24px;'>{s_an.index[0]}</span><br>{s_an.iloc[0]['ort']} XP Ortalaması</div>", unsafe_allow_html=True)
-
             t1, t2 = st.tabs(["👥 Sınıfım", "🏫 Okul (Top 10)"])
             with t1:
                 sinif_df = df_all[df_all['sinif'] == u['sinif']].sort_values(by='toplam_puan', ascending=False).head(10)
