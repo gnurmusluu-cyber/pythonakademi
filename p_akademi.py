@@ -14,7 +14,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Üst Boşluk Ayarı
+# Üst Boşluk Ayarı (Başlığın görünürlüğü için)
 top_pad = "5rem" if st.session_state.get("user") is None else "3.5rem"
 
 st.markdown(f"""
@@ -47,7 +47,7 @@ def init_supabase():
         key = st.secrets["supabase"]["key"]
         return create_client(url, key)
     except Exception as e:
-        st.error(f"⚠️ Bağlantı Bilgileri Eksik! Lütfen Secrets'ı kontrol edin: {e}")
+        st.error(f"⚠️ Bağlantı Bilgileri Eksik! Secrets kontrolü gerekli: {e}")
         st.stop()
 
 supabase: Client = init_supabase()
@@ -91,13 +91,11 @@ def ilerleme_kaydet(puan, kod, egz_id, n_id, n_m):
         yeni_xp = int(st.session_state.user['toplam_puan']) + puan
         r = "🏆 Bilge" if yeni_xp >= 1000 else "🔥 Savaşçı" if yeni_xp >= 500 else "🐍 Pythonist" if yeni_xp >= 200 else "🥚 Çömez"
         
-        # Güncelleme
         supabase.table("kullanicilar").update({
             "toplam_puan": yeni_xp, "mevcut_egzersiz": str(n_id), 
             "mevcut_modul": int(n_m), "rutbe": r
         }).eq("ogrenci_no", int(st.session_state.user['ogrenci_no'])).execute()
         
-        # Log
         supabase.table("egzersiz_kayitlari").insert({
             "ogrenci_no": int(st.session_state.user['ogrenci_no']), 
             "egz_id": str(egz_id), "alinan_puan": int(puan), "basarili_kod": str(kod)
@@ -138,7 +136,7 @@ if st.session_state.user is None:
                     y_ad = st.text_input("Ad Soyad:")
                     y_sin = st.selectbox("Sınıfın:", ["9-A", "9-B", "10-A", "10-B", "11-A", "12-A"])
                     
-                    # --- TEŞHİS MODLU KAYIT BLOĞU ---
+                    # --- İSTEDİĞİN TEŞHİS MODLU KAYIT BLOĞU ---
                     if st.button("Kaydı Tamamla 🎓") and y_ad:
                         try:
                             new_u = {
@@ -160,7 +158,7 @@ if st.session_state.user is None:
                                 time.sleep(1.5); st.rerun()
                             else:
                                 st.error("🛑 Sunucu veriyi almadı!")
-                                st.info("Eğer yukarıdaki 'data' kısmı boş [] ise, Supabase'de RLS hala aktif olabilir.")
+                                st.info("Eğer 'data' kısmı boş [] ise, Supabase RLS veya bağlantı ayarlarını tekrar kontrol et.")
                         except Exception as e:
                             st.error(f"❌ Teknik Engel Oluştu: {e}")
         else:
@@ -172,7 +170,6 @@ if st.session_state.user is None:
         st.markdown('</div>', unsafe_allow_html=True)
 
 else:
-    # --- AKADEMİ İÇERİĞİ ---
     u = st.session_state.user
     col_main, col_leader = st.columns([7, 3])
     
@@ -187,6 +184,8 @@ else:
             egz = next((e for e in modul['egzersizler'] if e['id'] == str(u['mevcut_egzersiz'])), modul['egzersizler'][0])
             
             st.markdown(f"<div class='hero-panel'><h3>🚀 {u['ad_soyad']} | {u['sinif']}</h3><p>{u['rutbe']} • {int(u['toplam_puan'])} XP</p></div>", unsafe_allow_html=True)
+            
+            # Puan Formülü: KazanılanPuan = max(0, 20 - (Hata * 5))
             p_pot = max(0, 20 - (st.session_state.error_count * 5))
             st.markdown(f'<div class="status-bar"><div>📍 Görev {egz["id"]}</div><div>💎 {p_pot} XP</div><div>⚠️ Hata: {st.session_state.error_count}/4</div></div>', unsafe_allow_html=True)
 
@@ -197,7 +196,7 @@ else:
                 st.markdown(f"<div class='pito-notu'>💬 <b>Pito:</b> {pito_notu_uret(st.session_state.pito_mod, u['ad_soyad'].split()[0])}</div>", unsafe_allow_html=True)
             
             if not st.session_state.cevap_dogru and st.session_state.error_count < 4:
-                k_in = st.text_area("Kodunu Yaz:", value=egz['sablon'], height=200, key="editor_v27")
+                k_in = st.text_area("Kodunu Yaz:", value=egz['sablon'], height=200, key="editor_v28")
                 if st.button("Kontrol Et"):
                     if kod_normalize_et(k_in) == kod_normalize_et(egz['dogru_cevap_kodu']):
                         st.session_state.cevap_dogru, st.session_state.pito_mod = True, "basari"
@@ -212,7 +211,10 @@ else:
                     n_id, n_m = (modul['egzersizler'][sira]['id'], u['mevcut_modul']) if sira < len(modul['egzersizler']) else (f"{m_idx + 2}.1", m_idx + 2)
                     ilerleme_kaydet(p_pot, "Başarılı", egz['id'], n_id, n_m)
             elif st.session_state.error_count >= 4:
-                st.error("🚫 Kilitlendi."); with st.expander("📖 Çözüm", expanded=True): st.code(egz['cozum'])
+                # GÖRSELDEKİ SYNTAX HATASI BURADA DÜZELTİLDİ:
+                st.error("🚫 Kilitlendi.")
+                with st.expander("📖 Çözüm", expanded=True):
+                    st.code(egz['cozum'])
                 if st.button("Anladım, Sıradaki ➡️"):
                     sira = modul['egzersizler'].index(egz) + 1
                     n_id, n_m = (modul['egzersizler'][sira]['id'], u['mevcut_modul']) if sira < len(modul['egzersizler']) else (f"{m_idx + 2}.1", m_idx + 2)
