@@ -19,16 +19,16 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. GÜVENLİ GÖRSEL YÜKLEME (KÖKTEN ÇÖZÜM) ---
+# --- 2. GÜVENLİ GÖRSEL YÜKLEME (DOSYA ADI DÜZELTİLDİ) ---
 def pito_gorseli_yukle(mod):
-    # assets/pito_merhaba.gif, pito_hata.gif, pito_basari.gif vb. [cite: 2026-01-12]
+    # assets içindeki: pito_merhaba, pito_hata, pito_basari, pito_dusunuyor
     base_path = os.path.dirname(os.path.abspath(__file__))
     img_path = os.path.join(base_path, "assets", f"pito_{mod}.gif")
     
     if os.path.exists(img_path):
         st.image(img_path, use_container_width=True)
     else:
-        st.error(f"🖼️ Görsel Eksik: assets/pito_{mod}.gif")
+        st.error(f"🖼️ Görsel Bulunamadı: assets/pito_{mod}.gif")
         st.info(f"Pito şu an '{mod}' modunda.")
 
 # --- 3. VERİTABANI VE MÜFREDAT BAĞLANTILARI ---
@@ -98,17 +98,18 @@ else:
         pito_gorseli_yukle(st.session_state.pito_mod)
         st.info(f"**GÖREV {egz['id']}:** {egz['yonerge']}")
         
-        # --- KADEMELİ DÖNÜT SİSTEMİ --- [cite: 2026-01-12]
+        # --- KADEMELİ DÖNÜT SİSTEMİ ---
         if st.session_state.error_count == 1:
-            st.error("🤫 Pito: 'Ufak bir hata! Yazım kurallarına bir bak istersen.'")
+            st.error("🤫 Pito: 'Ufak bir hata! Yazım kurallarına dikkat et.'")
         elif st.session_state.error_count == 2:
-            st.error("🧐 Pito: 'Dikkatli bak, küçük bir eksik var!'")
+            st.error("🧐 Pito: 'Hadi dostum, odaklan! Küçük bir eksik var.'")
         elif st.session_state.error_count == 3:
-            st.warning(f"💡 Pito'nun İpucu: {egz['ipucu']}")
+            st.warning(f"💡 Pito: 'İşte ipucun: {egz['ipucu']}'")
 
     with col2:
+        # Puanlama Formülü: 20 - (Hata * 5)
         puan_pot = max(0, 20 - (st.session_state.error_count * 5))
-        st.write(f"🎯 Potansiyel Puan: **{puan_pot} XP**")
+        st.write(f"🎯 Kazanılacak: **{puan_pot} XP**")
 
         if not st.session_state.cevap_dogru and st.session_state.error_count < 4:
             kod_input = st.text_area("Kodunu Yaz:", value=egz['sablon'], height=200, key="editor")
@@ -118,6 +119,7 @@ else:
                     st.rerun()
                 else:
                     st.session_state.error_count += 1
+                    # 4. hataya kadar GIF 'hata' modunda kalır
                     st.session_state.pito_mod = "hata" if st.session_state.error_count < 4 else "dusunuyor"
                     st.rerun()
 
@@ -133,5 +135,5 @@ else:
             with st.expander("📖 Çözüm"): st.code(egz['cozum'])
             idx = modul['egzersizler'].index(egz)
             n_id, n_m = (modul['egzersizler'][idx+1]['id'], u['mevcut_modul']) if idx+1 < len(modul['egzersizler']) else (f"{m_idx + 2}.1", m_idx + 2)
-            if st.button("Sıradaki Göreve Geç ➡️"):
+            if st.button("Anladım, Sıradaki Göreve Geç ➡️"):
                 ilerleme_kaydet(0, "Çözüm İncelendi", egz['id'], u['mevcut_modul'], n_id, n_m)
