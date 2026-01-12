@@ -5,7 +5,7 @@ import base64
 # --- 1. SAYFA AYARLARI ---
 st.set_page_config(page_title="Pito Python Akademi", layout="wide")
 
-# --- 2. CSS: GÖRSEL DÜZENLEME ---
+# --- 2. GÖRSEL STİL (CSS) ---
 st.markdown("""
     <style>
     .stTextInput > div > div > input { border: 2px solid #FF4B4B; font-size: 18px; font-weight: bold; }
@@ -14,7 +14,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 3. VERİ VE RÜTBE SİSTEMİ ---
+# --- 3. VERİ VE RÜTBE YÖNETİMİ ---
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1lat8rO2qm9QnzEUYlzC_fypG3cRkGlJfSfTtwNvs318/export?format=csv"
 
 def get_rank(points):
@@ -29,16 +29,16 @@ def get_rank(points):
     return "🥚 Yeni Başlayan"
 
 def render_gif(name):
-    """GIF dosyasını base64 ile donmadan render eder"""
+    """GIF dosyasını base64 ile render eder"""
     try:
         with open(f"assets/{name}.gif", "rb") as f:
             data = f.read()
             url = base64.b64encode(data).decode()
             st.markdown(f'<img src="data:image/gif;base64,{url}" width="280">', unsafe_allow_html=True)
     except:
-        st.info(f"[{name}.gif Hazırlanıyor...]")
+        st.info(f"[{name}.gif yüklenemedi]")
 
-# --- 4. 8 MODÜL VE 40 ADIMLIK EKSİKSİZ MÜFREDAT ---
+# --- 4. 8 MODÜL VE 40 ADIMLIK MÜFREDAT ---
 training_data = [
     {"module_title": "1. İletişim: print() ve Çıktı Dünyası", "exercises": [
         {"msg": "Python'da ekrana mesaj yazdırmak için `print()` fonksiyonunu kullanırız. Metinleri mutlaka tırnak (' ') içine almalısın.", "task": "print('___')", "solution": "print('Merhaba Pito')", "hint": "Metinleri tırnak işaretleri arasına yazmalısın."},
@@ -57,7 +57,7 @@ training_data = [
     {"module_title": "3. Karar Yapıları: If-Else Dünyası", "exercises": [
         {"msg": "Eşitlik için `==` kullanılır. Sayı 10'a eşitse kontrolü için **==** yaz.", "task": "if 10 ___ 10: print('OK')", "solution": "if 10 == 10:", "hint": "Çift eşittir kullan."},
         {"msg": "Şart yanlışsa `else:` çalışır. Boşluğa **else** yaz.", "task": "if 5 > 10: pass\n___: print('Hata')", "solution": "else:", "hint": "Sadece else: yaz."},
-        {"msg": "`elif` birden fazla şartı denetler. Boşluğa **elif** yaz.", "task": "p = 60\nif p < 50: pass\n___ p > 50: print('Geçti')", "solution": "elif p > 50:", "hint": "elif kullanmalısın."},
+        {"msg": "`elif` birden fazla şartı denetler. Boşluğa **elif** yaz.", "task": "p = 60\nif p < 50: pass\n___ p > 50: print('Pass')", "solution": "elif p > 50:", "hint": "elif kullanmalısın."},
         {"msg": "`and` (ve) iki tarafın da doğru olmasını bekler. Boşluğa **and** yaz.", "task": "if 1 == 1 ___ 2 == 2: print('OK')", "solution": "and", "hint": "ve anlamına gelen and yaz."},
         {"msg": "`!=` eşit değilse demektir. s değişkeni 0'a eşit değilse kontrolü için **!=** yaz.", "task": "s = 5\nif s ___ 0: print('Var')", "solution": "if s != 0:", "hint": "!= operatörünü koy."}
     ]},
@@ -84,27 +84,28 @@ training_data = [
     ]},
     {"module_title": "7. OOP: Nesne Tabanlı Dünya", "exercises": [
         {"msg": "`class` bir kalıptır. Robot kalıbı oluşturmak için boşluğa **class** yaz.", "task": "___ Robot: pass", "solution": "class Robot:", "hint": "class yaz."},
-        {"msg": "Kalıptan nesne üretmek için Robot() yazılır. Boşluğa **Robot()** yaz.", "task": "class Robot: pass\nr = ___", "solution": "r = Robot()", "hint": "Robot() yazmalısın."},
-        {"msg": "Özellikler nokta ile atanır. r nesnesinin **renk** özelliğini 'Mavi' yapmak için boşluğa **renk** yaz.", "task": "class R: pass\nr = R()\nr.___ = 'Mavi'", "solution": "r.renk = 'Mavi'", "hint": "renk yaz."},
+        {"msg": "Kalıptan nesne üretmek için Robot() yazılır. Boşluğa **Robot()** yaz.", "task": "class Robot: pass\ r = ___", "solution": "r = Robot()", "hint": "Robot() yazmalısın."},
+        {"msg": "Özellikler nokta ile atanır. r nesnesinin **renk** özelliğini 'Mavi' yapmak için boşluğa **renk** yaz.", "task": "class R: pass\ nr = R()\ nr.___ = 'Mavi'", "solution": "r.renk = 'Mavi'", "hint": "renk yaz."},
         {"msg": "`self` nesnenin kendisidir. Parantez içine **self** yaz.", "task": "class R:\n def ses(___): print('Bip')", "solution": "def ses(self):", "hint": "self yaz."},
-        {"msg": "r nesnesinin s() metodunu çalıştırmak için boşluğa **s()** yaz.", "task": "class R:\n def s(self): print('X')\nr = R()\nr.___()", "solution": "r.s()", "hint": "s() yazmalısın."}
+        {"msg": "r nesnesinin s() metodunu çalıştırmak için boşluğa **s()** yaz.", "task": "class R:\n def s(self): print('X')\ nr = R()\ nr.___()", "solution": "r.s()", "hint": "s() yazmalısın."}
     ]},
     {"module_title": "8. Kalıcılık: Dosya Yönetimi", "exercises": [
         {"msg": "Açmak için `open()` kullanılır. Yazmak için **'w'** kipi seçilir. Boşlukları **open** ve **'w'** ile doldur.", "task": "f = ___('n.txt', '___')", "solution": "open('n.txt', 'w')", "hint": "open ve w kullan."},
-        {"msg": "`.write()` metodu veriyi yazar. Boşluğa **write** yaz.", "task": "f = open('t.txt', 'w')\nf.___('X')\nf.close()", "solution": "f.write('X')", "hint": "write yaz."},
+        {"msg": "`.write()` metodu veriyi yazar. Boşluğa **write** yaz.", "task": "f = open('t.txt', 'w')\ nf.___('X')\ nf.close()", "solution": "f.write('X')", "hint": "write yaz."},
         {"msg": "Okuma için **'r'** modu kullanılır. Boşluğa **r** harfini koy.", "task": "f = open('t.txt', '___')", "solution": "f = open('t.txt', 'r')", "hint": "r yaz."},
-        {"msg": "`.read()` içeriği çeker. Boşluğa **read** yaz.", "task": "f = open('t.txt', 'r')\nprint(f.___())", "solution": "f.read()", "hint": "read yaz."},
-        {"msg": "`.close()` dosyayı kapatır. Boşluğa **close** yaz.", "task": "f = open('t.txt', 'r')\nf.___()", "solution": "f.close()", "hint": "close yaz."}
+        {"msg": "`.read()` içeriği çeker. Boşluğa **read** yaz.", "task": "f = open('t.txt', 'r')\ nprint(f.___())", "solution": "f.read()", "hint": "read yaz."},
+        {"msg": "`.close()` dosyayı kapatır. Boşluğa **close** yaz.", "task": "f = open('t.txt', 'r')\ nf.___()", "solution": "f.close()", "hint": "close yaz."}
     ]}
 ]
 
-# --- 5. SESSION STATE YÖNETİMİ ---
+# --- 5. SESSION STATE ---
 if 'user' not in st.session_state:
     st.session_state.user = None
     st.session_state.errors = 0
     st.session_state.score_pool = 20
     st.session_state.is_completed = False
-    st.session_state.feedback = None  # Geri bildirim mesajları için
+    st.session_state.feedback_msg = None
+    st.session_state.feedback_type = None
 
 def show_leaderboard():
     try:
@@ -115,33 +116,25 @@ def show_leaderboard():
     except:
         st.sidebar.info("Liderlik tablosu yükleniyor...")
 
-# --- 6. GİRİŞ VE ANA PANEL ---
+# --- 6. GİRİŞ VE PANEL ---
 if st.session_state.user is None:
-    col_l, col_r = st.columns([2, 1])
-    with col_l:
+    c1, c2 = st.columns([2, 1])
+    with c1:
         render_gif("pito_merhaba")
         st.title("Pito Python Akademi")
-        okul_no = st.text_input("Okul Numaranı Gir (Sadece Sayı):", placeholder="Örn: 12")
+        okul_no = st.text_input("Okul Numaranı Gir (Sadece Sayı):")
         if okul_no:
-            # Örnek giriş (Gerçek uygulamada DB kontrolü yapılır)
             st.session_state.user = {"Okul No": okul_no, "Ad": "Genç Yazılımcı", "Mevcut Modül": 1, "Mevcut Egzersiz": 1, "Puan": 0}
             st.rerun()
-    with col_r:
-        show_leaderboard()
+    with c2: show_leaderboard()
 
 else:
     u = st.session_state.user
-    m_idx = int(u["Mevcut Modül"]) - 1
-    e_idx = int(u["Mevcut Egzersiz"]) - 1
+    m_idx, e_idx = int(u["Mevcut Modül"]) - 1, int(u["Mevcut Egzersiz"]) - 1
 
     if m_idx >= 8:
         render_gif("pito_mezun")
-        st.balloons()
-        st.title("🎓 Tebrikler Python Kahramanı!")
-        if st.button("Eğitimi Sıfırla"):
-            st.session_state.user = None
-            st.rerun()
-        st.stop()
+        st.balloons(); st.title("🎓 Tebrikler!"); st.stop()
 
     curr_ex = training_data[m_idx]["exercises"][e_idx]
     st.progress(((m_idx * 5) + e_idx) / 40)
@@ -149,7 +142,7 @@ else:
     c_main, c_side = st.columns([2.5, 1])
 
     with c_main:
-        # Pito'nun Duygu Durumu
+        # Pito Durumu
         if st.session_state.is_completed:
             if st.session_state.errors >= 4: render_gif("pito_dusunuyor")
             else: render_gif("pito_basari")
@@ -158,9 +151,10 @@ else:
 
         st.markdown(f'<div class="pito-note">{curr_ex["msg"]}</div>', unsafe_allow_html=True)
         
-        # --- HATA MESAJLARININ GÖRÜNDÜĞÜ ALAN ---
-        if st.session_state.feedback:
-            st.write(st.session_state.feedback)
+        # Geribildirim Gösterimi (Hata Çözümü)
+        if st.session_state.feedback_msg:
+            if st.session_state.feedback_type == "error": st.error(st.session_state.feedback_msg)
+            elif st.session_state.feedback_type == "warning": st.warning(st.session_state.feedback_msg)
 
         ans = st.text_input(f"⌨️ Görev: {curr_ex['task']}", key=f"ans_{m_idx}_{e_idx}", disabled=st.session_state.is_completed)
 
@@ -174,7 +168,7 @@ else:
                     
                     if ans_norm in correct_norm or correct_norm in ans_norm:
                         st.session_state.is_completed = True
-                        st.session_state.feedback = None
+                        st.session_state.feedback_msg = None
                         u["Puan"] += st.session_state.score_pool
                         st.rerun()
                     else:
@@ -182,41 +176,39 @@ else:
                         st.session_state.score_pool -= 5
                         if st.session_state.score_pool < 0: st.session_state.score_pool = 0
                         
-                        # Hata Mesajları
                         if st.session_state.errors < 3:
-                            st.session_state.feedback = st.error(f"❌ Yanlış cevap! Bu {st.session_state.errors}. hatan. Puanın 5 düştü!")
+                            st.session_state.feedback_msg = f"❌ Yanlış cevap! Bu {st.session_state.errors}. hatan. Puanın 5 düştü!"
+                            st.session_state.feedback_type = "error"
                         elif st.session_state.errors == 3:
-                            st.session_state.feedback = st.warning(f"💡 Pito'dan İpucu: {curr_ex['hint']}")
+                            st.session_state.feedback_msg = f"💡 Pito'dan İpucu: {curr_ex['hint']}"
+                            st.session_state.feedback_type = "warning"
                         elif st.session_state.errors >= 4:
                             st.session_state.is_completed = True
-                            st.session_state.feedback = st.error("🚨 4 kez hata yaptığın için bu sorudan puan alamadın. Çözümü incele!")
+                            st.session_state.feedback_msg = "🚨 4 kez hata yaptığın için puan alamadın. Çözümü incele!"
+                            st.session_state.feedback_type = "error"
                         st.rerun()
 
-        # Sonuç Paneli
         if st.session_state.is_completed:
             st.divider()
             if st.session_state.errors >= 4:
                 st.info(f"✅ Doğru Çözüm: `{curr_ex['solution']}`")
             else:
-                st.balloons()
-                st.success(f"✨ Harika! Doğru cevap. +{st.session_state.score_pool} Puan Kazandın.")
-                out = curr_ex['solution'].replace("print(", "").replace(")", "").replace("'", "").replace('"', "")
-                st.code(f"Kod Çıktısı:\n{out}")
+                st.success(f"✨ Harika! +{st.session_state.score_pool} Puan Kazandın.")
+                # SyntaxError Çözümü: f-string dışına çıkarma
+                out_val = curr_ex['solution'].replace("print(", "").replace(")", "").replace("'", "").replace('"', "")
+                st.code(f"Kod Çıktısı:\n{out_val}")
 
             if st.button("Sonraki Adıma Geç ➡️"):
                 if e_idx < 4: u["Mevcut Egzersiz"] += 1
-                else:
-                    u["Mevcut Modül"] += 1
-                    u["Mevcut Egzersiz"] = 1
+                else: u["Mevcut Modül"] += 1; u["Mevcut Egzersiz"] = 1
                 st.session_state.is_completed = False
                 st.session_state.errors = 0
                 st.session_state.score_pool = 20
-                st.session_state.feedback = None
+                st.session_state.feedback_msg = None
                 st.rerun()
 
     with c_side:
         st.subheader(f"👤 {u['Ad']}")
         st.metric("Puan", u["Puan"])
         st.write(f"**Rütbe:** {get_rank(u['Puan'])}")
-        st.divider()
-        show_leaderboard()
+        st.divider(); show_leaderboard()
