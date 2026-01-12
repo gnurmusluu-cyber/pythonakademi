@@ -7,7 +7,7 @@ import re
 from datetime import datetime
 from streamlit_gsheets import GSheetsConnection
 
-# --- 1. SİSTEM AYARLARI ---
+# --- 1. KONFİGÜRASYON VE SİBER TASARIM ---
 st.set_page_config(
     page_title="Pito Python Akademi", 
     layout="wide", 
@@ -15,7 +15,7 @@ st.set_page_config(
 )
 
 # --- 2. DİNAMİK CSS VE GÖRSEL STİLLER ---
-# Giriş durumuna göre padding (üst boşluk) ayarı
+# Giriş durumuna göre üst boşluk (padding) ayarı
 top_pad = "1rem" if st.session_state.get("user") is None else "3.5rem"
 
 st.markdown(f"""
@@ -31,7 +31,7 @@ st.markdown(f"""
         padding-bottom: 1rem !important;
     }}
     
-    /* Giriş Konteynırı (Kutusuz ve Sade) */
+    /* Giriş Konteynırı (Minimalist ve Kutusuz) */
     .login-container {{
         text-align: center;
         max-width: 550px;
@@ -48,7 +48,7 @@ st.markdown(f"""
         text-shadow: 2px 2px 10px rgba(0, 255, 0, 0.2);
     }}
 
-    /* Dashboard Bileşenleri */
+    /* Dashboard Panelleri */
     .hero-panel {{ 
         background: linear-gradient(90deg, #1E1E2F 0%, #2D2D44 100%); 
         padding: 25px; 
@@ -107,7 +107,7 @@ st.markdown(f"""
         color: #E0E0E0; 
     }}
     
-    /* Butonlar ve Text Alanları */
+    /* Butonlar ve Girdiler */
     .stButton>button {{ 
         border-radius: 10px; 
         background-color: #00FF00 !important; 
@@ -133,8 +133,8 @@ def pito_notu_uret(mod, ad="Genç Yazılımcı"):
         "merhaba": f"Selam {ad}! Bugün Python dünyasında hangi kapıları açacağız?",
         "basari": f"Vay canına {ad}! Kodun tertemiz çalıştı. Çıktıyı aşağıya bıraktım.",
         "hata": f"Ufak bir yazım kazası {ad}... Python biraz titizdir, bir daha bak istersen.",
-        "dusunuyor": f"Hımm, bu görev biraz terletiyor mu? Merak etme, çözüm ve çıktı seni bekliyor.",
-        "mezun": f"İnanılmaz! Artık gerçek bir Python Bilgesisin!"
+        "dusunuyor": f"Hımm, bu görev biraz terletiyor mu? Merak etme, çözüm seni bekliyor.",
+        "mezun": f"İnanılmaz! Nusaybin'in gururu {ad} artık bir Python Bilgesi!"
     }
     return notlar.get(mod, notlar["merhaba"])
 
@@ -163,6 +163,7 @@ except Exception as e:
 
 # --- 5. SESSION STATE (HAFIZA) ---
 if "user" not in st.session_state: st.session_state.user = None
+if "temp_user" not in st.session_state: st.session_state.temp_user = None
 if "error_count" not in st.session_state: st.session_state.error_count = 0
 if "cevap_dogru" not in st.session_state: st.session_state.cevap_dogru = False
 if "pito_mod" not in st.session_state: st.session_state.pito_mod = "merhaba"
@@ -176,7 +177,6 @@ def ilerleme_kaydet(puan, kod, egz_id, m_id, n_id, n_m):
         yeni_xp = int(float(df_u.at[u_idx, 'toplam_puan'])) + puan
         df_u.at[u_idx, 'toplam_puan'], df_u.at[u_idx, 'mevcut_egzersiz'], df_u.at[u_idx, 'mevcut_modul'] = yeni_xp, str(n_id), int(float(n_m))
         
-        # Rütbe Algoritması
         if yeni_xp >= 1000: r = "🏆 Bilge"
         elif yeni_xp >= 500: r = "🔥 Savaşçı"
         elif yeni_xp >= 200: r = "🐍 Pythonist"
@@ -202,40 +202,63 @@ def ilerleme_kaydet(puan, kod, egz_id, m_id, n_id, n_m):
 # --- 7. ANA PROGRAM AKIŞI ---
 
 if st.session_state.user is None:
-    # --- MİNİMALİST GİRİŞ EKRANI (Padding: 1rem) ---
+    # --- GİRİŞ VE ONAY EKRANI ---
     empty_l, col_mid, empty_r = st.columns([1, 2, 1])
     with col_mid:
         st.markdown('<div class="login-container">', unsafe_allow_html=True)
         st.markdown('<div class="academy-title">Pito Python Akademi</div>', unsafe_allow_html=True)
         pito_gorseli_yukle("merhaba")
-        st.markdown(f'<div class="pito-notu">💬 <b>Pito:</b> "Selam genç yazılımcı! Geleceğin kodlarını birlikte yazmaya hazır mısın?"</div>', unsafe_allow_html=True)
-        st.markdown("<br>", unsafe_allow_html=True)
         
-        numara = st.number_input("Okul Numaranı Gir:", step=1, value=0)
-        if numara > 0:
-            if st.button("Akademi Kapısını Aç 🔑"):
-                df_u = conn.read(spreadsheet=KULLANICILAR_URL, ttl=0)
-                u_data = df_u[df_u['ogrenci_no'] == numara]
-                if not u_data.empty:
-                    st.session_state.user = u_data.iloc[0].to_dict()
+        # DURUM A: NUMARA GİRİŞİ VEYA KAYIT
+        if st.session_state.temp_user is None:
+            numara = st.number_input("Okul Numaranı Gir:", step=1, value=0)
+            if numara > 0:
+                if st.button("Akademi Kapısını Aç 🔑"):
+                    df_u = conn.read(spreadsheet=KULLANICILAR_URL, ttl=0)
+                    u_data = df_u[df_u['ogrenci_no'] == numara]
+                    
+                    if not u_data.empty:
+                        st.session_state.temp_user = u_data.iloc[0].to_dict()
+                        st.rerun()
+                    else:
+                        st.info("Seni tanımıyorum! Haydi kaydolalım.")
+                        with st.container():
+                            y_ad = st.text_input("Ad Soyad:")
+                            y_sin = st.selectbox("Sınıfın:", ["9-A", "9-B", "10-A", "10-B", "11-A", "12-A"])
+                            if st.button("Kaydı Tamamla 🎓") and y_ad:
+                                y_og = pd.DataFrame([{
+                                    "ogrenci_no": int(numara), "ad_soyad": y_ad, "sinif": y_sin, 
+                                    "toplam_puan": 0, "mevcut_modul": 1, "mevcut_egzersiz": "1.1", "rutbe": "🥚 Çömez"
+                                }])
+                                conn.update(spreadsheet=KULLANICILAR_URL, data=pd.concat([df_u, y_og], ignore_index=True))
+                                st.session_state.user = y_og.iloc[0].to_dict()
+                                st.rerun()
+
+        # DURUM B: KİMLİK DOĞRULAMA (AKILLI TANIMA)
+        else:
+            t_u = st.session_state.temp_user
+            st.markdown(f"""
+                <div class="pito-notu" style="text-align:center; border-left:none; border-bottom:4px solid #00FF00;">
+                    👋 <b>Selam {t_u['ad_soyad']}!</b><br>
+                    Şu an <b>{int(float(t_u['mevcut_modul']))}. Modül</b> üzerindesin.<br>
+                    Bu sen misin?
+                </div>
+            """, unsafe_allow_html=True)
+            
+            c1, c2 = st.columns(2)
+            with c1:
+                if st.button("Evet, Benim! 🚀"):
+                    st.session_state.user = st.session_state.temp_user
+                    st.session_state.temp_user = None
                     st.rerun()
-                else:
-                    st.info("Seni tanımıyorum! Haydi kaydolalım.")
-                    with st.container():
-                        y_ad = st.text_input("Ad Soyad:")
-                        y_sinif = st.selectbox("Sınıfın:", ["9-A", "9-B", "10-A", "10-B", "11-A", "12-A"])
-                        if st.button("Kaydı Tamamla 🎓") and y_ad:
-                            y_og = pd.DataFrame([{
-                                "ogrenci_no": int(numara), "ad_soyad": y_ad, "sinif": y_sinif, 
-                                "toplam_puan": 0, "mevcut_modul": 1, "mevcut_egzersiz": "1.1", "rutbe": "🥚 Çömez"
-                            }])
-                            conn.update(spreadsheet=KULLANICILAR_URL, data=pd.concat([df_u, y_og], ignore_index=True))
-                            st.session_state.user = y_og.iloc[0].to_dict()
-                            st.rerun()
+            with c2:
+                if st.button("Hayır, Değilim! 👤"):
+                    st.session_state.temp_user = None
+                    st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
 else:
-    # --- ARENA: EĞİTİM VE LİDERLİK (Padding: 3.5rem) ---
+    # --- ARENA: EĞİTİM VE LİDERLİK ---
     u = st.session_state.user
     col_main, col_leader = st.columns([7, 3])
 
@@ -248,7 +271,6 @@ else:
         egz_liste = modul['egzersizler']
         egz = next((e for e in egz_liste if e['id'] == str(u['mevcut_egzersiz'])), egz_liste[0])
 
-        # Hero Panel ve İlerleme
         st.markdown(f"<div class='hero-panel'><h3>🚀 {u['ad_soyad']} | {u['sinif']}</h3><p>{u['rutbe']} • {int(float(u['toplam_puan']))} XP</p></div>", unsafe_allow_html=True)
         sira = egz_liste.index(egz) + 1
         st.write(f"📊 **Modül İlerlemesi:** {sira}/{len(egz_liste)}")
