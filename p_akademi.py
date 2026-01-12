@@ -47,8 +47,10 @@ def pito_gorseli_yukle(mod):
 
 @st.cache_data(ttl=60)
 def veri_oku_akilli(url):
-    try: return conn.read(spreadsheet=url, ttl=60)
-    except: return None
+    try:
+        return conn.read(spreadsheet=url, ttl=60)
+    except:
+        return None
 
 # --- 3. BAĞLANTILAR VE MÜFREDAT ---
 KULLANICILAR_URL = "https://docs.google.com/spreadsheets/d/1lat8rO2qm9QnzEUYlzC_fypG3cRkGlJfSfTtwNvs318/edit#gid=0"
@@ -116,7 +118,8 @@ if st.session_state.user is None:
             if st.button("Kaydol ve Başla 🎓") and y_ad:
                 y_og = pd.DataFrame([{"ogrenci_no": int(numara), "ad_soyad": y_ad, "sinif": y_sinif, "toplam_puan": 0, "mevcut_modul": 1, "mevcut_egzersiz": "1.1", "rutbe": "🥚 Çömez"}])
                 conn.update(spreadsheet=KULLANICILAR_URL, data=pd.concat([df_u, y_og], ignore_index=True))
-                st.session_state.user = y_og.iloc[0].to_dict(); st.rerun()
+                st.session_state.user = y_og.iloc[0].to_dict()
+                st.rerun()
 else:
     u = st.session_state.user
     col_main, col_leader = st.columns([7, 3])
@@ -124,18 +127,22 @@ else:
     with col_main:
         m_idx = int(float(u['mevcut_modul'])) - 1
         if m_idx >= len(mufredat['pito_akademi_mufredat']):
-            st.balloons(); pito_gorseli_yukle("mezun"); st.success("🏆 AKADEMİ BİTTİ!"); st.stop()
+            st.balloons()
+            pito_gorseli_yukle("mezun")
+            st.success("🏆 AKADEMİ BİTTİ!")
+            st.stop()
         
         modul = mufredat['pito_akademi_mufredat'][m_idx]
         egz_liste = modul['egzersizler']
         egz = next((e for e in egz_liste if e['id'] == str(u['mevcut_egzersiz'])), egz_liste[0])
 
+        # Hero Header
         st.markdown(f"<div class='hero-panel'><h3>🚀 {u['ad_soyad']} | {u['sinif']}</h3><p>{u['rutbe']} • {int(float(u['toplam_puan']))} XP</p></div>", unsafe_allow_html=True)
         sira = egz_liste.index(egz) + 1
         st.write(f"📊 **Modül İlerlemesi:** {sira}/{len(egz_liste)}")
         st.progress(sira / len(egz_liste))
 
-        # --- YENİ: GÖREV BİLGİ ÇUBUĞU ---
+        # --- GÖREV BİLGİ ÇUBUĞU ---
         p_pot = max(0, 20 - (st.session_state.error_count * 5))
         st.markdown(f"""
             <div class="status-bar">
@@ -146,31 +153,41 @@ else:
         """, unsafe_allow_html=True)
 
         c_p, c_e = st.columns([1, 2])
-        with c_p: pito_gorseli_yukle(st.session_state.pito_mod)
+        with c_p:
+            pito_gorseli_yukle(st.session_state.pito_mod)
         with c_e:
             st.info(f"**GÖREV {egz['id']}:**\n{egz['yonerge']}")
             st.markdown(f"<div class='pito-notu'>💬 <b>Pito:</b> {pito_notu_uret(st.session_state.pito_mod, u['ad_soyad'].split()[0])}</div>", unsafe_allow_html=True)
-            if st.session_state.error_count == 1: st.error("🤫 Yazımı kontrol et!")
-            elif st.session_state.error_count == 2: st.error("🧐 Bir şeyler eksik sanki!")
-            elif st.session_state.error_count == 3: st.warning(f"💡 İpucu: {egz['ipucu']}")
+            if st.session_state.error_count == 1:
+                st.error("🤫 Pito: 'Yazımı kontrol et, ufak bir hata var!'")
+            elif st.session_state.error_count == 2:
+                st.error("🧐 Pito: 'Dikkat et dostum, bir şeyler eksik sanki!'")
+            elif st.session_state.error_count == 3:
+                st.warning(f"💡 İpucu: {egz['ipucu']}")
 
         if not st.session_state.cevap_dogru and st.session_state.error_count < 4:
             k_in = st.text_area("Kodunu Yaz:", value=egz['sablon'], height=200, key="editor")
             if st.button("Kontrol Et"):
                 st.session_state.last_code = k_in
                 if kod_normalize_et(k_in) == kod_normalize_et(egz['dogru_cevap_kodu']):
-                    st.session_state.cevap_dogru, st.session_state.pito_mod = True, "basari"; st.rerun()
+                    st.session_state.cevap_dogru, st.session_state.pito_mod = True, "basari"
+                    st.rerun()
                 else:
                     st.session_state.error_count += 1
-                    st.session_state.pito_mod = "hata" if st.session_state.error_count < 4 else "dusunuyor"; st.rerun()
+                    st.session_state.pito_mod = "hata" if st.session_state.error_count < 4 else "dusunuyor"
+                    st.rerun()
         elif st.session_state.cevap_dogru:
             st.success(f"🌟 +{p_pot} XP Kazandın!")
             n_id, n_m = (egz_liste[sira]['id'], u['mevcut_modul']) if sira < len(egz_liste) else (f"{m_idx + 2}.1", m_idx + 2)
-            if st.button("Sonraki Göreve Geç ➡️"): ilerleme_kaydet(p_pot, st.session_state.last_code, egz['id'], u['mevcut_modul'], n_id, n_m)
+            if st.button("Sonraki Göreve Geç ➡️"):
+                ilerleme_kaydet(p_pot, st.session_state.last_code, egz['id'], u['mevcut_modul'], n_id, n_m)
         elif st.session_state.error_count >= 4:
-            st.error("🚫 Kilitlendi."); with st.expander("📖 Çözümü İncele", expanded=True): st.code(egz['cozum'])
+            st.error("🚫 Görev Kilitlendi.")
+            with st.expander("📖 Çözümü İncele", expanded=True):
+                st.code(egz['cozum'])
             n_id, n_m = (egz_liste[sira]['id'], u['mevcut_modul']) if sira < len(egz_liste) else (f"{m_idx + 2}.1", m_idx + 2)
-            if st.button("Anladım, Sıradaki ➡️"): ilerleme_kaydet(0, "Çözüm İncelendi", egz['id'], u['mevcut_modul'], n_id, n_m)
+            if st.button("Anladım, Sıradaki ➡️"):
+                ilerleme_kaydet(0, "Çözüm İncelendi", egz['id'], u['mevcut_modul'], n_id, n_m)
 
     with col_leader:
         st.markdown("<h3 style='text-align:center;'>🏆 ONUR KÜRSÜSÜ</h3>", unsafe_allow_html=True)
@@ -184,7 +201,8 @@ else:
             t1, t2 = st.tabs(["👥 Sınıfım", "🏫 Okul (Top 10)"])
             with t1:
                 sinif_df = df_all[df_all['sinif'] == u['sinif']].sort_values(by='toplam_puan', ascending=False).head(10)
-                for i, r in enumerate(sinif_df.itertuples(), 1): st.markdown(f"**{i}.** {r.ad_soyad} • `{r.toplam_puan} XP`")
+                for i, r in enumerate(sinif_df.itertuples(), 1):
+                    st.markdown(f"**{i}.** {r.ad_soyad} • `{r.toplam_puan} XP`")
             with t2:
                 okul_df = df_all.sort_values(by='toplam_puan', ascending=False).head(10)
                 for i, r in enumerate(okul_df.itertuples(), 1):
