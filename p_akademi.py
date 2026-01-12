@@ -25,8 +25,14 @@ st.markdown("""
         max-width: 550px;
         margin: auto;
     }
-    .school-name { color: #00FF00; font-size: 1.1em; letter-spacing: 2px; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; }
-    .academy-title { font-size: 2.2em; font-weight: 800; margin-bottom: 25px; background: linear-gradient(90deg, #00FF00, #00CCFF); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .academy-title { 
+        font-size: 2.8em; 
+        font-weight: 800; 
+        margin-bottom: 25px; 
+        background: linear-gradient(90deg, #00FF00, #00CCFF); 
+        -webkit-background-clip: text; 
+        -webkit-text-fill-color: transparent; 
+    }
     
     /* Dashboard ve Paneller */
     .hero-panel { background: linear-gradient(90deg, #1E1E2F 0%, #2D2D44 100%); padding: 25px; border-radius: 15px; border-left: 8px solid #00FF00; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,255,0,0.2); }
@@ -46,7 +52,6 @@ st.markdown("""
 # --- 2. YARDIMCI MOTORLAR ---
 
 def kod_normalize_et(kod):
-    """Boşluk ve parantez farklarını yok sayarak esnek kontrol sağlar."""
     return re.sub(r'\s+', '', str(kod)).strip().lower()
 
 def pito_notu_uret(mod, ad="Genç Yazılımcı"):
@@ -55,7 +60,7 @@ def pito_notu_uret(mod, ad="Genç Yazılımcı"):
         "basari": f"Vay canına {ad}! Kodun tertemiz çalıştı. Çıktıyı aşağıya bıraktım.",
         "hata": f"Ufak bir yazım kazası {ad}... Python biraz titizdir, bir daha bak istersen.",
         "dusunuyor": f"Hımm, bu görev biraz terletiyor mu? Merak etme, çözüm ve çıktı seni bekliyor.",
-        "mezun": f"İnanılmaz! Nusaybin'in gururu {ad} artık bir Python Bilgesi!"
+        "mezun": f"İnanılmaz! Artık gerçek bir Python Bilgesisin!"
     }
     return notlar.get(mod, notlar["merhaba"])
 
@@ -117,11 +122,10 @@ def ilerleme_kaydet(puan, kod, egz_id, m_id, n_id, n_m):
 # --- 6. ANA PROGRAM AKIŞI ---
 
 if st.session_state.user is None:
-    # --- PRESTİJ GİRİŞ EKRANI ---
+    # --- YENİ SADE GİRİŞ EKRANI ---
     empty_l, col_mid, empty_r = st.columns([1, 2, 1])
     with col_mid:
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
-        st.markdown('<div class="school-name">Nusaybin Süleyman Bölünmez Anadolu Lisesi</div>', unsafe_allow_html=True)
         st.markdown('<div class="academy-title">Pito Python Akademi</div>', unsafe_allow_html=True)
         pito_gorseli_yukle("merhaba")
         st.markdown(f'<div class="pito-notu">💬 <b>Pito:</b> "Selam genç yazılımcı! Geleceğin kodlarını birlikte yazmaya hazır mısın?"</div>', unsafe_allow_html=True)
@@ -148,7 +152,7 @@ if st.session_state.user is None:
         st.markdown('</div>', unsafe_allow_html=True)
 
 else:
-    # --- ARENA: EĞİTİM (SOL) VE ONUR KÜRSÜSÜ (SAĞ) ---
+    # ARENA BÖLÜMÜ (Önceki kararlı yapıyla devam eder)
     u = st.session_state.user
     col_main, col_leader = st.columns([7, 3])
 
@@ -166,7 +170,7 @@ else:
         st.write(f"📊 **Modül İlerlemesi:** {sira}/{len(egz_liste)}")
         st.progress(sira / len(egz_liste))
 
-        # --- GÖREV BİLGİ ÇUBUĞU ---
+        # Görev Bilgi Çubuğu
         p_pot = max(0, 20 - (st.session_state.error_count * 5))
         st.markdown(f"""<div class="status-bar">
             <div style="color: #00FF00; font-weight: bold;">📍 Modül {u['mevcut_modul']} | Görev {egz['id']}</div>
