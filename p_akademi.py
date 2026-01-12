@@ -1,78 +1,105 @@
 import streamlit as st
 import pandas as pd
-import gspread
-from google.oauth2.service_account import Credentials
 import json
 import time
+from streamlit_gsheets import GSheetsConnection
 
-# --- PİTO PROTOKOLÜ VE BAĞLANTI ---
-def init_connection():
-    try:
-        # 1. Kontrol: Secrets var mı?
-        if "gcp_service_account" not in st.secrets:
-            st.error("❌ HATA: Streamlit Secrets içinde 'gcp_service_account' anahtarı bulunamadı!")
-            return None
-        
-        scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
-        creds = Credentials.from_service_account_info(st.secrets["gcp_service_account"], scopes=scope)
-        client = gspread.authorize(creds)
-        url = "https://docs.google.com/spreadsheets/d/1lat8rO2qm9QnzEUYlzC_fypG3cRkGlJfSfTtwNvs318/edit"
-        return client.open_by_url(url).get_worksheet(0)
-    except Exception as e:
-        st.error(f"⚠️ Bağlantı Kurulamadı: {e}")
-        return None
+# --- 1. SAYFA AYARLARI VE TASARIM ---
+st.set_page_config(page_title="Pito Python Akademi", layout="wide")
 
-sheet = init_connection()
+st.markdown("""
+    <style>
+    .stApp { background-color: #0E1117; color: #FFFFFF; }
+    .hero-panel { background: linear-gradient(90deg, #1E1E2F 0%, #2D2D44 100%); padding: 20px; border-radius: 15px; border-left: 5px solid #00FF00; margin-bottom: 20px; }
+    .stButton>button { border-radius: 10px; background-color: #00FF00; color: black; font-weight: bold; width: 100%; }
+    </style>
+    """, unsafe_allow_html=True)
 
-# Müfredat Yükleme
-with open('mufredat.json', 'r', encoding='utf-8') as f:
-    mufredat = json.load(f)
+# --- 2. VERİTABANI VE MÜFREDAT BAĞLANTILARI ---
+KULLANICILAR_URL = "https://docs.google.com/spreadsheets/d/1lat8rO2qm9QnzEUYlzC_fypG3cRkGlJfSfTtwNvs318/edit#gid=0"
+KAYITLAR_URL = "https://docs.google.com/spreadsheets/d/14QoNr4FHZhSaUDUU-DDQEfNFHMo5Ge5t5lyDgqGRJ3k/edit#gid=0"
 
-# --- VERİ YÖNETİMİ (BOŞ VERİTABANI KORUMASI) ---
-def get_clean_df():
-    if sheet is None: return pd.DataFrame()
-    data = sheet.get_all_records()
-    if not data:
-        # Eğer tablo boşsa, standart sütunlarla boş bir DataFrame oluştur
-        return pd.DataFrame(columns=["Okul No", "Öğrencinin Adı", "Sınıf", "Puan", "Rütbe", "Mevcut Modül", "Mevcut Egzersiz"])
-    return pd.DataFrame(data)
+def load_data():
+    conn = st.connection("gsheets", type=GSheetsConnection)
+    kullanicilar = conn.read(spreadsheet=KULLANICILAR_URL, ttl=0)
+    return conn, kullanicilar
 
-# --- GİRİŞ VE KAYIT SİSTEMİ ---
-if "user" not in st.session_state:
-    st.session_state.user = None
+def load_mufredat():
+    with open('mufredat.json', 'r', encoding='utf-8') as f:
+        return json.load(f)
 
-if st.session_state.user is None and sheet is not None:
+# --- 3. SESSION STATE (SİSTEM HAFIZASI) ---
+if "user_data" not in st.session_state: st.session_state.user_data = None
+if "error_count" not in st.session_state: st.session_state.error_count = 0
+if "pito_mod" not in st.session_state: st.session_state.pito_mod = "merhaba"
+
+# --- 4. GİRİŞ VE KAYIT SİSTEMİ ---
+conn, df_users = load_data()
+mufredat = load_mufredat()
+
+if st.session_state.user_data is None:
     st.title("🐍 Pito Python Akademi")
-    tab1, tab2 = st.tabs(["🔑 Giriş Yap", "📝 Kayıt Ol"])
+    st.image("assets/pito_merhaba.gif", width=200)
     
-    df = get_clean_df()
+    numara = st.number_input("Öğrenci Numaranı Yaz:", step=1, value=0)
     
-    with tab1:
-        okul_no = st.text_input("Okul Numaranı Gir:", key="log_input")
-        if st.button("Devam Et"):
-            # Numara kontrolü (Sayısal olmalı)
-            if not df.empty and str(okul_no) in df["Okul No"].astype(str).values:
-                st.session_state.user = df[df["Okul No"].astype(str) == str(okul_no)].iloc[0].to_dict()
-                st.rerun() # Macbook uyumu için şart
-            else:
-                st.warning("Seni tanımıyorum! Lütfen önce kayıt ol.")
-    
-    with tab2:
-        with st.form("kayit_formu"):
-            ad = st.text_input("Adın Soyadın:")
-            no = st.text_input("Okul Numaran (Sayı):")
-            sinif = st.selectbox("Sınıfın:", ["9-A", "9-B", "10-A", "10-B"])
-            if st.form_submit_button("Akademiye Katıl"):
-                if ad and no.isdigit():
-                    # Yeni kayıt satırı
-                    new_row = [int(no), ad, sinif, 0, "Egg", 0, 1, 1, time.strftime("%Y-%m-%d")]
-                    sheet.append_row(new_row)
-                    st.success("Kaydın yapıldı! Şimdi giriş yapabilirsin.")
-                else:
-                    st.error("Lütfen bilgileri eksiksiz ve numarayı sayısal gir!")
+    if st.button("Giriş Yap"):
+        user = df_users[df_users['ogrenci_no'] == numara]
+        if not user.empty:
+            st.session_state.user_data = user.iloc[0].to_dict()
+            st.success(f"Hoş geldin {st.session_state.user_data['ad_soyad']}!")
+            st.rerun()
+        else:
+            st.error("Seni tanıyamadım! Lütfen öğretmenine danış veya numaranı kontrol et.")
+            if st.button("Yeni Kayıt Ol"): # Kayıt butonu [cite: 2026-01-12]
+                st.info("Kayıt formu buraya gelecek.")
 
-# --- EĞİTİM EKRANI ---
-elif st.session_state.user is not None:
-    user = st.session_state.user
-    st.sidebar.write(f"Hoş geldin, **{user['Öğrencinin Adı']}**!")
-    # Eğitim kodları buraya devam eder...
+# --- 5. EĞİTİM PANELİ ---
+else:
+    u = st.session_state.user_data
+    # Hero Header [cite: 2026-01-12]
+    st.markdown(f"""<div class='hero-panel'>
+        <h3>🚀 {u['ad_soyad']} | {u['rutbe']}</h3>
+        <p>📊 Toplam Puan: {u['toplam_puan']} | Modül: {u['mevcut_modul']}</p>
+        </div>""", unsafe_allow_html=True)
+
+    col1, col2 = st.columns([1, 2])
+    
+    # Mevcut Egzersizi JSON'dan bul
+    m_id = int(u['mevcut_modul'])
+    egz_id = u['mevcut_egzersiz']
+    # Örnek olarak ilk egzersiz çekiliyor:
+    egzersiz = mufredat['pito_akademi_mufredat'][m_id-1]['egzersizler'][0] 
+
+    with col1:
+        st.image(f"assets/pito_{st.session_state.pito_mod}.gif")
+        st.info(f"**GÖREV {egz_id}:** {egzersiz['yonerge']}")
+        
+        if st.session_state.error_count >= 3:
+            st.warning(f"💡 İpucu: {egzersiz['ipucu']}")
+
+    with col2:
+        st.subheader("💻 Komut Paneli")
+        kod = st.text_area("Kodunu buraya yaz:", value=egzersiz['sablon'], height=250)
+        
+        # Puanlama Mantığı [cite: 2026-01-12]
+        puan = max(0, 20 - (st.session_state.error_count * 5))
+        st.write(f"💰 Kazanılacak Puan: **{puan} XP**")
+        
+        # Kontrol Butonu [cite: 2026-01-12]
+        if st.button("Kontrol Et"):
+            if kod.strip() == egzersiz['dogru_cevap_kodu'].strip():
+                st.session_state.pito_mod = "basari"
+                st.balloons()
+                # Veritabanı güncelleme işlemleri burada yapılacak
+                st.success(f"Mükemmel! {puan} puan kazandın.")
+                time.sleep(2)
+                # İlerleme mantığı...
+            else:
+                st.session_state.error_count += 1
+                st.session_state.pito_mod = "hata"
+                if st.session_state.error_count >= 4:
+                    st.session_state.pito_mod = "dusunuyor"
+                    st.error("Panel Kilitlendi! Çözümü incele.")
+                    st.code(egzersiz['cozum'])
+                st.rerun()
