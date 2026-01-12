@@ -16,7 +16,6 @@ st.markdown("""
     .stButton>button { border-radius: 10px; background-color: #00FF00 !important; color: black !important; font-weight: bold; width: 100%; height: 3.5em; transition: 0.3s; }
     .stButton>button:hover { transform: scale(1.02); box-shadow: 0 0 20px #00FF00; }
     .stTextArea>div>div>textarea { background-color: #1E1E1E; color: #00FF00; font-family: 'Courier New', Courier, monospace; font-size: 16px; }
-    .leaderboard-card { background-color: #1E1E2F; padding: 15px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #3E3E5E; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -52,21 +51,24 @@ if "last_code" not in st.session_state: st.session_state.last_code = ""
 def ilerleme_kaydet(puan, kod, egz_id, m_id, n_id, n_m):
     try:
         df_u = conn.read(spreadsheet=KULLANICILAR_URL, ttl=0)
-        idx = df_u[df_u['ogrenci_no'] == st.session_state.user['ogrenci_no']].index[0]
-        df_u.at[idx, 'toplam_puan'] = int(float(df_u.at[idx, 'toplam_puan'])) + puan
-        df_u.at[idx, 'mevcut_egzersiz'] = str(n_id)
-        df_u.at[idx, 'mevcut_modul'] = int(float(n_m))
+        u_idx = df_u[df_u['ogrenci_no'] == st.session_state.user['ogrenci_no']].index[0]
         
-        # Otomatik Rütbe Güncelleme
-        xp = int(df_u.at[idx, 'toplam_puan'])
-        if xp > 1000: r = "🏆 Bilge"
-        elif xp > 500: r = "🔥 Savaşçı"
-        elif xp > 200: r = "🐍 Pythonist"
+        # Puan ve İlerleme Güncelleme
+        yeni_puan = int(float(df_u.at[u_idx, 'toplam_puan'])) + puan
+        df_u.at[u_idx, 'toplam_puan'] = yeni_puan
+        df_u.at[u_idx, 'mevcut_egzersiz'] = str(n_id)
+        df_u.at[u_idx, 'mevcut_modul'] = int(float(n_m))
+        
+        # Otomatik Rütbe Algoritması
+        if yeni_puan >= 1000: r = "🏆 Bilge"
+        elif yeni_puan >= 500: r = "🔥 Savaşçı"
+        elif yeni_puan >= 200: r = "🐍 Pythonist"
         else: r = "🥚 Çömez"
-        df_u.at[idx, 'rutbe'] = r
+        df_u.at[u_idx, 'rutbe'] = r
         
         conn.update(spreadsheet=KULLANICILAR_URL, data=df_u)
 
+        # Aktivite Logu Yazma
         df_k = conn.read(spreadsheet=KAYITLAR_URL, ttl=0)
         yeni_log = pd.DataFrame([{
             "kayit_id": f"{st.session_state.user['ogrenci_no']}_{egz_id}",
@@ -79,7 +81,8 @@ def ilerleme_kaydet(puan, kod, egz_id, m_id, n_id, n_m):
         }])
         conn.update(spreadsheet=KAYITLAR_URL, data=pd.concat([df_k, yeni_log], ignore_index=True))
         
-        st.session_state.user = df_u.iloc[idx].to_dict()
+        # Hafıza Resetleme
+        st.session_state.user = df_u.iloc[u_idx].to_dict()
         st.session_state.error_count, st.session_state.cevap_dogru, st.session_state.pito_mod = 0, False, "merhaba"
         st.session_state.last_code = ""
         st.rerun()
@@ -87,12 +90,12 @@ def ilerleme_kaydet(puan, kod, egz_id, m_id, n_id, n_m):
 
 # --- 6. ANA AKIŞ ---
 mufredat = load_mufredat()
-if not mufredat: st.error("Müfredat Bulunamadı!"); st.stop()
+if not mufredat: st.error("Müfredat Dosyası Bulunamadı!"); st.stop()
 
 if st.session_state.user is None:
     st.title("🐍 Pito Python Akademi")
     pito_gorseli_yukle("merhaba")
-    numara = st.number_input("Öğrenci Numaranız:", step=1, value=0)
+    numara = st.number_input("Öğrenci Numarası:", step=1, value=0)
     
     if numara > 0:
         df_u = conn.read(spreadsheet=KULLANICILAR_URL, ttl=0)
@@ -113,8 +116,8 @@ if st.session_state.user is None:
                     conn.update(spreadsheet=KULLANICILAR_URL, data=pd.concat([df_u, yeni_ogrenci], ignore_index=True))
                     st.session_state.user = yeni_ogrenci.iloc[0].to_dict()
                     st.rerun()
+                else: st.error("Lütfen ad soyad girin!")
 else:
-    # --- DASHBOARD & EĞİTİM ---
     u = st.session_state.user
     m_idx = int(float(u['mevcut_modul'])) - 1
     
@@ -158,7 +161,9 @@ else:
                 n_id, n_m = (modul['egzersizler'][idx+1]['id'], u['mevcut_modul']) if idx+1 < len(modul['egzersizler']) else (f"{m_idx + 2}.1", m_idx + 2)
                 if st.button("Sonraki Göreve Geç ➡️"): ilerleme_kaydet(puan_pot, st.session_state.last_code, egz['id'], u['mevcut_modul'], n_id, n_m)
             elif st.session_state.error_count >= 4:
-                st.error("🚫 Kilitlendi."); with st.expander("📖 Çözüm"): st.code(egz['cozum'])
+                st.error("🚫 Kilitlendi.")
+                with st.expander("📖 Çözüm"):
+                    st.code(egz['cozum'])
                 idx = modul['egzersizler'].index(egz)
                 n_id, n_m = (modul['egzersizler'][idx+1]['id'], u['mevcut_modul']) if idx+1 < len(modul['egzersizler']) else (f"{m_idx + 2}.1", m_idx + 2)
                 if st.button("Sıradaki Göreve Geç ➡️"): ilerleme_kaydet(0, "Çözüm İncelendi", egz['id'], u['mevcut_modul'], n_id, n_m)
