@@ -6,26 +6,16 @@
     "🐍 Selamlar! Python Akademi'nin kapıları senin için sonuna kadar açık. Başlayalım mı?"
   ],
   "errors": {
-    "level_1": [
-      "Ufak bir yazım kazası {}, bu senin 1. hatan. Kodu bir daha kontrol etmeye ne dersin?",
-      "Gözden kaçan bir şeyler var {}, bu 1. denemen. Python bazen çok titizdir!"
-    ],
-    "level_2": [
-      "{} dostum, bu 2. hatan oldu. Tırnaklara veya parantezlere özellikle dikkat et!",
-      "Hata 2! Sakin ol {}, kodun üzerinden bir kez daha geçelim arkadaşım."
-    ],
-    "level_3": [
-      "Pes etmek yok {}, bu 3. deneme! Bak sana bir ipucu hazırladım, işine yarayabilir.",
-      "{} arkadaşım, 3. denemedesin. İpucunu incele, çözüme çok yaklaştın!"
-    ],
-    "level_4": [
-      "Üzgünüm {}, 4. denemede de olmadı ve bu görevden maalesef puan kazanılamadı.",
-      "Maalesef {}, puan limitine ulaştık. Ama moral bozmak yok, çözümü inceleyip öğrenmeye devam!"
-    ]
+    "level_1": ["{}, bu senin 1. hatan arkadaşım. Kodu bir daha kontrol etmeye ne dersin?"],
+    "level_2": ["{} dostum, bu 2. hatan oldu. Tırnaklara veya parantezlere özellikle dikkat et!"],
+    "level_3": ["Pes etmek yok {}, bu 3. deneme! Bak sana bir ipucu hazırladım."],
+    "level_4": ["Maalesef {}, 4. hatada puan limitine ulaştık ve bu görevden puan kazanılamadı. Ama öğrenmeye devam!"]
   },
-  "success": [
-    "Vay canına {}! Kodun saat gibi tıkır tıkır çalıştı. +{} XP kazandın!",
-    "İşte bu! {} dostum, Python seni seviyor! Hanene +{} XP eklendi."
-  ],
-  "welcome": "👋 Selam {}! Bugün Python dünyasında hangi kapıları aralayacağız?"
+  "success": ["Vay canına {}! Kodun saat gibi tıkır tıkır çalıştı. +{} XP kazandın!"],
+  "welcome": "👋 Selam {}! Bugün Python dünyasında hangi kapıları aralayacağız?",
+  "graduation": [
+    "🏆 İNANILMAZ! {} dostum, Python Akademisi'nin tüm zorluklarını aşarak bir BİLGE oldun! Seninle gurur duyuyorum arkadaşım!",
+    "🎓 Şapka çıkarıyorum {}! Nusaybin'in tozunu kodlarınla attırdın. Artık gerçek bir Python ustasısın. Yolun açık olsun genç yazılımcı!",
+    "🌟 Muazzam bir başarı! {} arkadaşım, tüm modülleri mühürledin ve zirveye ulaştın. Python dünyası artık senin oyun alanın!"
+  ]
 }
