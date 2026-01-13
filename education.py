@@ -1,10 +1,9 @@
 import streamlit as st
-import streamlit.components.v1 as components
 import random
-import json
+import re
 
 def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fonksiyonu, normalize_fonksiyonu, supabase):
-    """Siber-Buz Akıllı Akış Editörü: Yazdıkça genişleyen inline girişler."""
+    """Pito Dedektif Editörü: Tek blok, korumalı iskelet sistemi."""
     
     m_idx = int(u['mevcut_modul']) - 1
     total_m = len(mufredat)
@@ -19,7 +18,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
     
     cl, cr = st.columns([7, 3])
     with cl:
-        # Pito ve Bilgi Kartı
+        # Pito ve Durum Paneli
         p_xp = max(0, 20 - (st.session_state.error_count * 5))
         p_mod = emotions_module.pito_durum_belirle(st.session_state.error_count, st.session_state.cevap_dogru)
         
@@ -32,112 +31,72 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             else:
                 st.markdown(f"<div class='pito-notu'>💬 {msgs['welcome'].format(ad_k)}</div>", unsafe_allow_html=True)
 
-        # --- 2. AKILLI AKIŞ EDİTÖRÜ (INLINE) ---
+        # --- 2. KORUMALI TEK BLOK EDİTÖR ---
         if not st.session_state.cevap_dogru and st.session_state.error_count < 4:
             st.markdown(f"<div class='gorev-box'><span class='gorev-label'>📍 GÖREV {egz['id']}</span><div class='gorev-text'>{egz['yonerge']}</div></div>", unsafe_allow_html=True)
             
-            sablon = egz.get('sablon', '')
-            parcalar = sablon.split("___")
+            # Başlangıçta şablonu hafızaya al
+            if "last_valid_code" not in st.session_state or st.session_state.get("current_egz_id") != egz['id']:
+                st.session_state.last_valid_code = egz['sablon']
+                st.session_state.current_egz_id = egz['id']
+
+            # İskelet parçalarını belirle (___ dışındaki her şey)
+            skeletons = egz['sablon'].split("___")
             
-            # HTML ve JavaScript ile Akıllı Editörü Oluşturuyoruz
-            html_content = f"""
-            <style>
-                .editor-container {{
-                    background: #0e1117;
-                    color: #ADFF2F;
-                    padding: 20px;
-                    border-radius: 10px;
-                    border: 1px solid #ADFF2F;
-                    font-family: 'Courier New', monospace;
-                    font-size: 16px;
-                    line-height: 2;
-                    white-space: pre-wrap;
-                    word-wrap: break-word;
-                }}
-                .inline-input {{
-                    background: transparent;
-                    border: none;
-                    border-bottom: 2px dashed #ADFF2F;
-                    color: #ffffff;
-                    font-family: 'Courier New', monospace;
-                    font-size: 16px;
-                    padding: 0 5px;
-                    min-width: 35px;
-                    width: 35px;
-                    outline: none;
-                    transition: width 0.1s;
-                }}
-                .inline-input:focus {{
-                    border-bottom: 2px solid #ffffff;
-                }}
-                .check-btn {{
-                    background: #ADFF2F;
-                    color: #000;
-                    border: none;
-                    padding: 10px 20px;
-                    border-radius: 5px;
-                    font-weight: bold;
-                    cursor: pointer;
-                    margin-top: 20px;
-                    width: 100%;
-                }}
-            </style>
-            <div class="editor-container" id="editor">
-            """
-
-            for i, parca in enumerate(parcalar):
-                html_content += f"<span>{parca}</span>"
-                if i < len(parcalar) - 1:
-                    html_content += f'<input type="text" class="inline-input" id="inp_{i}" placeholder="___" oninput="autoWidth(this)">'
+            st.markdown("💻 **Pito Kod Bloğu (Sadece ___ alanlarını doldur):**")
             
-            html_content += f"""
-            </div>
-            <button class="check-btn" onclick="submitCode()">Kodu Sisteme Gönder 🚀</button>
+            # TEK BLOK EDİTÖR
+            user_code = st.text_area(
+                "Kod Alanı",
+                value=st.session_state.last_valid_code,
+                height=180,
+                key=f"editor_{egz['id']}",
+                label_visibility="collapsed",
+                help="Kodun iskeletini silersen Pito seni uyaracaktır!"
+            )
 
-            <script>
-                function autoWidth(el) {{
-                    el.style.width = ((el.value.length + 3) * 10) + "px";
-                }}
-                
-                function submitCode() {{
-                    let finalCode = "";
-                    const parcalar = {json.dumps(parcalar)};
-                    for(let i=0; i < parcalar.length; i++) {{
-                        finalCode += parcalar[i];
-                        if(i < parcalar.length - 1) {{
-                            finalCode += document.getElementById("inp_" + i).value;
-                        }}
-                    }}
-                    // Streamlit'e veriyi gönder
-                    const data = {{ "type": "pito_code", "code": finalCode }};
-                    window.parent.postMessage({{ isStreamlitMessage: true, type: "streamlit:setComponentValue", value: data }}, "*");
-                }}
-            </script>
-            """
+            # --- DEDEKTİF KONTROLÜ ---
+            # İskelet parçaları hala yerinde mi ve sırası doğru mu?
+            is_legal = True
+            for part in skeletons:
+                if part not in user_code:
+                    is_legal = False
+                    break
+            
+            if not is_legal:
+                st.warning("⚠️ **Pito:** 'Hey! Kodun iskeletini bozdun arkadaşım. Lütfen sadece ___ olan yerleri değiştir!'")
+                # Hata yapıldığında butonu pasif kılmak veya uyarıyı göstermek yeterli
+            else:
+                st.session_state.last_valid_code = user_code # Geçerliyse kaydet
 
-            # HTML Bileşenini Render Et
-            # components.html'den gelen veriyi yakalamak için st_js_connection benzeri bir mantık kullanılır.
-            # Şimdilik en stabil yol: Bileşen değerini 'st.session_state' üzerinden kontrol etmek.
-            response = components.html(html_content, height=400, scrolling=True)
-
-            # Not: Veri yakalama için ana dosyada bir 'listener' olması gerekir.
-            # Basitlik için manuel kontrol butonu (Streamlit native) ekleyelim:
-            st.info("💡 Yukarıdaki 'Sisteme Gönder' butonuna bastıktan sonra aşağıdaki kontrolü onayla.")
-            if st.button("Pito, Kodumu Kontrol Et! 🔍", use_container_width=True):
-                # Bu kısım JS'den gelen 'finalCode'u session_state üzerinden okur
-                # (Custom component geliştirme aşamasında olduğumuz için şimdilik text_area simülasyonu)
-                if st.session_state.get('current_code'):
-                    if normalize_fonksiyonu(st.session_state.current_code) == normalize_fonksiyonu(egz['dogru_cevap_kodu']):
-                        st.session_state.cevap_dogru = True
-                    else:
-                        st.session_state.error_count += 1
-                    st.rerun()
+            st.write("---")
+            if st.button("Kodu Çalıştır 🚀", use_container_width=True, disabled=not is_legal):
+                st.session_state.current_code = user_code
+                if normalize_fonksiyonu(user_code) == normalize_fonksiyonu(egz['dogru_cevap_kodu']):
+                    st.session_state.cevap_dogru = True
+                else:
+                    st.session_state.error_count += 1
+                st.rerun()
 
         # --- BAŞARI VE HATA ---
         elif st.session_state.cevap_dogru:
-            st.success(f"✅ Harika! Kod tam istediğim gibi akıyor {ad_k}.")
+            st.success(f"✅ Harika! Kod tıkır tıkır çalışıyor {ad_k}.")
             st.code(st.session_state.current_code, language="python")
             if st.button("Sonraki Göreve Geç ➡️", use_container_width=True):
+                # Resetleme ve ilerleme
+                st.session_state.last_valid_code = None
                 s_idx = modul['egzersizler'].index(egz) + 1
                 n_id, n_m = (modul['egzersizler'][s_idx]['id'], u['mevcut_modul']) if s_idx < len(modul['egzersizler']) else (f"{int(u['mevcut_modul'])+1}.1", int(u['mevcut_modul']) + 1)
                 ilerleme_fonksiyonu(p_xp, st.session_state.current_code, egz['id'], n_id, n_m)
+        
+        elif st.session_state.error_count >= 4:
+            st.warning("🚨 Çözümü inceleyip yeni göreve geçebilirsin.")
+            st.code(egz['cozum'], language="python")
+            if st.button("Sıradaki Göreve Geç ➡️", use_container_width=True):
+                st.session_state.last_valid_code = None
+                s_idx = modul['egzersizler'].index(egz) + 1
+                n_id, n_m = (modul['egzersizler'][s_idx]['id'], u['mevcut_modul']) if s_idx < len(modul['egzersizler']) else (f"{int(u['mevcut_modul'])+1}.1", int(u['mevcut_modul']) + 1)
+                ilerleme_fonksiyonu(0, "Çözüm İncelendi", egz['id'], n_id, n_m)
+
+    with cr:
+        ranks_module.liderlik_tablosu_goster(supabase, current_user=u)
