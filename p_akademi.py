@@ -3,7 +3,7 @@ import json
 import re
 from supabase import create_client, Client
 
-# Özel Modüllerimiz (Aynı dizinde bulunmalıdır)
+# Özel Modüllerimiz (Aynı dizinde bulunduğundan emin ol!)
 import auth
 import mechanics
 import ranks
@@ -19,7 +19,7 @@ st.set_page_config(
 
 def load_resources():
     try:
-        # style.json'dan CSS zırhını yükle
+        # style.json'dan siber-buz temasını yükle
         with open('style.json', 'r', encoding='utf-8') as f:
             st.markdown(json.load(f)['siber_buz_armor'], unsafe_allow_html=True)
         # messages.json'dan Pito ses bankasını yükle
@@ -34,7 +34,6 @@ load_resources()
 @st.cache_resource
 def init_supabase():
     try:
-        # Client'ı oluştur ve ana değişken olarak dön
         return create_client(st.secrets["supabase"]["url"], st.secrets["supabase"]["key"])
     except:
         st.error("⚠️ Supabase bağlantısı kurulamadı!"); st.stop()
@@ -66,7 +65,7 @@ def ilerleme_kaydet(puan, kod, egz_id, n_id, n_m):
         "basarili_kod": str(kod)
     }).execute()
     
-    # Session State Güncelleme
+    # Local State Güncelleme
     st.session_state.user.update({
         "toplam_puan": yeni_xp, 
         "mevcut_egzersiz": str(n_id), 
@@ -76,8 +75,7 @@ def ilerleme_kaydet(puan, kod, egz_id, n_id, n_m):
     st.session_state.error_count, st.session_state.cevap_dogru, st.session_state.current_code = 0, False, ""
     st.rerun()
 
-# --- 4. SESSION STATE (ZIRHLI HAFIZA) ---
-# NameError hatalarını engellemek için tüm anahtarları önceden tanımlıyoruz
+# --- 4. SESSION STATE (NAMEERROR ZIRHI) ---
 keys = ["user", "temp_user", "show_reg", "error_count", "cevap_dogru", "current_code", "user_num", "in_review"]
 for k in keys:
     if k not in st.session_state:
@@ -107,28 +105,31 @@ else:
     u = st.session_state.user
     m_idx = int(u['mevcut_modul']) - 1
     
-    # Navigasyon (İnceleme Modu Butonu)
-    c_nav1, c_nav2 = st.columns([4, 1])
-    with c_nav2:
-        if st.button("🔍 İnceleme Modu"):
-            st.session_state.in_review = True
-            st.rerun()
+    # Üst Navigasyon (Sadece eğitim modunda inceleme butonu gösterilir)
+    if not st.session_state.in_review and m_idx < len(mufredat):
+        c_nav1, c_nav2 = st.columns([4, 1])
+        with c_nav2:
+            if st.button("🔍 İnceleme Modu", use_container_width=True):
+                st.session_state.in_review = True
+                st.rerun()
 
-    # İnceleme Modu Aktifse
+    # DURUM YÖNETİMİ
     if st.session_state.in_review:
+        # Geçmiş kodları inceleme paneli
         mechanics.inceleme_modu_paneli(u, mufredat, emotions.pito_goster, supabase)
     
-    # Mezuniyet Durumu (Müfredat tamamlandıysa)
     elif m_idx >= len(mufredat):
+        # Mezuniyet: Sertifika, Onur Kürsüsü ve Sıfırlama
         mechanics.mezuniyet_ekrani(
             u, 
             st.session_state.pito_messages, 
             emotions.pito_goster, 
-            supabase
+            supabase,
+            ranks
         )
     
-    # Eğitim Akışı (Ders İşleme Modu)
     else:
+        # Normal Eğitim Akışı
         education.egitim_ekrani(
             u, 
             mufredat, 
