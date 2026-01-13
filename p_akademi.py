@@ -7,7 +7,7 @@ import re
 import base64
 from supabase import create_client, Client
 
-# --- 1. SİBER-ESTETİK TASARIM VE KESİN GÖRÜNÜRLÜK MÜHRÜ ---
+# --- 1. SİBER-ZIRH: GÖRSEL VE ESTETİK MÜHÜRLEME ---
 st.set_page_config(
     page_title="Pito Python Akademi", 
     layout="wide", 
@@ -16,22 +16,30 @@ st.set_page_config(
 
 st.markdown("""
     <style>
-    /* 1. ANA TEMA VE MUTLAK KARANLIK */
+    /* ANA TEMA VE SAYFA YAPISI - MUTLAK KARARLILIK */
     .stApp { 
         background-color: #0E1117 !important; 
         color: #FFFFFF !important; 
     }
     .stApp > header { display: none; }
-    
-    /* SAYFA ÜSTÜ BOŞLUK */
     .block-container { 
-        padding-top: 5rem !important; 
+        padding-top: 5.5rem !important; 
         padding-bottom: 2rem !important;
         padding-left: 5% !important;
         padding-right: 5% !important;
     }
 
-    /* 2. MODÜL İSMİ (HERO PANEL) - KESİN KONTRAST */
+    /* PARLAYAN NEON BAŞLIK - GİRİŞ EKRANI Ruhu */
+    .academy-title { 
+        font-size: 3.8em !important; font-weight: 900 !important; text-align: left !important;
+        background: linear-gradient(90deg, #00FF00, #00CCFF) !important; 
+        -webkit-background-clip: text !important; -webkit-text-fill-color: transparent !important; 
+        margin-bottom: 30px !important; line-height: 1.1 !important;
+        filter: drop-shadow(0 0 15px rgba(0, 255, 0, 0.6)) !important;
+        text-shadow: 0 0 10px rgba(0, 255, 0, 0.3) !important;
+    }
+
+    /* MODÜL İSMİ (HERO PANEL) - BEYAZ ÜSTÜNE BEYAZ SORUNU ÇÖZÜMÜ */
     .hero-panel { 
         background-color: #161b22 !important; 
         padding: 25px !important; 
@@ -41,86 +49,74 @@ st.markdown("""
         border: 1px solid #30363d !important;
     }
     .hero-panel h3 { 
-        color: #00FF00 !important; /* Modül İsmi Her Zaman Neon Yeşil */
+        color: #00FF00 !important; 
         font-weight: 900 !important; 
         margin: 0 !important;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.9) !important;
+        text-shadow: 2px 2px 5px rgba(0,0,0,1) !important;
+        -webkit-text-fill-color: #00FF00 !important;
     }
-    .hero-panel p { color: #E0E0E0 !important; }
 
-    /* 3. PİTO'NUN ÇÖZÜMÜ VE KOD BLOKLARI TAMİRİ */
-    /* Çözüm kutusunun (Expander) kendisi */
+    /* PİTO'NUN ÇÖZÜMÜ VE KOD BLOKLARI - OKUNURLUK MÜHRÜ */
     [data-testid="stExpander"] {
         background-color: #1E1E2F !important;
         border: 1px solid #00FF00 !important;
         border-radius: 12px !important;
     }
-    /* Çözüm içindeki kod bloğu (Code Block) */
-    [data-testid="stCodeBlock"], .stCode, code {
+    [data-testid="stExpander"] details summary p {
+        color: #00FF00 !important; font-weight: 800 !important;
+    }
+    /* Kod bloklarının içini karartıp metni yeşil/beyaz yapma */
+    [data-testid="stCodeBlock"] {
         background-color: #000000 !important;
-        color: #00FF00 !important; /* Kod metni neon yeşil kalsın veya beyaz */
         border: 1px solid #333 !important;
+        border-radius: 8px !important;
     }
-    /* Kod bloğu içindeki metinlerin beyaz kalmasını zorla */
-    [data-testid="stCodeBlock"] pre {
+    code, .stCodeBlock pre {
         background-color: #000000 !important;
-    }
-    [data-testid="stCodeBlock"] code span {
-        color: inherit !important;
+        color: #00FF00 !important;
     }
 
-    /* 4. GÖREV KUTUSU - YÜKSEK KONTRAST */
+    /* GÖREV KUTUSU - YÜKSEK KONTRAST */
     .gorev-box {
         background-color: #1E1E2F !important;
         border: 2px solid #00CCFF !important;
-        border-radius: 12px;
-        padding: 22px;
-        margin-bottom: 25px;
+        border-radius: 12px; padding: 22px; margin-bottom: 25px;
     }
     .gorev-label {
-        color: #00CCFF !important; 
-        font-weight: 900 !important;
-        font-size: 1.2em !important;
-        display: block;
-        margin-bottom: 10px;
+        color: #00CCFF !important; font-weight: 900 !important;
+        font-size: 1.25em !important; display: block; margin-bottom: 12px;
     }
     .gorev-text { color: #FFFFFF !important; font-size: 1.15em !important; line-height: 1.6; }
 
-    /* 5. PARLAYAN NEON BAŞLIK */
-    .academy-title { 
-        font-size: 3.8em; font-weight: 900; text-align: left;
-        background: linear-gradient(90deg, #00FF00, #00CCFF); 
-        -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
-        margin-bottom: 30px; line-height: 1.1;
-        filter: drop-shadow(0 0 12px rgba(0, 255, 0, 0.4));
-    }
-
-    /* 6. ETİKETLER VE INPUTLAR */
+    /* ETİKETLER VE INPUTLAR */
     [data-testid="stWidgetLabel"] p {
-        color: #00FF00 !important;
-        font-weight: 900 !important;
-        font-size: 1.25em !important;
+        color: #00FF00 !important; font-weight: 900 !important; font-size: 1.3em !important;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8) !important;
     }
-    input, textarea {
-        color: #FFFFFF !important;
-        background-color: #000000 !important;
+    textarea, input {
+        color: #FFFFFF !important; background-color: #000000 !important;
         border: 1px solid #00FF00 !important;
     }
 
-    /* 7. SEKMELER VE DİĞERLERİ */
+    /* SEKMELER VE DURUM ÇUBUKLARI */
     .stTabs [data-baseweb="tab-list"] { background-color: #1E1E2F !important; padding: 10px; border-radius: 12px 12px 0 0; }
     .stTabs [data-baseweb="tab"] p { color: #E0E0E0 !important; font-weight: bold !important; }
     .stTabs [aria-selected="true"] { background-color: #00FF00 !important; }
     .stTabs [aria-selected="true"] p { color: #000000 !important; }
     
     .status-bar { display: flex; justify-content: space-between; background-color: #161b22; padding: 18px; border-radius: 15px; border: 1px solid #30363d; margin-bottom: 20px; }
-    .pito-notu { background-color: #1E1E2F; border-radius: 12px; padding: 22px; border-left: 6px solid #00FF00; margin-top: 15px; color: #E0E0E0; font-style: italic; }
-    .stButton>button { border-radius: 12px; background-color: #00FF00 !important; color: black !important; font-weight: 800; height: 3.8em; }
-    div.stProgress > div > div > div > div { background-color: #00FF00; }
+    .pito-notu { background-color: #1E1E2F !important; border-radius: 12px !important; padding: 22px !important; border-left: 6px solid #00FF00 !important; margin-top: 15px !important; color: #E0E0E0 !important; font-style: italic !important; }
+    .stButton>button { border-radius: 12px; background-color: #00FF00 !important; color: black !important; font-weight: 800; height: 3.8em; border: none !important; }
+    div.stProgress > div > div > div > div { background-color: #00FF00 !important; }
+    
+    .progress-label {
+        font-size: 0.95em; color: #00FF00 !important; font-weight: 900 !important; margin-bottom: 10px; 
+        display: flex; justify-content: space-between;
+    }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. SUPABASE VE MOTORLAR ---
+# --- 2. SUPABASE VE YARDIMCI MOTORLAR ---
 @st.cache_resource
 def init_supabase():
     try:
@@ -164,7 +160,7 @@ if "cevap_dogru" not in st.session_state: st.session_state.cevap_dogru = False
 if "pito_mod" not in st.session_state: st.session_state.pito_mod = "merhaba"
 if "current_code" not in st.session_state: st.session_state.current_code = ""
 
-# --- 4. NAVİGASYON MOTORU ---
+# --- 4. NAVİGASYON VE İLERLEME MOTORU ---
 def ilerleme_kaydet(puan, kod, egz_id, n_id, n_m):
     try:
         yeni_xp = int(st.session_state.user['toplam_puan']) + puan
@@ -193,16 +189,16 @@ def liderlik_tablosu_goster(user_sinif=None):
         df = pd.DataFrame(res.data)
         with t_okul:
             for i, r in enumerate(df.sort_values(by="toplam_puan", ascending=False).head(8).itertuples(), 1):
-                st.markdown(f"<div class='leader-card'><span>{i}. {r.ad_soyad}</span><code>{int(r.toplam_puan)} XP</code></div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='leader-card' style='background:#1E1E2F; padding:10px; border-radius:10px; margin-bottom:8px; border:1px solid #333; display:flex; justify-content:space-between;'><span>{i}. {r.ad_soyad}</span><code>{int(r.toplam_puan)} XP</code></div>", unsafe_allow_html=True)
         with t_sinif:
             s_filter = user_sinif if user_sinif else "9-A"
             df_s = df[df['sinif'] == s_filter].sort_values(by="toplam_puan", ascending=False).head(8)
             for i, r in enumerate(df_s.itertuples(), 1):
-                st.markdown(f"<div class='leader-card'><span>#{i} {r.ad_soyad}</span><code>{int(r.toplam_puan)} XP</code></div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='leader-card' style='background:#1E1E2F; padding:10px; border-radius:10px; margin-bottom:8px; border:1px solid #333; display:flex; justify-content:space-between;'><span>#{i} {r.ad_soyad}</span><code>{int(r.toplam_puan)} XP</code></div>", unsafe_allow_html=True)
         with t_pano:
             df_p = df.groupby('sinif')['toplam_puan'].sum().sort_values(ascending=False).reset_index()
             for i, r in enumerate(df_p.itertuples(), 1):
-                st.markdown(f"<div class='leader-card'><span>🏆 {i}. {r.sinif}</span><code>{int(r.toplam_puan)} XP</code></div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='leader-card' style='background:linear-gradient(90deg, #FFD700, #FFA500); color:black; padding:10px; border-radius:10px; margin-bottom:8px; display:flex; justify-content:space-between;' if i==1 else 'background:#1E1E2F; padding:10px; border-radius:10px; margin-bottom:8px; border:1px solid #333; display:flex; justify-content:space-between;'><span>🏆 {i}. {r.sinif}</span><code>{int(r.toplam_puan)} XP</code></div>", unsafe_allow_html=True)
     except: st.write("Yükleniyor...")
 
 # --- 6. ANA PROGRAM AKIŞI ---
@@ -226,24 +222,24 @@ else:
         m_idx = int(u['mevcut_modul']) - 1
         total_m = len(mufredat)
         
-        st.markdown(f"<div class='progress-label'><span>🎓 Akademi Yolculuğu</span><span>{m_idx + 1} / {total_m} Modül</span></div>", unsafe_allow_html=True)
+        # ÜST GLOBAL İLERLEME (BELİRTEÇLİ)
+        st.markdown(f"<div class='progress-label'><span>🎓 Akademi Yolculuğu</span><span>Modül {m_idx + 1} / {total_m}</span></div>", unsafe_allow_html=True)
         st.progress(min((m_idx) / total_m, 1.0) if total_m > 0 else 0)
 
         if m_idx >= total_m:
             st.balloons(); pito_gorseli_yukle("mezun", size=280)
             st.markdown(f"<h2 style='text-align:center; color:#00FF00;'>🏆 TEBRİKLER {u['ad_soyad'].upper()}!</h2>", unsafe_allow_html=True)
-            if st.button("🔄 Sıfırdan Başla"):
+            if st.button("🔄 Akademiyi Baştan Başlat"):
                 supabase.table("kullanicilar").update({"toplam_puan": 0, "mevcut_egzersiz": "1.1", "mevcut_modul": 1}).eq("ogrenci_no", u['ogrenci_no']).execute()
                 st.session_state.user = None; st.rerun()
         else:
             modul = mufredat[m_idx]
             egz = next((e for e in modul['egzersizler'] if e['id'] == str(u['mevcut_egzersiz'])), modul['egzersizler'][0])
             
-            # HERO PANEL - MODÜL İSMİ TAMİRİ
             st.markdown(f"<div class='hero-panel'><h3>🚀 {modul['modul_adi']}</h3><p>{u['ad_soyad']} | {u['rutbe']} | {int(u['toplam_puan'])} XP</p></div>", unsafe_allow_html=True)
             
             with st.expander(f"📖 KONU ANLATIMI: {modul['modul_adi']}", expanded=True):
-                st.markdown(f"<div class='anlatim-box'>{modul.get('pito_anlatimi', 'Yükleniyor...')}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='anlatim-box' style='background:#000; color:#fff; padding:15px; border-radius:10px;'>{modul.get('pito_anlatimi', 'İçerik yükleniyor...')}</div>", unsafe_allow_html=True)
 
             c_idx, t_egz = modul['egzersizler'].index(egz) + 1, len(modul['egzersizler'])
             st.markdown(f"<div class='progress-label'><span>🗺️ Modül Görevleri</span><span>{c_idx} / {t_egz} Görev</span></div>", unsafe_allow_html=True)
@@ -267,26 +263,33 @@ else:
                     st.session_state.current_code = k_in
                     if kod_normalize_et(k_in) == kod_normalize_et(egz['dogru_cevap_kodu']):
                         st.session_state.cevap_dogru, st.session_state.pito_mod = True, "basari"
-                    else: st.session_state.error_count += 1; st.rerun()
+                    else:
+                        st.session_state.error_count += 1
+                        st.session_state.pito_mod = "hata"
+                    st.rerun()
             elif st.session_state.cevap_dogru:
                 st.success(f"✅ Harika! +{p_pot} XP")
-                st.markdown(f"<div class='console-box'>💻 Çıktı: {egz.get('beklenen_cikti', 'Tamamlandı.')}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='console-box' style='background:#000; color:#0f0; border:1px solid #333; padding:15px;'>💻 Çıktı: {egz.get('beklenen_cikti', 'Tamamlandı.')}</div>", unsafe_allow_html=True)
                 if st.button("Sonraki Göreve Geç ➡️"):
                     s_idx = modul['egzersizler'].index(egz) + 1
                     if s_idx < len(modul['egzersizler']):
                         n_id, n_m = modul['egzersizler'][s_idx]['id'], u['mevcut_modul']
-                    else: n_id, n_m = f"{u['mevcut_modul']+1}.1", u['mevcut_modul'] + 1
+                    else:
+                        n_id, n_m = f"{u['mevcut_modul']+1}.1", u['mevcut_modul'] + 1
                     ilerleme_kaydet(p_pot, st.session_state.current_code, egz['id'], n_id, n_m)
             elif st.session_state.error_count >= 4:
-                st.error("🚫 Puan kazanılamadı.")
+                st.error("🚫 Bu görevden puan kazanılamadı.")
                 with st.expander("📖 Pito'nun Çözümü", expanded=True):
-                    # KOD BLOĞU TAMİRİ BURADA
+                    # KOD BLOĞU VE ÇÖZÜM MÜHRÜ
+                    st.markdown("<div style='background-color:#000; padding:10px; border-radius:5px;'>", unsafe_allow_html=True)
                     st.code(egz['cozum'], language="python")
+                    st.markdown("</div>", unsafe_allow_html=True)
                 if st.button("Anladım, Sıradaki Göreve Geç ➡️"):
                     s_idx = modul['egzersizler'].index(egz) + 1
                     if s_idx < len(modul['egzersizler']):
                         n_id, n_m = modul['egzersizler'][s_idx]['id'], u['mevcut_modul']
-                    else: n_id, n_m = f"{u['mevcut_modul']+1}.1", u['mevcut_modul'] + 1
+                    else:
+                        n_id, n_m = f"{u['mevcut_modul']+1}.1", u['mevcut_modul'] + 1
                     ilerleme_kaydet(0, "Çözüm İncelendi", egz['id'], n_id, n_m)
 
     with col_side: 
