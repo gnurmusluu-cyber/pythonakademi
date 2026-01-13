@@ -29,30 +29,33 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             flex-wrap: wrap;
         }
 
-        /* PITO GIF ÇERÇEVESİ (KOKPİT) */
+        /* PITO GIF ÇERÇEVESİ (KOKPİT) - BÜYÜTÜLDÜ */
         .hud-pito-gif img {
-            width: 45px;
-            height: 45px;
+            width: 65px;  /* Daha belirgin boyut */
+            height: 65px;
             border-radius: 50%;
-            border: 2px solid #00E5FF;
+            border: 3px solid #00E5FF; /* Çerçeve biraz kalınlaştırıldı */
             object-fit: cover;
             background: #000;
-            margin-right: 12px;
+            margin-right: 15px;
         }
 
-        .hud-item { color: #E0E0E0; font-family: 'Fira Code', monospace; font-size: 0.85rem; margin: 2px 8px; }
+        .hud-item { color: #E0E0E0; font-family: 'Fira Code', monospace; font-size: 0.9rem; margin: 2px 8px; }
         .hud-v { color: #00E5FF; font-weight: bold; text-shadow: 0 0 5px #00E5FF; }
 
-        /* HUD Altında Kalmaması İçin İçerik Kaydırma */
-        .main-container { margin-top: 75px; }
+        /* HUD Altında Kalmaması İçin İçerik Kaydırma - OPTİMİZE EDİLDİ */
+        /* Bar büyüdüğü için boşluk artırıldı */
+        .main-container { margin-top: 90px; } 
 
         /* MOBİL UYUMLULUK ZIRHI */
         @media (max-width: 768px) {
             .cyber-hud { padding: 8px 10px; justify-content: center; }
-            .hud-item { font-size: 0.75rem; margin: 2px 5px; }
-            .main-container { margin-top: 115px; }
-            .hud-pito-gif img { width: 35px; height: 35px; margin-right: 8px; }
-            .academy-header { font-size: 1.5rem !important; }
+            .hud-item { font-size: 0.8rem; margin: 2px 5px; }
+            /* Mobilde bar daha çok yer kaplayabilir, boşluğu artırıyoruz */
+            .main-container { margin-top: 130px; }
+            /* Mobilde de Pito daha büyük */
+            .hud-pito-gif img { width: 50px; height: 50px; margin-right: 10px; border-width: 2px; }
+            .academy-header { font-size: 1.6rem !important; margin-bottom: 10px !important; }
         }
 
         .console-box {
@@ -92,7 +95,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
                 <div class="hud-pito-gif"><img src="{pito_gif}" alt="Pito"></div>
                 <div class="hud-item">👤 <span class="hud-v">{u['ad_soyad']}</span></div>
             </div>
-            <div style="display: flex; align-items: center;">
+            <div style="display: flex; align-items: center; flex-wrap: wrap; justify-content: center;">
                 <div class="hud-item">💎 Potansiyel: <span class="hud-v">{p_xp} XP</span></div>
                 <div class="hud-item">⚠️ Hata: <span class="hud-v">{st.session_state.error_count}/4</span></div>
                 <div class="hud-item">🏆 Toplam: <span class="hud-v">{int(u['toplam_puan'])} XP</span></div>
