@@ -1,3 +1,58 @@
-{
-  "siber_buz_armor": "<style>html, body, [data-testid='stAppViewContainer'], .stApp { background-color: #0E1117 !important; color: #E0E0E0 !important; } .stApp > header { display: none; } .block-container { padding-top: 4rem !important; padding-left: 5% !important; padding-right: 5% !important; } .academy-title { font-size: 3.5em !important; font-weight: 900 !important; background: linear-gradient(90deg, #ADFF2F, #00CCFF) !important; -webkit-background-clip: text !important; -webkit-text-fill-color: transparent !important; margin-bottom: 20px !important; } .hero-panel { background-color: #ADFF2F !important; padding: 20px !important; border-radius: 12px !important; margin-bottom: 20px !important; border: 2px solid #FFFFFF !important; box-shadow: 0 0 15px rgba(173, 255, 47, 0.3) !important;} .hero-panel h3, .hero-panel p { color: #000000 !important; font-weight: 950 !important; margin: 0 !important; text-transform: uppercase; } .progress-label { font-size: 0.9em; color: #ADFF2F; font-weight: 900; display: flex; justify-content: space-between; margin-bottom: 2px; margin-top: 10px; } div.stProgress > div > div > div > div { background-color: #ADFF2F !important; } .gorev-box { background-color: #1E1E2F !important; border: 2px solid #00CCFF !important; border-radius: 12px; padding: 22px; margin-bottom: 20px; } .gorev-label { color: #00CCFF !important; font-weight: 900; font-size: 1.25em; display: block; margin-bottom: 10px; } .gorev-text { color: #FFFFFF !important; font-size: 1.15em !important; line-height: 1.6; } .console-box { background-color: #000000 !important; color: #00CCFF !important; padding: 15px; border-radius: 10px; border: 1px solid #00CCFF; font-family: monospace; margin-top: 10px; } .rank-badge { padding: 4px 12px !important; border-radius: 20px !important; font-size: 0.7em !important; font-weight: 800 !important; text-transform: uppercase !important; border: 1px solid #000; display: inline-block; } .badge-comez { background-color: #4B4B4B !important; color: #FFFFFF !important; } .badge-pythonist { background-color: #00CCFF !important; color: #000000 !important; } .badge-savasci { background-color: #FF4B4B !important; color: #FFFFFF !important; } .badge-bilge { background-color: #FFD700 !important; color: #000000 !important; box-shadow: 0 0 10px #FFD700; } .leader-card { background: #1E1E2F !important; border: 1px solid #30363d !important; border-radius: 10px !important; padding: 10px 15px !important; margin-bottom: 8px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; } [data-testid='stExpander'] { background-color: #1E1E2F !important; border: 2px solid #ADFF2F !important; border-radius: 12px !important; margin-bottom: 15px; } [data-testid='stExpander'] summary { background-color: #ADFF2F !important; border-radius: 10px 10px 0 0 !important; color: #000000 !important; } [data-testid='stExpander'] summary p { color: #000000 !important; font-weight: 900 !important; } .stTabs [data-baseweb='tab-list'] { background-color: #1E1E2F !important; border-radius: 12px; padding: 5px; } .stTabs [data-baseweb='tab'] p { color: #ADFF2F !important; font-weight: bold !important; } .stTabs [aria-selected='true'] { background-color: #ADFF2F !important; border-radius: 8px; } .stTabs [aria-selected='true'] p { color: #000000 !important; font-weight: 900 !important; } [data-testid='stWidgetLabel'] p { color: #ADFF2F !important; font-weight: 900; } textarea, input { color: #00CCFF !important; background-color: #000000 !important; border: 1px solid #ADFF2F !important; } .stButton>button { border-radius: 12px; background-color: #ADFF2F !important; color: black !important; font-weight: 900; height: 3.5em; width: 100%; } .pito-notu { background-color: #1E1E2F !important; border-radius: 12px; padding: 20px; border-left: 6px solid #ADFF2F; color: #E0E0E0; font-style: italic; } .diploma-box { text-align: center; padding: 50px; background: #161b22; border-radius: 30px; border: 5px solid #FFD700; box-shadow: 0 0 30px rgba(255, 215, 0, 0.3); margin-top: 20px; }</style>"
-}
+import streamlit as st
+import pandas as pd
+
+def mezuniyet_ekrani(u, msgs, pito_goster, supabase):
+    """Tüm modülleri bitiren öğrenci için mezuniyet törenini yönetir."""
+    st.balloons() # Kutlama balonları!
+    st.snow()     # Ve Nusaybin'e biraz kar yağdıralım :)
+    
+    st.markdown("<div class='academy-title'>🎓 PİTO PYHTON AKADEMİ MEZUNİYETİ</div>", unsafe_allow_html=True)
+    
+    c1, c2 = st.columns([1, 2])
+    with c1:
+        pito_goster("basari") # Mezuniyet için Pito çok mutlu!
+    with c2:
+        st.markdown(f"""
+            <div class='pito-notu'>
+                💬 <b>Pito:</b> {msgs['mezuniyet_mesaji'].format(u['ad_soyad'])}
+            </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown(f"""
+        <div class='gorev-box' style='text-align:center; border: 2px solid #ADFF2F;'>
+            <h2 style='color:#ADFF2F;'>📜 BAŞARI SERTİFİKASI</h2>
+            <p>Sayın <b>{u['ad_soyad']}</b>,<br>
+            Python dilinin temellerini başarıyla kavrayarak Pito Python Akademi'den 
+            <b>{u['toplam_puan']} XP</b> ile mezun olmaya hak kazandınız.</p>
+            <hr>
+            <p><i>Nusaybin Süleyman Bölünmez Anadolu Lisesi - 2026</i></p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    if st.button("🔍 Eski Kodlarımı İncelemek İstiyorum"):
+        st.session_state.in_review = True
+        st.rerun()
+
+def inceleme_modu_paneli(u, mufredat, pito_goster, supabase):
+    """Öğrencinin geçmişte yazdığı başarılı kodları görmesini sağlar."""
+    st.markdown("<h2 style='color:#ADFF2F;'>🔍 Geçmiş Görev İnceleme</h2>", unsafe_allow_html=True)
+    
+    if st.button("⬅️ Akademiye Dön"):
+        st.session_state.in_review = False
+        st.rerun()
+
+    try:
+        # AttributeError'u engellemek için doğrudan parametre olan supabase kullanıldı
+        res = supabase.table("egzersiz_kayitlari").select("*").eq("ogrenci_no", int(u['ogrenci_no'])).execute()
+        
+        if res.data:
+            df = pd.DataFrame(res.data)
+            for item in res.data:
+                with st.expander(f" Görev {item['egz_id']} | 💎 {item['alinan_puan']} XP"):
+                    st.code(item['basarili_kod'], language="python")
+                    st.info(f"Kayıt Tarihi: {item['created_at'][:10]}")
+        else:
+            st.info("Henüz kaydedilmiş bir görev çözümün bulunmuyor arkadaşım.")
+            
+    except Exception as e:
+        st.error(f"Veriler çekilirken bir sorun oluştu: {e}")
