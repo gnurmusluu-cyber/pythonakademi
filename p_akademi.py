@@ -16,10 +16,12 @@ st.set_page_config(
 
 st.markdown("""
     <style>
+    /* Ana Uygulama Teması */
     .stApp { background-color: #0E1117; color: #FFFFFF; }
     .stApp > header { display: none; }
     .block-container { padding-top: 2rem !important; }
     
+    /* Başlık ve Paneller */
     .academy-title { 
         font-size: 3.2em; font-weight: 800; text-align: left;
         background: linear-gradient(90deg, #00FF00, #00CCFF); 
@@ -31,11 +33,27 @@ st.markdown("""
         padding: 20px; border-radius: 15px; border-left: 8px solid #00FF00; 
         margin-bottom: 15px; box-shadow: 0 10px 30px rgba(0,255,0,0.1);
     }
-    .anlatim-box {
-        background-color: #161b22; border: 1px solid #30363d;
-        border-radius: 10px; padding: 20px; margin-bottom: 20px;
-        line-height: 1.6; color: #e6edf3; border-left: 5px solid #00CCFF;
+    
+    /* MODÜL ANLATIMI PANELİ TAMİRİ (BEYAZ EKRAN SORUNU ÇÖZÜMÜ) */
+    [data-testid="stExpander"] {
+        background-color: #1E1E2F !important;
+        border: 1px solid #30363d !important;
+        border-radius: 10px !important;
     }
+    [data-testid="stExpander"] details summary p {
+        color: #00FF00 !important; /* Başlık Yazısı: Parlayan Yeşil */
+        font-weight: bold !important;
+        font-size: 1.1em !important;
+    }
+    [data-testid="stExpander"] details summary {
+        background-color: #1E1E2F !important; /* Kapalıyken Arka Plan: Koyu Lacivert */
+    }
+    .anlatim-box {
+        background-color: #161b22; border-radius: 8px; padding: 15px;
+        line-height: 1.6; color: #e6edf3; border-left: 4px solid #00CCFF;
+    }
+
+    /* Oyunlaştırma Öğeleri */
     .progress-label {
         font-size: 0.85em; color: #00FF00; font-weight: bold; margin-bottom: 5px; 
         display: flex; justify-content: space-between;
@@ -133,27 +151,23 @@ def liderlik_tablosu_goster(user_sinif=None):
         df = pd.DataFrame(res.data)
         
         with t_okul:
-            # Okulun En İyi 8 Öğrencisi
             for i, r in enumerate(df.sort_values(by="toplam_puan", ascending=False).head(8).itertuples(), 1):
                 e = "🥇" if i==1 else "🥈" if i==2 else "🥉" if i==3 else f"{i}."
                 st.markdown(f"<div class='leader-card'><span>{e} {r.ad_soyad}</span><code>{int(r.toplam_puan)} XP</code></div>", unsafe_allow_html=True)
         
         with t_sinif:
-            # Öğrencinin Kendi Sınıfındaki Sıralaması
             s_filter = user_sinif if user_sinif else "9-A"
             df_s = df[df['sinif'] == s_filter].sort_values(by="toplam_puan", ascending=False).head(8)
-            st.caption(f"{s_filter} Sınıfı Liderleri")
             for i, r in enumerate(df_s.itertuples(), 1):
                 st.markdown(f"<div class='leader-card'><span>#{i} {r.ad_soyad}</span><code>{int(r.toplam_puan)} XP</code></div>", unsafe_allow_html=True)
         
         with t_pano:
-            # ŞAMPİYON SINIF PANOSU (Sınıf Toplam Puanları)
             df_p = df.groupby('sinif')['toplam_puan'].sum().sort_values(ascending=False).reset_index()
             for i, r in enumerate(df_p.itertuples(), 1):
                 css_class = "leader-card champion-class" if i == 1 else "leader-card"
                 st.markdown(f"<div class='{css_class}'><span>🏆 {i}. {r.sinif}</span><code>{int(r.toplam_puan)} XP</code></div>", unsafe_allow_html=True)
     except:
-        st.write("Veriler güncelleniyor...")
+        st.write("Onur kürsüsü hazırlanıyor...")
 
 # --- 6. İLERLEME KAYDET ---
 def ilerleme_kaydet(puan, kod, egz_id, n_id, n_m):
@@ -212,9 +226,9 @@ else:
             
             st.markdown(f"<div class='hero-panel'><div style='display:flex; justify-content:space-between; align-items:center;'><h3 style='margin:0;'>🚀 {u['ad_soyad']}</h3><span style='background:#00FF00; color:black; padding:2px 10px; border-radius:20px; font-weight:bold; font-size:0.8em;'>MODÜL {u['mevcut_modul']}</span></div><p style='margin:5px 0;'>{u['rutbe']} • {int(u['toplam_puan'])} XP</p></div>", unsafe_allow_html=True)
             
-            # --- MODÜL ANLATIMI ---
+            # --- MODÜL ANLATIMI PANELİ (GÖRSEL TAMİR EDİLDİ) ---
             with st.expander(f"📖 {modul['modul_adi']} - Pito Anlatımı", expanded=True):
-                st.markdown(f"<div class='anlatim-box'>{modul.get('pito_anlatimi', 'Açıklama yükleniyor...')}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='anlatim-box'>{modul.get('pito_anlatimi', 'Konu anlatımı yükleniyor...')}</div>", unsafe_allow_html=True)
 
             c_idx, t_egz = modul['egzersizler'].index(egz) + 1, len(modul['egzersizler'])
             st.markdown(f"<div class='progress-label'><span>🗺️ Modül İlerlemesi</span><span>{c_idx} / {t_egz} Görev</span></div>", unsafe_allow_html=True)
