@@ -6,7 +6,7 @@ import re
 import base64
 from supabase import create_client, Client
 
-# --- 1. SİBER-BUZ (MUTLAK HAKİMİYET) CSS ---
+# --- 1. SİBER-ZIRH: AGRESİF YÜKSEK KONTRAST CSS ---
 st.set_page_config(
     page_title="Pito Python Akademi", 
     layout="wide", 
@@ -15,29 +15,57 @@ st.set_page_config(
 
 st.markdown("""
     <style>
-    /* KÜRESEL KARANLIK MOD ZORLAMASI */
+    /* 1. KÜRESEL KARANLIK MOD */
     html, body, [data-testid="stAppViewContainer"], .stApp {
         background-color: #0E1117 !important;
         color: #E0E0E0 !important;
     }
     .stApp > header { display: none; }
-    .block-container { 
-        padding-top: 5rem !important; 
-        padding-bottom: 2rem !important;
-        padding-left: 5% !important;
-        padding-right: 5% !important;
-    }
+    .block-container { padding-top: 5rem !important; padding-left: 5% !important; padding-right: 5% !important; }
 
-    /* PARLAYAN NEON BAŞLIK */
+    /* 2. PARLAYAN NEON BAŞLIK */
     .academy-title { 
         font-size: 3.8em !important; font-weight: 900 !important;
         background: linear-gradient(90deg, #00FF00, #00CCFF) !important; 
         -webkit-background-clip: text !important; -webkit-text-fill-color: transparent !important; 
-        margin-bottom: 30px !important; line-height: 1.1 !important;
         filter: drop-shadow(0 0 15px rgba(0, 255, 0, 0.4)) !important;
+        margin-bottom: 30px !important;
     }
 
-    /* GÖREV KUTUSU - ELEKTRİK MAVİSİ ÇERÇEVE */
+    /* 3. MODÜL BAŞLIĞI (KESİN ÇÖZÜM: YEŞİL ÜSTÜNE SİYAH) */
+    .hero-panel { 
+        background-color: #00FF00 !important; /* PARLAK NEON YEŞİL */
+        padding: 20px !important; 
+        border-radius: 12px !important; 
+        margin-bottom: 25px !important;
+        border: 2px solid #FFFFFF !important;
+    }
+    .hero-panel h3 { 
+        color: #000000 !important; /* MUTLAK SİYAH YAZI */
+        font-weight: 950 !important; 
+        margin: 0 !important;
+        text-transform: uppercase !important;
+    }
+    .hero-panel p { color: #000000 !important; font-weight: 700 !important; margin: 0 !important; }
+
+    /* 4. ÇÖZÜM BLOĞU (EXPANDER) - KESİN ÇÖZÜM: YEŞİL ÜSTÜNE SİYAH */
+    [data-testid="stExpander"] {
+        background-color: #1E1E2F !important;
+        border: 2px solid #00FF00 !important;
+        border-radius: 12px !important;
+    }
+    [data-testid="stExpander"] summary {
+        background-color: #00FF00 !important; /* BAŞLIK ARKA PLANI YEŞİL */
+        border-radius: 10px 10px 0 0 !important;
+        color: #000000 !important;
+    }
+    [data-testid="stExpander"] summary p {
+        color: #000000 !important; /* BAŞLIK YAZISI SİYAH */
+        font-weight: 900 !important;
+        font-size: 1.1em !important;
+    }
+
+    /* 5. GÖREV KUTUSU - ELEKTRİK MAVİSİ */
     .gorev-box {
         background-color: #1E1E2F !important;
         border: 2px solid #00CCFF !important;
@@ -46,26 +74,11 @@ st.markdown("""
     .gorev-label { color: #00CCFF !important; font-weight: 900; font-size: 1.25em; display: block; margin-bottom: 12px; }
     .gorev-text { color: #FFFFFF !important; font-size: 1.15em; line-height: 1.6; }
 
-    /* MODÜL İSMİ (HERO PANEL) */
-    .hero-panel { 
-        background-color: #161b22 !important; padding: 25px !important; border-radius: 15px !important; 
-        border: 1px solid #30363d !important; border-left: 8px solid #00CCFF !important; margin-bottom: 25px !important;
-    }
-    .hero-panel h3 { color: #00CCFF !important; font-weight: 900 !important; margin: 0 !important; }
-
-    /* ETİKETLER VE INPUTLAR */
+    /* 6. ETİKETLER VE INPUTLAR */
     [data-testid="stWidgetLabel"] p { color: #00FF00 !important; font-weight: 900; font-size: 1.3em; }
     textarea, input { color: #00CCFF !important; background-color: #000000 !important; border: 1px solid #00FF00 !important; }
 
-    /* MEZUNİYET DİPLOMASI */
-    .diploma-box {
-        text-align: center; padding: 50px; background: #161b22; 
-        border-radius: 30px; border: 5px solid #FFD700;
-        box-shadow: 0 0 30px rgba(255, 215, 0, 0.3); margin-top: 20px;
-    }
-    .diploma-title { color: #FFD700 !important; font-size: 3.5em !important; font-weight: 900 !important; }
-
-    /* LİDERLİK TABLOSU */
+    /* 7. LİDERLİK KARTLARI */
     .leader-card {
         background: #1E1E2F !important; border: 1px solid #30363d !important;
         border-radius: 12px !important; padding: 12px 18px !important; margin-bottom: 10px !important;
@@ -77,10 +90,10 @@ st.markdown("""
     .badge-savasci { background-color: #FF4B4B !important; color: #FFFFFF !important; }
     .badge-bilge { background-color: #FFD700 !important; color: #000000 !important; box-shadow: 0 0 10px #FFD700; }
 
-    /* BUTONLAR VE İLERLEME */
+    /* 8. MEZUNİYET VE İLERLEME */
+    .diploma-box { text-align: center; padding: 50px; background: #161b22; border-radius: 30px; border: 5px solid #FFD700; box-shadow: 0 0 30px rgba(255, 215, 0, 0.3); margin-top: 20px; }
     .stButton>button { border-radius: 12px; background-color: #00FF00 !important; color: black !important; font-weight: 800; height: 3.8em; }
     div.stProgress > div > div > div > div { background-color: #00FF00 !important; }
-    .progress-label { font-size: 0.95em; color: #00FF00 !important; font-weight: 900; display: flex; justify-content: space-between; margin-bottom: 8px; }
     .pito-notu { background-color: #1E1E2F !important; border-radius: 12px; padding: 22px; border-left: 6px solid #00FF00; color: #E0E0E0; font-style: italic; }
     .console-box { background-color: #000 !important; color: #00CCFF !important; padding: 15px; border-radius: 10px; border: 1px solid #00CCFF; font-family: monospace; }
     </style>
@@ -90,7 +103,7 @@ st.markdown("""
 @st.cache_resource
 def init_supabase():
     try: return create_client(st.secrets["supabase"]["url"], st.secrets["supabase"]["key"])
-    except: st.error("⚠️ Supabase Hatası!"); st.stop()
+    except: st.error("⚠️ Supabase Bağlantısı Eksik!"); st.stop()
 
 supabase: Client = init_supabase()
 
@@ -106,7 +119,7 @@ def pito_gorseli_yukle(mod, size=210):
 try:
     with open('mufredat.json', 'r', encoding='utf-8') as f:
         mufredat = json.load(f)['pito_akademi_mufredat']
-except: st.error("❌ mufredat.json bulunamadı!"); st.stop()
+except: st.error("❌ mufredat.json dosyası bulunamadı!"); st.stop()
 
 if "user" not in st.session_state: st.session_state.user = None
 if "temp_user" not in st.session_state: st.session_state.temp_user = None
@@ -126,16 +139,15 @@ def ilerleme_kaydet(puan, kod, egz_id, n_id, n_m):
 # --- 5. LİDERLİK TABLOSU ---
 def liderlik_tablosu_goster(user_sinif=None):
     st.markdown("<h3 style='text-align:center; color:#00FF00;'>🏆 ONUR KÜRSÜSÜ</h3>", unsafe_allow_html=True)
-    t_okul, t_sinif, t_pano = st.tabs(["🌍 Okul", "📍 Sınıfım", "🏫 Ligler"])
+    t1, t2, t3 = st.tabs(["🌍 Okul", "📍 Sınıfım", "🏫 Ligler"])
     def r_stil(r): return "badge-bilge" if "Bilge" in r else "badge-savasci" if "Savaşçı" in r else "badge-pythonist" if "Pythonist" in r else "badge-comez"
     try:
         res = supabase.table("kullanicilar").select("ad_soyad, sinif, toplam_puan, rutbe").execute()
         df = pd.DataFrame(res.data)
-        with t_okul:
-            df_o = df.sort_values(by="toplam_puan", ascending=False).head(8)
-            for i, r in enumerate(df_o.itertuples(), 1):
+        with t1:
+            for i, r in enumerate(df.sort_values(by="toplam_puan", ascending=False).head(8).itertuples(), 1):
                 st.markdown(f"<div class='leader-card'><div><b>{i}. {r.ad_soyad}</b> <br><span class='rank-badge {r_stil(r.rutbe)}'>{r.rutbe}</span></div><code>{int(r.toplam_puan)} XP</code></div>", unsafe_allow_html=True)
-    except: st.write("Yükleniyor...")
+    except: st.write("Tablolar güncelleniyor...")
 
 # --- 6. ANA AKIŞ ---
 if st.session_state.user is None:
@@ -166,7 +178,7 @@ else:
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
             pito_gorseli_yukle("mezun", size=350)
-            st.markdown(f"""<div class="diploma-box"><div class="diploma-title">BİLGE SERTİFİKASI</div><div class="diploma-name">{u['ad_soyad'].upper()}</div><div class="diploma-text">Nusaybin Süleyman Bölünmez Anadolu Lisesi <br> Pito Python Akademisi'ni Başarıyla Tamamladı.</div><h3 style="color:#FFD700; margin-top:20px;">XP: {int(u['toplam_puan'])}</h3></div>""", unsafe_allow_html=True)
+            st.markdown(f"""<div class="diploma-box"><h1 class="diploma-title">BİLGE SERTİFİKASI</h1><h2>{u['ad_soyad'].upper()}</h2><p>Pito Python Akademisi'ni Başarıyla Tamamladı.</p><h3>XP: {int(u['toplam_puan'])}</h3></div>""", unsafe_allow_html=True)
             if st.button("🔄 Sıfırla"):
                 supabase.table("kullanicilar").update({"toplam_puan": 0, "mevcut_egzersiz": "1.1", "mevcut_modul": 1, "rutbe": "🥚 Çömez"}).eq("ogrenci_no", u['ogrenci_no']).execute()
                 st.session_state.user = None; st.rerun()
@@ -177,24 +189,25 @@ else:
         st.progress(min((m_idx) / total_m, 1.0))
         c_m, c_s = st.columns([7, 3])
         with c_m:
+            # MODÜL BAŞLIĞI: YEŞİL ÜSTÜNE SİYAH
             st.markdown(f"<div class='hero-panel'><h3>🚀 {modul['modul_adi']}</h3><p>{u['ad_soyad']} | {u['rutbe']} | {int(u['toplam_puan'])} XP</p></div>", unsafe_allow_html=True)
-            with st.expander("📖 KONU ANLATIMI", expanded=True): st.markdown(f"<div class='anlatim-box'>{modul.get('pito_anlatimi', '...')}</div>", unsafe_allow_html=True)
+            with st.expander("📖 KONU ANLATIMI", expanded=True): st.markdown(f"<div style='background:#000; padding:15px; border-radius:10px;'>{modul.get('pito_anlatimi', '...')}</div>", unsafe_allow_html=True)
             c_i, t_i = modul['egzersizler'].index(egz) + 1, len(modul['egzersizler'])
             st.markdown(f"<div class='progress-label'><span>🗺️ Modül Görevleri</span><span>{c_i} / {t_i} Görev</span></div>", unsafe_allow_html=True)
             st.progress(c_i / t_i)
             st.markdown(f"<div class='gorev-box'><span class='gorev-label'>📍 GÖREV {egz['id']}</span><div class='gorev-text'>{egz['yonerge']}</div></div>", unsafe_allow_html=True)
             p_xp = max(0, 20 - (st.session_state.error_count * 5))
-            st.markdown(f'<div class="status-bar"><div>💎 {p_xp} XP</div><div>⚠️ Hata: {st.session_state.error_count}/4</div></div>', unsafe_allow_html=True)
+            st.markdown(f'<div style="display:flex; justify-content:space-between; background:#161b22; padding:15px; border-radius:12px; margin-bottom:20px; border:1px solid #30363d;"><div>💎 {p_xp} XP</div><div>⚠️ Hata: {st.session_state.error_count}/4</div></div>', unsafe_allow_html=True)
             
-            # --- HATA YÖNETİMİ (1, 2, 3, 4) ---
             c_p, c_e = st.columns([1, 2])
             with c_p: pito_gorseli_yukle("merhaba", size=180)
             with c_e:
+                # --- HATA YÖNETİMİ (1, 2, 3, 4) ---
                 if st.session_state.error_count == 1: st.error("🚨 Pito: Bu senin 1. hatan! Kodu tekrar incele.")
                 elif st.session_state.error_count == 2: st.error("🚨 Pito: Bu senin 2. hatan! Bir şeyler ters gidiyor gibi.")
                 elif st.session_state.error_count == 3: st.warning(f"💡 Pito İpucu: {egz['ipucu']}")
                 elif st.session_state.error_count >= 4: st.error("🚫 Maksimum hata! Çözümü incele.")
-                st.markdown(f"<div class='pito-notu'>💬 <b>Pito:</b> {u['ad_soyad'].split()[0]}, pes etmek yok!</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='pito-notu'>💬 <b>Pito:</b> {u['ad_soyad'].split()[0]}, sakin ol ve odaklan!</div>", unsafe_allow_html=True)
 
             if not st.session_state.cevap_dogru and st.session_state.error_count < 4:
                 k_i = st.text_area("Pito Kod Editörü:", value=egz['sablon'], height=150, key="editor")
@@ -209,7 +222,7 @@ else:
                     n_id, n_m = (modul['egzersizler'][s_idx]['id'], u['mevcut_modul']) if s_idx < len(modul['egzersizler']) else (f"{u['mevcut_modul']+1}.1", u['mevcut_modul'] + 1)
                     ilerleme_kaydet(p_xp, k_i, egz['id'], n_id, n_m)
             elif st.session_state.error_count >= 4:
-                with st.expander("📖 Pito'nun Çözümü", expanded=True):
+                with st.expander("📖 PITO'NUN KESİN ÇÖZÜMÜ", expanded=True):
                     st.code(egz['cozum'], language="python")
                     st.markdown(f"<div class='console-box'>💻 Çıktı: {egz.get('beklenen_cikti', '...')}</div>", unsafe_allow_html=True)
                 if st.button("Sıradaki Göreve Geç ➡️"):
