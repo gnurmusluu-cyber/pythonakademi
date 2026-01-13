@@ -2,26 +2,40 @@ import streamlit as st
 import random
 
 def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fonksiyonu, normalize_fonksiyonu, supabase):
-    # --- 0. SİBER-HUD (STIKY BAR) VE GÖRSEL CSS ---
+    # --- 0. SİBER-HUD VE RESPONSIVE CSS MÜHRÜ ---
     st.markdown('''
         <style>
         .stApp { background-color: #0e1117; }
         
-        /* SABİT ÜST HUD BAR */
+        .block-container {
+            padding-top: 0rem !important;
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+            max-width: 100% !important;
+        }
+
+        /* SABİT ÜST HUD BAR (Duygu Durumu Eklenmiş) */
         .cyber-hud {
             position: fixed; top: 0; left: 0; width: 100%;
             background: rgba(14, 17, 23, 0.98);
             border-bottom: 2px solid #00E5FF;
-            z-index: 999999; padding: 12px 25px;
+            z-index: 999999; padding: 10px 25px;
             display: flex; justify-content: space-between; align-items: center;
             box-shadow: 0 4px 20px rgba(0, 229, 255, 0.3);
             backdrop-filter: blur(15px);
+            flex-wrap: wrap;
         }
-        .hud-item { color: #E0E0E0; font-family: 'Fira Code', monospace; font-size: 0.9rem; }
+        .hud-pito-state { font-size: 1.5rem; margin-right: 15px; } /* Pito'nun ikon alanı */
+        .hud-item { color: #E0E0E0; font-family: 'Fira Code', monospace; font-size: 0.85rem; margin: 2px 8px; }
         .hud-v { color: #00E5FF; font-weight: bold; text-shadow: 0 0 5px #00E5FF; }
 
-        /* HUD Altında Kalmaması İçin İçerik Kaydırma */
-        .main-container { margin-top: 70px; }
+        .main-container { margin-top: 75px; }
+
+        @media (max-width: 768px) {
+            .cyber-hud { padding: 5px 10px; justify-content: center; }
+            .main-container { margin-top: 115px; }
+            .hud-pito-state { margin-right: 5px; font-size: 1.2rem; }
+        }
 
         .console-box {
             background-color: #000 !important; color: #00E5FF !important;
@@ -29,22 +43,29 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             padding: 15px; font-family: 'Courier New', monospace; margin: 10px 0;
         }
         .academy-header {
-            text-align: center; color: #00E5FF; font-size: 2rem; font-weight: bold;
-            text-shadow: 0 0 15px rgba(0, 229, 255, 0.4); margin-bottom: 20px;
+            text-align: center; color: #00E5FF; font-size: 1.8rem; font-weight: bold;
+            text-shadow: 0 0 15px rgba(0, 229, 255, 0.4); margin-bottom: 15px;
         }
         </style>
     ''', unsafe_allow_html=True)
 
-    # --- 1. HUD VERİ HESAPLAMA ---
+    # --- 1. HUD VERİLERİ VE DUYGU DURUMU ---
     p_xp = max(0, 20 - (st.session_state.error_count * 5))
     
-    # HUD HTML Çıktısı
+    # Pito'nun o anki duygusunu (ikonunu) belirliyoruz
+    pito_icon = emotions_module.pito_durum_belirle(st.session_state.error_count, st.session_state.cevap_dogru)
+    
     st.markdown(f'''
         <div class="cyber-hud">
-            <div class="hud-item">👤 <span class="hud-v">{u['ad_soyad']}</span></div>
-            <div class="hud-item">💎 XP Potansiyel: <span class="hud-v">{p_xp}</span></div>
-            <div class="hud-item">⚠️ Hata: <span class="hud-v">{st.session_state.error_count}/4</span></div>
-            <div class="hud-item">🏆 Toplam: <span class="hud-v">{int(u['toplam_puan'])} XP</span></div>
+            <div style="display: flex; align-items: center;">
+                <div class="hud-pito-state">{pito_icon}</div>
+                <div class="hud-item">👤 <span class="hud-v">{u['ad_soyad']}</span></div>
+            </div>
+            <div style="display: flex; align-items: center;">
+                <div class="hud-item">💎 Potansiyel: <span class="hud-v">{p_xp} XP</span></div>
+                <div class="hud-item">⚠️ Hata: <span class="hud-v">{st.session_state.error_count}/4</span></div>
+                <div class="hud-item">🏆 Toplam: <span class="hud-v">{int(u['toplam_puan'])} XP</span></div>
+            </div>
         </div>
     ''', unsafe_allow_html=True)
 
@@ -68,27 +89,24 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         st.progress(c_i / t_i)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    cl, cr = st.columns([7.2, 2.8])
+    cl, cr = st.columns([7.5, 2.5])
     
     with cl:
-        p_mod = emotions_module.pito_durum_belirle(st.session_state.error_count, st.session_state.cevap_dogru)
-        cp1, cp2 = st.columns([1, 4])
-        with cp1: emotions_module.pito_goster(p_mod)
-        with cp2: 
-            # --- YENİ DÜZEN: Selamlama ve Uzun İnceleme Butonu ---
-            c_msg, c_rev = st.columns([0.65, 0.35])
-            with c_msg:
-                st.markdown(f"<div style='color:#00E5FF; font-style:italic;'>💬 {msgs['welcome'].format(ad_k)}</div>", unsafe_allow_html=True)
-            with c_rev:
-                if st.button("🔍 Önceki egzersizleri incele", help="Geçmiş görev çözümlerini arşivden gör", key="nav_to_review"):
-                    st.session_state.in_review = True
-                    st.rerun()
+        # Pito Mesajı ve İnceleme Butonu (Daha Kompakt)
+        c_msg, c_rev = st.columns([0.7, 0.3])
+        with c_msg:
+            st.markdown(f"<div style='color:#00E5FF; font-style:italic; font-size:1.1rem;'>💬 {msgs['welcome'].format(ad_k)}</div>", unsafe_allow_html=True)
+        with c_rev:
+            if st.button("🔍 Önceki egzersizleri incele", help="Geçmiş çözümleri gör", key="btn_review_main", use_container_width=True):
+                st.session_state.in_review = True
+                st.rerun()
 
         with st.expander(f"📖 {modul['modul_adi']}", expanded=True):
             st.markdown(f"<div style='background:rgba(0,229,255,0.03); padding:15px; border-radius:10px;'>{modul['pito_anlatimi']}</div>", unsafe_allow_html=True)
             st.markdown(f"### 🎯 GÖREV {egz['id']}")
             st.info(egz['yonerge'])
 
+        # --- EDİTÖR VE AKIŞ ---
         if not st.session_state.cevap_dogru and st.session_state.error_count < 4:
             if st.session_state.error_count > 0:
                 st.error(f"🚨 **Pito:** {random.choice(msgs['errors'][f'level_{min(st.session_state.error_count, 4)}']).format(ad_k)}")
