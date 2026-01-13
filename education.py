@@ -83,7 +83,6 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         st.markdown(f"<div class='kokpit-label'>🚀 AKADEMİ YOLCULUĞU (%{int((m_idx/total_m)*100)})</div>", unsafe_allow_html=True)
         st.progress(min((m_idx) / total_m, 1.0))
     with col_mod:
-        # Netleştirilmiş Modül ve Görev Takibi
         st.markdown(f"<div class='kokpit-label'>📍 MODÜL {m_idx + 1} - GÖREV {c_i} / {t_i}</div>", unsafe_allow_html=True)
         st.progress(c_i / t_i)
 
@@ -120,7 +119,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             st.markdown("💻 **Konsol Çıktısı:**")
             st.markdown(f"<div class='console-box'>{egz.get('beklenen_cikti', 'Çıktı üretiliyor...')}</div>", unsafe_allow_html=True)
             if st.button("SONRAKİ İNCELEMEYE GEÇ ➡️", type="primary", use_container_width=True):
-                # Mantık p_akademi tarafında kontrol edilir.
+                # Bu butonun mantığı p_akademi tarafında kontrol edilir.
                 pass
 
         elif not st.session_state.cevap_dogru and st.session_state.error_count < 4:
@@ -140,7 +139,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
                     st.session_state.current_code = user_code
                     if normalize_fonksiyonu(user_code) == normalize_fonksiyonu(egz['dogru_cevap_kodu']):
                         st.session_state.cevap_dogru = True
-                        st.balloons() # BALONLAR SADECE BU ANLIK UÇAR
+                        st.balloons() # Balonlar sadece burada uçar
                     else: st.session_state.error_count += 1
                     st.rerun()
             with b_res:
@@ -148,7 +147,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
                     st.session_state.reset_trigger += 1; st.rerun()
 
         elif st.session_state.cevap_dogru:
-            # BAŞARI EKRANI: Konsol Çıktısı ve İlerleme
+            # BAŞARI EKRANI: Konsol Çıktısı ve Devam Butonu
             st.markdown("💻 **Konsol Çıktısı:**")
             st.markdown(f"<div class='console-box'>{egz.get('beklenen_cikti', 'Kod başarıyla çalıştırıldı...')}</div>", unsafe_allow_html=True)
             st.success(f"✅ Müthişsin {ad_k}! Kodun siber-onay aldı.")
@@ -158,7 +157,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
                 ilerleme_fonksiyonu(p_xp, st.session_state.current_code, egz['id'], n_id, n_m)
 
         elif st.session_state.error_count >= 4:
-            # HATA SINIRI: İdeal Çözüm ve Konsol Çıktısı
+            # HATA SINIRI: İdeal Çözüm ve Çıktı
             st.warning("🚨 Limit doldu! Pito'nun ideal çözümü ve çıktısı:")
             st.code(egz['cozum'], language="python")
             st.markdown("💻 **Kodun Çıktısı:**")
@@ -169,5 +168,5 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
                 ilerleme_fonksiyonu(0, "Çözüm İncelendi", egz['id'], n_id, n_m)
 
     with side_col:
-        # LİDERLİK TABLOSU (Sağ Kanatta Sabit ve Sade)
+        # LİDERLİK TABLOSU (Sağ Kanatta Sabit)
         ranks_module.liderlik_tablosu_goster(supabase, current_user=u)
