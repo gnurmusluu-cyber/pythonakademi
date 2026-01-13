@@ -30,17 +30,17 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         st.markdown(f"""
             <div class='hero-panel'>
                 <h3>🚀 {modul['modul_adi']}</h3>
-                <p>{u['ad_soyad']} | <span class='rank-badge' style='background:black; color:#ADFF2F;'>{rn}</span> | {int(u['toplam_puan'])} XP</p>
+                <p>{u['ad_soyad']} | <span class='rank-badge' style='background:black; color:#00E5FF;'>{rn}</span> | {int(u['toplam_puan'])} XP</p>
             </div>
         """, unsafe_allow_html=True)
         
         # Konu Anlatımı Bölümü
         with st.expander("📖 KONU ANLATIMI", expanded=True):
-            st.markdown(f"<div style='background:#000; padding:15px; border-radius:10px; border-left: 4px solid #ADFF2F;'>{modul.get('pito_anlatimi', '...')}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='background:#000; padding:15px; border-radius:10px; border-left: 4px solid #00E5FF;'>{modul.get('pito_anlatimi', '...')}</div>", unsafe_allow_html=True)
         
         # XP Hesaplama ve Hata Durumu ($Puan = \max(0, 20 - (Hata \times 5))$)
         p_xp = max(0, 20 - (st.session_state.error_count * 5))
-        st.markdown(f'<div style="background:#161b22; padding:12px; border-radius:12px; border:1px solid #ADFF2F; color:#ADFF2F; font-weight:bold; text-align:center;">💎 Kazanılacak: {p_xp} XP | ⚠️ Hatalar: {st.session_state.error_count}/4</div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="background:#161b22; padding:12px; border-radius:12px; border:1px solid #00E5FF; color:#00E5FF; font-weight:bold; text-align:center;">💎 Kazanılacak: {p_xp} XP | ⚠️ Hatalar: {st.session_state.error_count}/4</div>', unsafe_allow_html=True)
         
         # Pito Etkileşim Alanı
         p_mod = emotions_module.pito_durum_belirle(st.session_state.error_count, st.session_state.cevap_dogru)
