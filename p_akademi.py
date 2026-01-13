@@ -34,12 +34,12 @@ load_resources()
 @st.cache_resource
 def init_supabase():
     try:
-        # Client'ı oluştur ve ana değişkene aktar
+        # Client'ı oluştur ve ana değişken olarak dön
         return create_client(st.secrets["supabase"]["url"], st.secrets["supabase"]["key"])
     except:
         st.error("⚠️ Supabase bağlantısı kurulamadı!"); st.stop()
 
-# Veritabanı istemcisini tüm modüllere iletmek üzere başlatıyoruz
+# Veritabanı istemcisini tüm modüllere elden teslim etmek üzere başlatıyoruz
 supabase: Client = init_supabase()
 
 def normalize(k): 
@@ -76,8 +76,8 @@ def ilerleme_kaydet(puan, kod, egz_id, n_id, n_m):
     st.session_state.error_count, st.session_state.cevap_dogru, st.session_state.current_code = 0, False, ""
     st.rerun()
 
-# --- 4. SESSION STATE (ZIRHLI HAFIZA) ---
-# Uygulama boyunca NameError hatalarını engellemek için anahtarları önceden tanımlıyoruz
+# --- 4. SESSION STATE (NAMEERROR ZIRHI) ---
+# Uygulama boyunca NameError hatalarını engellemek için tüm anahtarları önceden tanımlıyoruz
 keys = ["user", "temp_user", "show_reg", "error_count", "cevap_dogru", "current_code", "user_num", "in_review"]
 for k in keys:
     if k not in st.session_state:
@@ -95,6 +95,7 @@ except:
 
 # --- DURUM 1: GİRİŞ EKRANI ---
 if st.session_state.user is None:
+    # emotions.pito_goster doğrudan fonksiyon olarak gönderilir
     auth.login_ekrani(
         supabase, 
         st.session_state.pito_messages, 
@@ -114,20 +115,15 @@ else:
             st.session_state.in_review = True
             st.rerun()
 
-    # İnceleme Modu Aktifse
+    # İnceleme Modu Aktifse (supabase elden teslim edildi)
     if st.session_state.in_review:
-        mechanics.inceleme_modu_paneli(u, mufredat, emotions.pito_goster)
+        mechanics.inceleme_modu_paneli(u, mufredat, emotions.pito_goster, supabase)
     
-    # Mezuniyet Durumu (Müfredat tamamlandıysa)
+    # Mezuniyet Durumu (Tüm müfredat bittiyse)
     elif m_idx >= len(mufredat):
-        mechanics.mezuniyet_ekrani(
-            u, 
-            st.session_state.pito_messages, 
-            emotions.pito_goster, 
-            supabase
-        )
+        mechanics.mezuniyet_ekrani(u, st.session_state.pito_messages, emotions.pito_goster, supabase)
     
-    # Eğitim Akışı (Ders İşleme Modu)
+    # Eğitim Motoru (Ders İşleme Modu - supabase elden teslim edildi)
     else:
         education.egitim_ekrani(
             u, 
