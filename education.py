@@ -7,6 +7,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         <style>
         .stApp { background-color: #0e1117; }
         
+        /* Sayfa Genel Boşlukları */
         .block-container {
             padding-top: 0rem !important;
             padding-left: 1rem !important;
@@ -14,35 +15,32 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             max-width: 100% !important;
         }
 
-        /* SABİT ÜST HUD BAR */
+        /* SABİT ÜST HUD BAR (GIF DESTEKLİ) */
         .cyber-hud {
             position: fixed; top: 0; left: 0; width: 100%;
             background: rgba(14, 17, 23, 0.98);
             border-bottom: 2px solid #00E5FF;
-            z-index: 999999; padding: 8px 25px; /* Padding biraz azaltıldı */
+            z-index: 999999; padding: 8px 25px;
             display: flex; justify-content: space-between; align-items: center;
             box-shadow: 0 4px 20px rgba(0, 229, 255, 0.3);
             backdrop-filter: blur(15px);
             flex-wrap: wrap;
         }
 
-        /* --- GIF İÇİN YENİ STİLLER --- */
-        .hud-pito-state {
+        /* PITO GIF ÇERÇEVESİ */
+        .hud-pito-container {
             margin-right: 15px;
             display: flex;
             align-items: center;
-            justify-content: center;
         }
-        /* GIF'in boyutu ve siber-çerçevesi */
-        .hud-pito-gif {
-            width: 45px; /* PC için ideal boyut */
+        .hud-pito-gif img {
+            width: 45px;
             height: 45px;
-            border-radius: 50%; /* Yuvarlak görünüm */
-            border: 2px solid rgba(0, 229, 255, 0.7); /* Siber-neon çerçeve */
-            object-fit: cover; /* Görüntüyü çerçeveye sığdır */
-            background-color: rgba(0,0,0,0.3); /* Şeffaf GIF'ler için arka plan */
+            border-radius: 50%;
+            border: 2px solid #00E5FF;
+            object-fit: cover;
+            background: #000;
         }
-        /* --------------------------- */
 
         .hud-item { color: #E0E0E0; font-family: 'Fira Code', monospace; font-size: 0.85rem; margin: 2px 8px; }
         .hud-v { color: #00E5FF; font-weight: bold; text-shadow: 0 0 5px #00E5FF; }
@@ -52,9 +50,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         @media (max-width: 768px) {
             .cyber-hud { padding: 5px 10px; justify-content: center; }
             .main-container { margin-top: 115px; }
-            /* Mobilde GIF boyutunu ayarla */
-            .hud-pito-state { margin-right: 8px; }
-            .hud-pito-gif { width: 35px; height: 35px; }
+            .hud-pito-gif img { width: 35px; height: 35px; }
         }
 
         .console-box {
@@ -69,17 +65,21 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         </style>
     ''', unsafe_allow_html=True)
 
-    # --- 1. HUD VERİLERİ VE PİTO GIF'İ ---
+    # --- 1. HUD VERİLERİ VE PİTO DUYGUSU ---
     p_xp = max(0, 20 - (st.session_state.error_count * 5))
     
-    # emotions_module artık bir GIF URL'si/yolu döndürmeli!
-    pito_gif_url = emotions_module.pito_durum_belirle(st.session_state.error_count, st.session_state.cevap_dogru)
+    # emotions_module'den Pito'nun o anki GIF verisini (Base64 veya path) alıyoruz
+    # Duygu motoru pito_durum_belirle fonksiyonuyla hangi GIF'i göstereceğine karar verir
+    pito_gif_data = emotions_module.pito_durum_belirle(st.session_state.error_count, st.session_state.cevap_dogru)
     
+    # Kokpit (HUD) HTML Yapısı
     st.markdown(f'''
         <div class="cyber-hud">
             <div style="display: flex; align-items: center;">
-                <div class="hud-pito-state">
-                    <img src="{pito_gif_url}" class="hud-pito-gif" alt="Pito Mood">
+                <div class="hud-pito-container">
+                    <div class="hud-pito-gif">
+                        <img src="{pito_gif_data}" alt="Pito">
+                    </div>
                 </div>
                 <div class="hud-item">👤 <span class="hud-v">{u['ad_soyad']}</span></div>
             </div>
@@ -114,12 +114,12 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
     cl, cr = st.columns([7.5, 2.5])
     
     with cl:
-        # Pito Mesajı ve İnceleme Butonu
-        c_msg, c_rev = st.columns([0.7, 0.3])
+        # Pito Mesajı ve Navigasyon Düğmesi
+        c_msg, c_rev = st.columns([0.65, 0.35])
         with c_msg:
             st.markdown(f"<div style='color:#00E5FF; font-style:italic; font-size:1.1rem;'>💬 {msgs['welcome'].format(ad_k)}</div>", unsafe_allow_html=True)
         with c_rev:
-            if st.button("🔍 Önceki egzersizleri incele", help="Geçmiş çözümleri gör", key="btn_review_main", use_container_width=True):
+            if st.button("🔍 Önceki egzersizleri incele", key="btn_review_main", use_container_width=True):
                 st.session_state.in_review = True
                 st.rerun()
 
@@ -135,7 +135,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
                 if st.session_state.error_count == 3: st.warning(f"💡 **İPUCU:** {egz.get('ipucu', 'Kodu tekrar kontrol et!')}")
 
             if "reset_trigger" not in st.session_state: st.session_state.reset_trigger = 0
-            user_code = st.text_area("Siber-Editor", value=egz['sablon'], height=180, key=f"v_hud_gif_{egz['id']}_{st.session_state.reset_trigger}", label_visibility="collapsed")
+            user_code = st.text_area("Siber-Editor", value=egz['sablon'], height=180, key=f"v_hud_{egz['id']}_{st.session_state.reset_trigger}", label_visibility="collapsed")
 
             b1, b2 = st.columns([4, 1.5])
             with b1:
@@ -159,7 +159,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
                 ilerleme_fonksiyonu(p_xp, st.session_state.current_code, egz['id'], n_id, n_m)
 
         elif st.session_state.error_count >= 4:
-            st.warning("🚨 Limit doldu! Çözümü ve çıktıyı incele:")
+            st.warning("🚨 Limit doldu! Çözümü incele:")
             st.code(egz['cozum'], language="python")
             st.markdown(f"<div class='console-box'>{egz.get('beklenen_cikti', '...')}</div>", unsafe_allow_html=True)
             if st.button("DEVAM ET ➡️", type="primary", use_container_width=True):
