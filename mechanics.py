@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 def mezuniyet_ekrani(u, msgs, pito_goster, supabase, ranks_module):
-    """Mezuniyet töreni ve sıfırlama seçeneği."""
+    """Mezuniyet töreni, onur kürsüsü ve sıfırlama seçeneği."""
     st.balloons()
     st.snow()
     st.markdown("<div class='academy-title'>🎓 PİTO PYTHON AKADEMİ MEZUNİYETİ</div>", unsafe_allow_html=True)
@@ -29,7 +29,7 @@ def mezuniyet_ekrani(u, msgs, pito_goster, supabase, ranks_module):
         st.markdown("### ⚙️ Sonraki Adımlar")
         col_btn1, col_btn2 = st.columns(2)
         with col_btn1:
-            if st.button("🔍 Eski Kodlarımı İncele", use_container_width=True):
+            if st.button("🔍 Görev Çözümlerini İncele", use_container_width=True):
                 st.session_state.in_review = True; st.rerun()
         with col_btn2:
             if st.button("🔄 Eğitimi Tekrar Al (Sıfırla)", use_container_width=True):
@@ -40,43 +40,34 @@ def mezuniyet_ekrani(u, msgs, pito_goster, supabase, ranks_module):
         ranks_module.liderlik_tablosu_goster(supabase, current_user=u)
 
 def inceleme_modu_paneli(u, mufredat, pito_goster, supabase):
-    """Hata vermeyen, güvenli inceleme paneli."""
-    st.markdown("<h2 style='color:#ADFF2F;'>🔍 Geçmiş Görev İnceleme</h2>", unsafe_allow_html=True)
+    """Sadece müfredattaki ideal çözümleri gösteren gelişim paneli."""
+    st.markdown("<h2 style='color:#ADFF2F;'>🔍 Görev Çözüm Kütüphanesi</h2>", unsafe_allow_html=True)
+    st.markdown("Başarıyla tamamladığın görevlerin en ideal çözümlerini buradan inceleyebilirsin arkadaşım!")
     
-    if st.button("⬅️ Geri Dön"):
+    if st.button("⬅️ Mezuniyet Ekranına Dön"):
         st.session_state.in_review = False; st.rerun()
 
     try:
-        # DÜZELTME: .order() kısmını çıkardık çünkü sütun yok
-        res = supabase.table("egzersiz_kayitlari").select("*").eq("ogrenci_no", int(u['ogrenci_no'])).execute()
+        # Veritabanından sadece hangi görevlerin bittiğini çekiyoruz
+        res = supabase.table("egzersiz_kayitlari").select("egz_id, alinan_puan").eq("ogrenci_no", int(u['ogrenci_no'])).execute()
         
         if res.data:
-            for item in res.data:
-                egz_id = item.get('egz_id')
-                # Modül ismini müfredattan çek
-                modul_adi = "Bilinmeyen Modül"
-                for m in mufredat:
-                    if any(e['id'] == str(egz_id) for e in m['egzersizler']):
-                        modul_adi = m['modul_adi']
-                        break
+            # Bitirilen görevleri bir listeye alalım
+            biten_id_listesi = [str(item['egz_id']) for item in res.data]
+            
+            # Müfredatı tarayarak sadece bitirilen görevlerin ideal çözümlerini göster
+            for m in mufredat:
+                # Bu modülde biten görev var mı kontrol et
+                modulun_bitenleri = [e for e in m['egzersizler'] if str(e['id']) in biten_id_listesi]
                 
-                # DÜZELTME: created_at yoksa hata verme, boş geç
-                tarih = item.get('created_at', 'Tarih Kaydı Yok')
-                if tarih != 'Tarih Kaydı Yok': tarih = tarih[:10]
-                
-                xp = item.get('alinan_puan', 0)
-                
-                with st.expander(f"📦 {modul_adi} | 📍 Görev {egz_id} | 💎 {xp} XP"):
-                    # Veritabanındaki sütun isminin doğruluğunu kontrol et (basarili_kod)
-                    kod_icerigi = item.get('basarili_kod', '').strip()
-                    
-                    if kod_icerigi:
-                        st.code(kod_icerigi, language="python")
-                    else:
-                        st.warning("⚠️ Bu görev için kaydedilmiş bir kod bulunamadı.")
-                    
-                    st.caption(f"📅 Kayıt Tarihi: {tarih}")
+                if modulun_bitenleri:
+                    with st.expander(f"📦 {m['modul_adi']}"):
+                        for egz in modulun_bitenleri:
+                            st.markdown(f"📍 **Görev {egz['id']}:** {egz.get('yonerge')}")
+                            st.markdown("🤖 **Pito'nun İdeal Çözümü:**")
+                            st.code(egz.get('cozum', '# Çözüm hazırlanıyor...'), language="python")
+                            st.divider()
         else:
-            st.info("Henüz kaydedilmiş bir çözümün bulunmuyor genç yazılımcı.")
+            st.info("Henüz tamamlanmış bir görevin bulunmuyor genç yazılımcı. Önce biraz kod yazalım!")
     except Exception as e:
-        st.error(f"Pito veri çekerken bir pürüzle karşılaştı: {e}")
+        st.error(f"Veri çekme hatası: {e}")
