@@ -7,14 +7,12 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
     # --- 0. SİBER-KALKAN VE OPAK ZIRH CSS ---
     st.markdown('''
         <style>
-        /* STREAMLIT VARSAYILANLARINI İMHA ET */
         header[data-testid="stHeader"] { display: none !important; visibility: hidden !important; height: 0px !important; }
         [data-testid="stDecoration"] { display: none !important; }
-        footer { display: none !important; }
+        footer { visibility: hidden; }
         
         .stApp { background-color: #0e1117 !important; }
         
-        /* SIDEBAR STABİLİZASYONU */
         [data-testid="stSidebar"] {
             min-width: 320px !important;
             max-width: 320px !important;
@@ -22,16 +20,14 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             border-right: 2px solid #00E5FF;
         }
 
-        /* FİZİKSEL ENGEL: İçeriği HUD'ın arkasına sokma */
         [data-testid="stMainViewContainer"] {
             padding-top: 110px !important;
         }
 
-        /* SABİT ÜST HUD BAR (SIFIR ŞEFFAFLIK) */
         .cyber-hud {
             position: fixed; top: 0; left: 0; right: 0;
             height: 105px;
-            background-color: #0e1117 !important; /* Tam opak zemin */
+            background-color: #0e1117 !important;
             border-bottom: 3px solid #00E5FF;
             z-index: 1000000 !important;
             padding: 0 25px;
@@ -39,7 +35,6 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             box-shadow: 0 15px 40px #000000 !important;
         }
 
-        /* PITO GIF ÇERÇEVESİ (KOKPİT) */
         .hud-pito-gif img {
             width: 75px; height: 75px;
             border-radius: 50%; border: 3px solid #00E5FF;
@@ -73,7 +68,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         </style>
     ''', unsafe_allow_html=True)
 
-    # --- 1. HUD VERİLERİ VE PİTO GIF ---
+    # --- 1. HUD VE GIF HAZIRLIĞI ---
     p_xp = max(0, 20 - (st.session_state.error_count * 5))
     p_mod = emotions_module.pito_durum_belirle(st.session_state.error_count, st.session_state.cevap_dogru)
     
@@ -87,7 +82,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
 
     pito_gif_base = get_base64_gif(p_mod)
 
-    # KOKPİT HTML
+    # KOKPİT ÇIKTISI
     st.markdown(f'''
         <div class="cyber-hud">
             <div style="display: flex; align-items: center;">
@@ -125,27 +120,33 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
     cl, cr = st.columns([7.5, 2.5])
     
     with cl:
-        msg_col, nav_col = st.columns([0.65, 0.35])
-        with msg_col: st.markdown(f"<div style='color:#00E5FF; font-style:italic; font-size:1.1rem;'>💬 {msgs['welcome'].format(ad_k)}</div>", unsafe_allow_html=True)
-        with nav_col:
-            if st.button("🔍 Önceki egzersizleri incele", use_container_width=True, key="rev_btn"):
+        # --- NAVİGASYON: İnceleme ve Çıkış Butonları ---
+        c_msg, c_rev, c_exit = st.columns([0.5, 0.3, 0.2])
+        with c_msg: st.markdown(f"<div style='color:#00E5FF; font-style:italic; font-size:1.1rem;'>💬 {msgs['welcome'].format(ad_k)}</div>", unsafe_allow_html=True)
+        with c_rev:
+            if st.button("🔍 İncele", use_container_width=True, key="rev_btn"):
                 st.session_state.in_review = True; st.rerun()
+        with c_exit:
+            if st.button("🚪 Çıkış", help="Oturumu kapat ve ana sayfaya dön", use_container_width=True, key="exit_btn"):
+                st.session_state.user = None
+                st.session_state.in_review = False
+                st.rerun()
 
         with st.expander(f"📖 {modul['modul_adi']}", expanded=True):
             st.markdown(f"<div style='background:rgba(0,229,255,0.03); padding:15px; border-radius:10px;'>{modul['pito_anlatimi']}</div>", unsafe_allow_html=True)
             st.markdown(f"### 🎯 GÖREV {egz['id']}")
             st.info(egz['yonerge'])
 
-        # --- EDİTÖR VE KONTROL ---
+        # --- EDİTÖR AKIŞI ---
         if not st.session_state.cevap_dogru and st.session_state.error_count < 4:
             if st.session_state.error_count > 0:
                 st.error(f"🚨 **Pito:** {random.choice(msgs['errors'][f'level_{min(st.session_state.error_count, 4)}']).format(ad_k)}")
-                # KRİTİK: 3. HATADA İPUCU GÖSTERİMİ
+                # 3. HATADA İPUCU MÜHRÜ
                 if st.session_state.error_count == 3:
                     st.warning(f"💡 **Pito'nun İpucu:** {egz.get('ipucu', 'Kodu tekrar kontrol et!')}")
 
             if "reset_trigger" not in st.session_state: st.session_state.reset_trigger = 0
-            user_code = st.text_area("Siber-Editor", value=egz['sablon'], height=180, key=f"ed_{egz['id']}_{st.session_state.reset_trigger}", label_visibility="collapsed")
+            user_code = st.text_area("Editor", value=egz['sablon'], height=180, key=f"ed_{egz['id']}_{st.session_state.reset_trigger}", label_visibility="collapsed")
             
             b1, b2 = st.columns([4, 1.2])
             with b1:
@@ -159,7 +160,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
                 if st.button("🔄 SIFIRLA", use_container_width=True): st.session_state.reset_trigger += 1; st.rerun()
 
         elif st.session_state.cevap_dogru:
-            # KRİTİK: DOĞRU CEVAPTAN SONRA KOD ÇIKTISI GÖSTERİMİ
+            # BAŞARI: KOD ÇIKTISI GÖSTERİMİ
             st.markdown("💻 **Konsol Çıktısı:**")
             st.markdown(f"<div class='console-box'>{egz.get('beklenen_cikti', '...')}</div>", unsafe_allow_html=True)
             st.success(f"✅ Harika iş çıkardın {ad_k}! (+{p_xp} XP)")
