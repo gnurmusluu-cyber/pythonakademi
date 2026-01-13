@@ -3,101 +3,101 @@ import random
 
 def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fonksiyonu, normalize_fonksiyonu, supabase):
     """
-    Platformun ana eğitim ve görev akışını yönetir.
-    'supabase' parametresi, AttributeError hatalarını engellemek için doğrudan ana dosyadan iletilir.
+    Referans kod destekli eğitim motoru. 
+    Öğrenci editörü bozsa bile görev kutusundaki kopyaya bakarak düzeltebilir.
     """
     
     m_idx = int(u['mevcut_modul']) - 1
     total_m = len(mufredat)
     ad_k = u['ad_soyad'].split()[0]
 
-    # --- 1. ÜST İLERLEME GÖSTERGELERİ ---
+    # --- 1. ÜST PANEL (İLERLEME) ---
     st.markdown(f"<div class='progress-label'><span>🎓 Akademi Yolculuğu</span><span>Modül {m_idx + 1} / {total_m}</span></div>", unsafe_allow_html=True)
     st.progress(min((m_idx) / total_m, 1.0))
 
     modul = mufredat[m_idx]
-    # Mevcut egzersizi bul, yoksa ilk egzersizden başla
     egz = next((e for e in modul['egzersizler'] if e['id'] == str(u['mevcut_egzersiz'])), modul['egzersizler'][0])
-    c_i, t_i = modul['egzersizler'].index(egz) + 1, len(modul['egzersizler'])
     
-    st.markdown(f"<div class='progress-label'><span>🗺️ Modül Görevleri</span><span>{c_i} / {t_i} Görev</span></div>", unsafe_allow_html=True)
-    st.progress(c_i / t_i)
-
-    # --- 2. ANA EĞİTİM ALANI ---
     cl, cr = st.columns([7, 3])
     with cl:
-        # Hero Panel: Öğrenci ve Rütbe Bilgisi
-        rn, rc = ranks_module.rütbe_ata(u['toplam_puan'])
-        st.markdown(f"""
-            <div class='hero-panel'>
-                <h3>🚀 {modul['modul_adi']}</h3>
-                <p>{u['ad_soyad']} | <span class='rank-badge' style='background:black; color:#ADFF2F;'>{rn}</span> | {int(u['toplam_puan'])} XP</p>
-            </div>
-        """, unsafe_allow_html=True)
-        
-        # Konu Anlatımı Bölümü
-        with st.expander("📖 KONU ANLATIMI", expanded=True):
-            st.markdown(f"<div style='background:#000; padding:15px; border-radius:10px; border-left: 4px solid #ADFF2F;'>{modul.get('pito_anlatimi', '...')}</div>", unsafe_allow_html=True)
-        
-        # XP Hesaplama ve Hata Durumu
-        # Formül: $Puan = \max(0, 20 - (Hata \times 5))$
+        # Pito ve Durum Bilgisi
         p_xp = max(0, 20 - (st.session_state.error_count * 5))
-        st.markdown(f'<div style="background:#161b22; padding:12px; border-radius:12px; border:1px solid #ADFF2F; color:#ADFF2F; font-weight:bold; text-align:center;">💎 Bu Görevden Kazanılacak: {p_xp} XP | ⚠️ Hatalar: {st.session_state.error_count}/4</div>', unsafe_allow_html=True)
-        
-        # Pito Etkileşim Alanı
         p_mod = emotions_module.pito_durum_belirle(st.session_state.error_count, st.session_state.cevap_dogru)
-        cp1, cp2 = st.columns([1, 2])
-        with cp1:
-            emotions_module.pito_goster(p_mod)
+        
+        cp1, cp2 = st.columns([1, 3])
+        with cp1: emotions_module.pito_goster(p_mod)
         with cp2:
+            st.markdown(f"💎 **{p_xp} XP** | ⚠️ **Hata: {st.session_state.error_count}/4**")
             if st.session_state.error_count > 0:
                 lvl = f"level_{min(st.session_state.error_count, 4)}"
-                msg = random.choice(msgs['errors'][lvl]).format(ad_k)
-                st.error(f"🚨 Pito: {msg}")
-                if st.session_state.error_count == 3:
-                    st.warning(f"💡 İpucu: {egz['ipucu']}")
+                st.error(f"🚨 Pito: {random.choice(msgs['errors'][lvl]).format(ad_k)}")
             else:
                 st.markdown(f"<div class='pito-notu'>💬 <b>Pito:</b> {msgs['welcome'].format(ad_k)}</div>", unsafe_allow_html=True)
 
-        # --- 3. ETKİLEŞİM VE KOD EDİTÖRÜ ---
-        # DURUM A: Çözüm Bekleniyor
+        # --- 2. GÖREV VE REFERANS ALANI ---
         if not st.session_state.cevap_dogru and st.session_state.error_count < 4:
-            st.markdown(f"<div class='gorev-box'><span class='gorev-label'>📍 GÖREV {egz['id']}</span><div class='gorev-text'>{egz['yonerge']}</div></div>", unsafe_allow_html=True)
-            k_i = st.text_area("Pito Kod Editörü:", value=egz['sablon'], height=150, key="editor")
-            if st.button("Kodu Kontrol Et 🔍", use_container_width=True):
-                st.session_state.current_code = k_i
-                if normalize_fonksiyonu(k_i) == normalize_fonksiyonu(egz['dogru_cevap_kodu']):
-                    st.session_state.cevap_dogru = True
-                else:
-                    st.session_state.error_count += 1
-                st.rerun()
-        
-        # DURUM B: Başarı Sağlandı
+            with st.container():
+                # Görev Yönergesi
+                st.markdown(f"""
+                    <div class='gorev-box'>
+                        <span class='gorev-label'>📍 GÖREV {egz['id']}</span>
+                        <div class='gorev-text'>{egz['yonerge']}</div>
+                    </div>
+                """, unsafe_allow_html=True)
+                
+                # YENİ: İskelet Referans Kutusu (Silinme riskine karşı sabit kopya)
+                with st.expander("🔍 KOD İSKELETİNE BAK (REFERANS)", expanded=True):
+                    st.info("Eğer aşağıdaki editörü yanlışlıkla bozarsan, buradaki kopyaya bakarak düzeltebilirsin.")
+                    st.code(egz['sablon'], language="python")
+
+            # --- 3. SERBEST EDİTÖR ---
+            st.markdown("💻 **Senin Editörün (Hemen aşağıya kodla):**")
+            
+            # Hafıza yönetimi: Egzersiz değiştiğinde editörü sıfırla
+            if "current_edit_val" not in st.session_state or st.session_state.get("last_egz_id") != egz['id']:
+                st.session_state.current_edit_val = egz['sablon']
+                st.session_state.last_egz_id = egz['id']
+
+            user_code = st.text_area(
+                "Editor",
+                value=st.session_state.current_edit_val,
+                height=180,
+                key=f"edit_{egz['id']}",
+                label_visibility="collapsed"
+            )
+
+            c_btn1, c_btn2 = st.columns([4, 1])
+            with c_btn1:
+                if st.button("Kodu Çalıştır ve Kontrol Et 🚀", use_container_width=True):
+                    st.session_state.current_edit_val = user_code
+                    if normalize_fonksiyonu(user_code) == normalize_fonksiyonu(egz['dogru_cevap_kodu']):
+                        st.session_state.cevap_dogru = True
+                    else:
+                        st.session_state.error_count += 1
+                    st.rerun()
+            with c_btn2:
+                if st.button("🔄 Sıfırla"):
+                    st.session_state.current_edit_val = egz['sablon']
+                    st.rerun()
+
+        # --- BAŞARI VE HATA DURUMLARI (Standart Akış) ---
         elif st.session_state.cevap_dogru:
-            st.success(f"✅ {random.choice(msgs['success']).format(ad_k, p_xp)}")
-            st.markdown(f"<div class='console-box'>💻 Senin Çıktın:<br>> {egz['beklenen_cikti']}</div>", unsafe_allow_html=True)
+            st.success(f"✅ Müthişsin {ad_k}! Kodun onaylandı.")
+            st.code(user_code if 'user_code' in locals() else st.session_state.current_edit_val, language="python")
             if st.button("Sonraki Göreve Geç ➡️", use_container_width=True):
+                st.session_state.current_edit_val = None
                 s_idx = modul['egzersizler'].index(egz) + 1
-                if s_idx < len(modul['egzersizler']):
-                    n_id, n_m = modul['egzersizler'][s_idx]['id'], u['mevcut_modul']
-                else:
-                    n_id, n_m = f"{int(u['mevcut_modul'])+1}.1", int(u['mevcut_modul']) + 1
-                ilerleme_fonksiyonu(p_xp, st.session_state.current_code, egz['id'], n_id, n_m)
+                n_id, n_m = (modul['egzersizler'][s_idx]['id'], u['mevcut_modul']) if s_idx < len(modul['egzersizler']) else (f"{int(u['mevcut_modul'])+1}.1", int(u['mevcut_modul']) + 1)
+                ilerleme_fonksiyonu(p_xp, user_code if 'user_code' in locals() else st.session_state.current_edit_val, egz['id'], n_id, n_m)
         
-        # DURUM C: Pes Edildi (4 Hata)
         elif st.session_state.error_count >= 4:
-            st.warning("🚨 Bu görevde çok zorlandın arkadaşım. Pito senin için kesin çözümü hazırladı!")
-            with st.expander("📖 PİTO'NUN KESİN ÇÖZÜMÜ", expanded=True):
-                st.code(egz['cozum'], language="python")
-                st.markdown(f"<div class='console-box'>💻 Beklenen Çıktı:<br>> {egz['beklenen_cikti']}</div>", unsafe_allow_html=True)
-            if st.button("Sıradaki Göreve Geç (Puan Alınamadı) ➡️", use_container_width=True):
+            st.warning("🚨 Pito: 'Biraz takıldın sanki, sorun değil! İşte ideal çözüm:'")
+            st.code(egz['cozum'], language="python")
+            if st.button("Sıradaki Göreve Geç ➡️", use_container_width=True):
+                st.session_state.current_edit_val = None
                 s_idx = modul['egzersizler'].index(egz) + 1
-                if s_idx < len(modul['egzersizler']):
-                    n_id, n_m = modul['egzersizler'][s_idx]['id'], u['mevcut_modul']
-                else:
-                    n_id, n_m = f"{int(u['mevcut_modul'])+1}.1", int(u['mevcut_modul']) + 1
+                n_id, n_m = (modul['egzersizler'][s_idx]['id'], u['mevcut_modul']) if s_idx < len(modul['egzersizler']) else (f"{int(u['mevcut_modul'])+1}.1", int(u['mevcut_modul']) + 1)
                 ilerleme_fonksiyonu(0, "Çözüm İncelendi", egz['id'], n_id, n_m)
-    
-    # --- 4. SAĞ KOLON: LİDERLİK TABLOSU ---
+
     with cr:
         ranks_module.liderlik_tablosu_goster(supabase, current_user=u)
