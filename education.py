@@ -38,6 +38,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
     # --- 1. HUD VERİ HESAPLAMA ---
     p_xp = max(0, 20 - (st.session_state.error_count * 5))
     
+    # HUD HTML Çıktısı
     st.markdown(f'''
         <div class="cyber-hud">
             <div class="hud-item">👤 <span class="hud-v">{u['ad_soyad']}</span></div>
@@ -74,12 +75,12 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         cp1, cp2 = st.columns([1, 4])
         with cp1: emotions_module.pito_goster(p_mod)
         with cp2: 
-            # --- YENİ DÜZEN: Selamlama Mesajı ve İnceleme Butonu ---
-            c_msg, c_rev = st.columns([0.8, 0.2])
+            # --- YENİ DÜZEN: Selamlama ve Uzun İnceleme Butonu ---
+            c_msg, c_rev = st.columns([0.65, 0.35])
             with c_msg:
                 st.markdown(f"<div style='color:#00E5FF; font-style:italic;'>💬 {msgs['welcome'].format(ad_k)}</div>", unsafe_allow_html=True)
             with c_rev:
-                if st.button("🔍 İncele", help="Egzersiz çözümlerini ve siber-arşivi incele", key="nav_to_review"):
+                if st.button("🔍 Önceki egzersizleri incele", help="Geçmiş görev çözümlerini arşivden gör", key="nav_to_review"):
                     st.session_state.in_review = True
                     st.rerun()
 
