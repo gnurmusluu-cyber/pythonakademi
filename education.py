@@ -2,20 +2,12 @@ import streamlit as st
 import random
 
 def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fonksiyonu, normalize_fonksiyonu, supabase):
-    # --- 0. SİBER-HUD VE RESPONSIVE CSS MÜHRÜ ---
+    # --- 0. SİBER-HUD (STIKY BAR) VE GÖRSEL CSS ---
     st.markdown('''
         <style>
         .stApp { background-color: #0e1117; }
         
-        /* Sayfa Genel Boşlukları */
-        .block-container {
-            padding-top: 0rem !important;
-            padding-left: 1rem !important;
-            padding-right: 1rem !important;
-            max-width: 100% !important;
-        }
-
-        /* SABİT ÜST HUD BAR (Duyarlı Yapı) */
+        /* SABİT ÜST HUD BAR */
         .cyber-hud {
             position: fixed; top: 0; left: 0; width: 100%;
             background: rgba(14, 17, 23, 0.98);
@@ -24,22 +16,12 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             display: flex; justify-content: space-between; align-items: center;
             box-shadow: 0 4px 20px rgba(0, 229, 255, 0.3);
             backdrop-filter: blur(15px);
-            flex-wrap: wrap; /* Mobilde alt alta gelme desteği */
         }
-        .hud-item { color: #E0E0E0; font-family: 'Fira Code', monospace; font-size: 0.9rem; margin: 2px 5px; }
+        .hud-item { color: #E0E0E0; font-family: 'Fira Code', monospace; font-size: 0.9rem; }
         .hud-v { color: #00E5FF; font-weight: bold; text-shadow: 0 0 5px #00E5FF; }
 
-        /* Duyarlı İçerik Kaydırma */
+        /* HUD Altında Kalmaması İçin İçerik Kaydırma */
         .main-container { margin-top: 70px; }
-
-        /* MOBİL VE TABLET ÖZEL AYARLARI */
-        @media (max-width: 768px) {
-            .cyber-hud { padding: 8px 10px; justify-content: center; }
-            .hud-item { font-size: 0.75rem; margin: 2px 8px; }
-            .main-container { margin-top: 110px; } /* Mobilde HUD 2 satır olursa içeriği aşağı it */
-            .academy-header { font-size: 1.5rem !important; }
-            .kokpit-label { font-size: 0.7rem !important; }
-        }
 
         .console-box {
             background-color: #000 !important; color: #00E5FF !important;
@@ -78,21 +60,28 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
 
     col_prog1, col_prog2 = st.columns(2)
     with col_prog1:
-        st.markdown(f"<div style='color:#00E5FF; font-weight:bold; font-size:0.8rem;' class='kokpit-label'>🚀 AKADEMİ: %{int((m_idx/total_m)*100)}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='color:#00E5FF; font-weight:bold; font-size:0.8rem;'>🚀 AKADEMİ: %{int((m_idx/total_m)*100)}</div>", unsafe_allow_html=True)
         st.progress(min((m_idx) / total_m, 1.0))
     with col_prog2:
-        st.markdown(f"<div style='color:#00E5FF; font-weight:bold; font-size:0.8rem;' class='kokpit-label'>📍 MODÜL {m_idx+1} - GÖREV {c_i}/{t_i}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='color:#00E5FF; font-weight:bold; font-size:0.8rem;'>📍 MODÜL {m_idx+1} - GÖREV {c_i}/{t_i}</div>", unsafe_allow_html=True)
         st.progress(c_i / t_i)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    # Streamlit'te st.columns mobilde otomatik olarak alt alta gelir (stacking)
     cl, cr = st.columns([7.2, 2.8])
     
     with cl:
         p_mod = emotions_module.pito_durum_belirle(st.session_state.error_count, st.session_state.cevap_dogru)
         cp1, cp2 = st.columns([1, 4])
         with cp1: emotions_module.pito_goster(p_mod)
-        with cp2: st.markdown(f"<div style='color:#00E5FF; font-style:italic;'>💬 {msgs['welcome'].format(ad_k)}</div>", unsafe_allow_html=True)
+        with cp2: 
+            # --- YENİ DÜZEN: Selamlama Mesajı ve İnceleme Butonu ---
+            c_msg, c_rev = st.columns([0.8, 0.2])
+            with c_msg:
+                st.markdown(f"<div style='color:#00E5FF; font-style:italic;'>💬 {msgs['welcome'].format(ad_k)}</div>", unsafe_allow_html=True)
+            with c_rev:
+                if st.button("🔍 İncele", help="Egzersiz çözümlerini ve siber-arşivi incele", key="nav_to_review"):
+                    st.session_state.in_review = True
+                    st.rerun()
 
         with st.expander(f"📖 {modul['modul_adi']}", expanded=True):
             st.markdown(f"<div style='background:rgba(0,229,255,0.03); padding:15px; border-radius:10px;'>{modul['pito_anlatimi']}</div>", unsafe_allow_html=True)
