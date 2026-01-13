@@ -4,19 +4,18 @@ import os
 import base64
 
 def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fonksiyonu, normalize_fonksiyonu, supabase):
-    # --- 0. SİBER-KALKAN VE OPAK ZIRH CSS (SIFIR SIZINTI) ---
+    # --- 0. SİBER-KALKAN (SIFIR SIZINTI & SIFIR ŞEFFAFLIK) ---
     st.markdown('''
         <style>
-        /* 1. STREAMLIT VARSAYILANLARINI TAMAMEN İMHA ET */
+        /* 1. STREAMLIT VARSAYILANLARINI SİSTEMDEN SİL */
         header[data-testid="stHeader"] { display: none !important; visibility: hidden !important; height: 0px !important; }
         [data-testid="stDecoration"] { display: none !important; }
-        #MainMenu { visibility: hidden; }
         footer { visibility: hidden; }
         
-        /* 2. ANA UYGULAMA ZEMİNİ */
+        /* 2. ANA ZEMİNİ ÇİVİLE */
         .stApp { background-color: #0e1117 !important; }
         
-        /* 3. SIDEBAR STABİLİZASYONU (SIÇRAMA ÖNLEYİCİ) */
+        /* 3. SIDEBAR STABİLİZASYONU */
         [data-testid="stSidebar"] {
             min-width: 320px !important;
             max-width: 320px !important;
@@ -24,31 +23,29 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             border-right: 2px solid #00E5FF;
         }
 
-        /* 4. SABİT ÜST HUD BAR (SIFIR ŞEFFAFLIK - TAM OPAK) */
+        /* 4. SABİT ÜST HUD BAR (SIFIR GEÇİRGENLİK ZIRHI) */
         .cyber-hud {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            height: 95px;
-            background-color: #0e1117 !important; /* Arka planla aynı renk, %100 OPAK */
+            height: 100px; /* Yüksekliği netleştir */
+            background-color: #0e1117 !important; /* ARKA PLANLA AYNI VE TAM OPAK */
             border-bottom: 3px solid #00E5FF;
-            z-index: 1000000 !important; /* Her şeyin üstünde */
+            z-index: 1000000 !important; /* MİLYONLUK Z-INDEX: HER ŞEYİN ÜSTÜNDE */
             padding: 0 25px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 15px 40px #000000 !important; /* Alt katmanı tamamen gölgeler */
+            opacity: 1 !important; /* Şeffaflığı yasakla */
+            box-shadow: 0 10px 40px #000000 !important; /* ALTI TAMAMEN KARART */
         }
 
-        /* PITO GIF ÇERÇEVESİ (KOKPİT - BÜYÜTÜLDÜ) */
+        /* PITO KOKPİT GÖRSELİ (BÜYÜTÜLDÜ) */
         .hud-pito-gif img {
-            width: 75px; 
-            height: 75px;
-            border-radius: 50%; 
-            border: 3px solid #00E5FF;
-            object-fit: cover; 
-            background: #000;
+            width: 75px; height: 75px;
+            border-radius: 50%; border: 3px solid #00E5FF;
+            object-fit: cover; background: #000;
             margin-right: 18px;
             box-shadow: 0 0 10px #00E5FF;
         }
@@ -56,31 +53,16 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         .hud-item { color: #E0E0E0; font-family: 'Fira Code', monospace; font-size: 0.95rem; margin: 0 12px; }
         .hud-v { color: #00E5FF; font-weight: bold; text-shadow: 0 0 8px #00E5FF; }
 
-        /* 5. ANA İÇERİK KAYDIRMA (HUD ALTINDA KALMAMASI İÇİN) */
+        /* 5. ANA İÇERİK KAYDIRMA (BARİYERLİ) */
         .main-container { 
-            margin-top: 115px !important; 
-            padding: 15px;
+            margin-top: 120px !important; /* HUD ALTINDA KALMAMASI İÇİN NET BOŞLUK */
+            padding: 20px;
             position: relative;
-            z-index: 1;
-            animation: fadeIn 0.5s ease-in;
+            z-index: 1; /* HUD'IN ALTINDA KALMASINI GARANTİLE */
         }
 
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        /* MOBİL UYUMLULUK */
-        @media (max-width: 768px) {
-            .cyber-hud { padding: 5px 10px; justify-content: center; height: auto; min-height: 100px; }
-            .main-container { margin-top: 160px !important; }
-            .hud-pito-gif img { width: 55px; height: 55px; }
-            [data-testid="stSidebar"] { min-width: 100% !important; }
-        }
-
-        .console-box {
-            background-color: #000 !important; color: #00E5FF !important;
-            border: 1px solid #333; border-radius: 8px;
-            padding: 15px; font-family: 'Courier New', monospace; margin: 10px 0;
-            box-shadow: 0 0 10px rgba(0, 229, 255, 0.2);
-        }
+        /* Streamlit'in bloklar arası boşluklarını daralt */
+        .block-container { padding-top: 0rem !important; }
         </style>
     ''', unsafe_allow_html=True)
 
@@ -88,8 +70,8 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
     p_xp = max(0, 20 - (st.session_state.error_count * 5))
     p_mod = emotions_module.pito_durum_belirle(st.session_state.error_count, st.session_state.cevap_dogru)
     
-    # GIF'i kokpite mühürlemek için Base64 dönüşümü
     def get_base64_gif(mod):
+        # Assets klasöründeki GIF'i Base64 formatına çevirir
         path = os.path.join(os.path.dirname(__file__), "assets", f"pito_{mod}.gif")
         if os.path.exists(path):
             with open(path, "rb") as f:
@@ -151,7 +133,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             st.markdown(f"### 🎯 GÖREV {egz['id']}")
             st.info(egz['yonerge'])
 
-        # --- EDİTÖR VE AKIŞ ---
+        # --- EDİTÖR VE KONTROL AKIŞI ---
         if not st.session_state.cevap_dogru and st.session_state.error_count < 4:
             if st.session_state.error_count > 0:
                 st.error(f"🚨 **Pito:** {random.choice(msgs['errors'][f'level_{min(st.session_state.error_count, 4)}']).format(ad_k)}")
@@ -189,6 +171,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
                 ilerleme_fonksiyonu(0, "Çözüm İncelendi", egz['id'], n_id, n_m)
 
     with cr:
+        # Onur Kürsüsü sağ kolonda mühürlendi
         ranks_module.liderlik_tablosu_goster(supabase, current_user=u)
 
     st.markdown('</div>', unsafe_allow_html=True)
