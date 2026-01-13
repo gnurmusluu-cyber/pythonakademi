@@ -40,41 +40,43 @@ def mezuniyet_ekrani(u, msgs, pito_goster, supabase, ranks_module):
         ranks_module.liderlik_tablosu_goster(supabase, current_user=u)
 
 def inceleme_modu_paneli(u, mufredat, pito_goster, supabase):
-    """Öğrencinin geçmiş başarılarını modül isimleriyle birlikte gösterir."""
+    """Hata vermeyen, güvenli inceleme paneli."""
     st.markdown("<h2 style='color:#ADFF2F;'>🔍 Geçmiş Görev İnceleme</h2>", unsafe_allow_html=True)
     
     if st.button("⬅️ Geri Dön"):
         st.session_state.in_review = False; st.rerun()
 
     try:
-        # Veritabanından kayıtları çek
-        res = supabase.table("egzersiz_kayitlari").select("*").eq("ogrenci_no", int(u['ogrenci_no'])).order("created_at", desc=True).execute()
+        # DÜZELTME: .order() kısmını çıkardık çünkü sütun yok
+        res = supabase.table("egzersiz_kayitlari").select("*").eq("ogrenci_no", int(u['ogrenci_no'])).execute()
         
         if res.data:
             for item in res.data:
                 egz_id = item.get('egz_id')
-                # MÜFREDATTAN MODÜL İSMİNİ BULMA (Akıllı Arama)
-                modul_adi = "Diğer Görevler"
+                # Modül ismini müfredattan çek
+                modul_adi = "Bilinmeyen Modül"
                 for m in mufredat:
                     if any(e['id'] == str(egz_id) for e in m['egzersizler']):
                         modul_adi = m['modul_adi']
                         break
                 
-                tarih = item.get('created_at', 'Tarih Belirsiz')[:10]
+                # DÜZELTME: created_at yoksa hata verme, boş geç
+                tarih = item.get('created_at', 'Tarih Kaydı Yok')
+                if tarih != 'Tarih Kaydı Yok': tarih = tarih[:10]
+                
                 xp = item.get('alinan_puan', 0)
                 
-                # Expand başlığında Modül İsmi ve Görev ID birlikte
                 with st.expander(f"📦 {modul_adi} | 📍 Görev {egz_id} | 💎 {xp} XP"):
-                    # Veritabanındaki sütun isminin 'basarili_kod' olduğundan eminiz
-                    kod_icerigi = item.get('basarili_kod', '')
+                    # Veritabanındaki sütun isminin doğruluğunu kontrol et (basarili_kod)
+                    kod_icerigi = item.get('basarili_kod', '').strip()
                     
-                    if kod_icerigi and kod_icerigi.strip():
+                    if kod_icerigi:
                         st.code(kod_icerigi, language="python")
                     else:
-                        st.warning("⚠️ Bu görev için kayıtlı bir kod bulunamadı (Çözüm izlenmiş olabilir).")
+                        st.warning("⚠️ Bu görev için kaydedilmiş bir kod bulunamadı.")
                     
                     st.caption(f"📅 Kayıt Tarihi: {tarih}")
         else:
             st.info("Henüz kaydedilmiş bir çözümün bulunmuyor genç yazılımcı.")
     except Exception as e:
-        st.error(f"Veri çekilirken bir sorun oluştu: {e}")
+        st.error(f"Pito veri çekerken bir pürüzle karşılaştı: {e}")
