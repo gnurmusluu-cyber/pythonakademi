@@ -77,12 +77,13 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
     egz = next((e for e in modul['egzersizler'] if e['id'] == str(u['mevcut_egzersiz'])), modul['egzersizler'][0])
     c_i, t_i = modul['egzersizler'].index(egz) + 1, len(modul['egzersizler'])
 
-    # --- 2. ÜST PANEL: İLERLEME GÖSTERGELERİ (NETLEŞTİRİLMİŞ) ---
+    # --- 2. ÜST PANEL: İLERLEME GÖSTERGELERİ ---
     col_acad, col_mod = st.columns(2)
     with col_acad:
         st.markdown(f"<div class='kokpit-label'>🚀 AKADEMİ YOLCULUĞU (%{int((m_idx/total_m)*100)})</div>", unsafe_allow_html=True)
         st.progress(min((m_idx) / total_m, 1.0))
     with col_mod:
+        # Netleştirilmiş Modül ve Görev Takibi
         st.markdown(f"<div class='kokpit-label'>📍 MODÜL {m_idx + 1} - GÖREV {c_i} / {t_i}</div>", unsafe_allow_html=True)
         st.progress(c_i / t_i)
 
@@ -113,7 +114,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
 
         # --- 4. AKIŞ MANTIĞI ---
         if inceleme_modu:
-            # İNCELEME MODU: Direkt Çözüm ve Çıktı (Mezunlar/Eğitmenler İçin)
+            # İNCELEME MODU: Direkt Çözüm ve Çıktı
             st.markdown("📖 **Pito'nun İdeal Çözümü:**")
             st.code(egz['cozum'], language="python")
             st.markdown("💻 **Konsol Çıktısı:**")
@@ -168,6 +169,5 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
                 ilerleme_fonksiyonu(0, "Çözüm İncelendi", egz['id'], n_id, n_m)
 
     with side_col:
-        # LİDERLİK TABLOSU (Sağ Kanatta Sabit)
-        st.markdown("<div style='text-align:center; color:#00E5FF; font-weight:bold; font-size:1.1rem;'>🏆 ONUR KÜRSÜSÜ</div>", unsafe_allow_html=True)
+        # LİDERLİK TABLOSU (Sağ Kanatta Sabit ve Sade)
         ranks_module.liderlik_tablosu_goster(supabase, current_user=u)
