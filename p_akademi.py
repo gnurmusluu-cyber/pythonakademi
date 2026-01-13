@@ -7,23 +7,23 @@ import re
 import base64
 from supabase import create_client, Client
 
-# --- 1. SİBER-ZIRH: AGRESİF GÖRSEL MÜHÜRLEME ---
+# --- 1. SİBER-BUZ (CYBER-ICE) TEMASI VE GÖRSEL MÜHÜRLEME ---
 st.set_page_config(
     page_title="Pito Python Akademi", 
     layout="wide", 
     initial_sidebar_state="collapsed"
 )
 
-# STREAMLIT'İN TÜM VARSAYILANLARINI EZEN CSS
+# TÜM CSS KURALLARI - RENK PALETİ DÜZENLENDİ
 st.markdown("""
     <style>
-    /* 1. KÜRESEL SIFIRLAMA - BEYAZ FONU KÖKTEN SİL */
+    /* 1. KÜRESEL SIFIRLAMA VE ANA ARKA PLAN */
     html, body, [data-testid="stAppViewContainer"], .stApp {
-        background-color: #0E1117 !important;
-        color: #FFFFFF !important;
+        background-color: #0E1117 !important; /* Derin Lacivert-Siyah */
+        color: #E0E0E0 !important; /* Göz yormayan kırık beyaz metin */
     }
-
-    /* ÜST BOŞLUK */
+    
+    /* ÜST BOŞLUK DÜZENİ */
     .block-container { 
         padding-top: 5rem !important; 
         padding-bottom: 2rem !important;
@@ -31,61 +31,67 @@ st.markdown("""
         padding-right: 5% !important;
     }
 
-    /* 2. PARLAYAN NEON BAŞLIK */
+    /* 2. PARLAYAN NEON BAŞLIK (Giriş Ekranı - Yeşil/Mavi Gradyan) */
     .academy-title { 
         font-size: 3.8em !important; font-weight: 900 !important;
         background: linear-gradient(90deg, #00FF00, #00CCFF) !important; 
         -webkit-background-clip: text !important; -webkit-text-fill-color: transparent !important; 
         margin-bottom: 30px !important; line-height: 1.1 !important;
-        filter: drop-shadow(0 0 12px rgba(0, 255, 0, 0.4)) !important;
+        filter: drop-shadow(0 0 15px rgba(0, 255, 0, 0.5)) !important;
     }
 
-    /* 3. MODÜL İSMİ (HERO PANEL) - BEYAZ ÜSTÜNE BEYAZ TAMİRİ */
+    /* 3. MODÜL İSMİ (HERO PANEL) - YENİ RENK: ELEKTRİK MAVİSİ */
     .hero-panel { 
-        background-color: #161b22 !important; 
+        background-color: #161b22 !important; /* Koyu panel zemini */
         padding: 25px !important; 
         border-radius: 15px !important; 
         border: 1px solid #30363d !important;
-        border-left: 8px solid #00FF00 !important; 
-        margin-bottom: 20px !important;
+        border-left: 8px solid #00CCFF !important; /* Mavi Sol Çizgi */
+        margin-bottom: 25px !important;
     }
-    /* Panel içindeki H3 metnini siyah arkaplan ve yeşil yazıya mühürle */
+    /* H3 BAŞLIĞI: BEYAZ ZEMİN SORUNU İÇİN TAMİR EDİLDİ */
     .hero-panel h3 { 
-        color: #00FF00 !important; 
+        color: #00CCFF !important; /* Elektrik Mavisi Başlık */
         background-color: transparent !important;
         font-weight: 900 !important; 
         margin: 0 !important;
         text-shadow: none !important;
-        -webkit-text-fill-color: #00FF00 !important;
+        -webkit-text-fill-color: #00CCFF !important;
     }
+    .hero-panel p { color: #B0B0B0 !important; } /* Alt metin daha soft gri */
 
-    /* 4. ÇÖZÜM BLOĞU VE EXPANDER (KESİN ÇÖZÜM) */
-    /* Expander'ın dış çerçevesi */
+    /* 4. KOD BLOKLARI VE ÇÖZÜM - ZİFİRİ SİYAH ÜSTÜNE MAVİ */
+    /* Streamlit'in kod bloğu taşıyıcısı */
+    [data-testid="stCodeBlock"] {
+        background-color: #000000 !important; /* Mutlak Siyah Zemin */
+        border: 1px solid #00CCFF !important; /* Mavi Çerçeve */
+        border-radius: 10px !important;
+    }
+    /* Kodun kendisi */
+    code, pre, .stCodeBlock pre {
+        background-color: #000000 !important;
+        color: #00CCFF !important; /* Kodlar Elektrik Mavisi */
+        font-family: 'Courier New', monospace !important;
+    }
+    /* Kod içindeki renklendirmeleri sıfırla */
+    [data-testid="stCodeBlock"] span { color: inherit !important; }
+
+    /* 5. EXPANDER (KONU ANLATIMI/ÇÖZÜM KUTUSU) */
     [data-testid="stExpander"] {
         background-color: #1E1E2F !important;
-        border: 1px solid #00FF00 !important;
+        border: 1px solid #00CCFF !important;
         border-radius: 12px !important;
     }
-    /* Expander başlık metni */
     [data-testid="stExpander"] summary p {
-        color: #00FF00 !important;
-        font-weight: bold !important;
+        color: #00CCFF !important; font-weight: 800 !important;
     }
-    /* Expander açıldığında içindeki alan */
     [data-testid="stExpander"] div[role="region"] {
-        background-color: #000000 !important; /* İÇİ TAM SİYAH */
-        color: #FFFFFF !important;
+        background-color: #000000 !important; /* İçi siyah */
+        color: #E0E0E0 !important;
     }
-
-    /* 5. KOD BLOKLARI (ST.CODE) - BEYAZ ÜSTÜNE BEYAZ TAMİRİ */
-    code, pre, [data-testid="stCodeBlock"] {
-        background-color: #000000 !important;
-        color: #00FF00 !important; /* KOD YEŞİL OLSUN */
-        border: 1px solid #333 !important;
-    }
-    /* Streamlit'in kod bloğu içindeki spanları temizle */
-    [data-testid="stCodeBlock"] span {
-        color: inherit !important;
+    .anlatim-box {
+        background-color: #000000 !important; padding: 20px; border-radius: 10px;
+        border-left: 5px solid #00CCFF; color: #E0E0E0 !important;
     }
 
     /* 6. GÖREV KUTUSU */
@@ -97,38 +103,31 @@ st.markdown("""
     .gorev-label { color: #00CCFF !important; font-weight: 900 !important; font-size: 1.2em !important; display: block; margin-bottom: 12px; }
     .gorev-text { color: #FFFFFF !important; font-size: 1.15em !important; line-height: 1.6; }
 
-    /* 7. ETİKETLER VE INPUTLAR */
+    /* 7. ETİKETLER VE INPUTLAR (AKSİYON RENGİ YEŞİL KALDI) */
     [data-testid="stWidgetLabel"] p {
         color: #00FF00 !important; font-weight: 900 !important; font-size: 1.25em !important;
     }
     textarea, input {
-        color: #FFFFFF !important; background-color: #000000 !important;
+        color: #00CCFF !important; /* Yazılan kod mavi olsun */
+        background-color: #000000 !important;
         border: 1px solid #00FF00 !important;
     }
 
-    /* SEKMELER, BUTONLAR VE İLERLEME */
+    /* DİĞER BİLEŞENLER */
     .stTabs [data-baseweb="tab-list"] { background-color: #1E1E2F !important; border-radius: 12px; padding: 10px; }
-    .stTabs [data-baseweb="tab"] p { color: #E0E0E0 !important; font-weight: bold !important; }
+    .stTabs [data-baseweb="tab"] p { color: #B0B0B0 !important; font-weight: bold !important; }
     .stTabs [aria-selected="true"] { background-color: #00FF00 !important; }
     .stTabs [aria-selected="true"] p { color: #000000 !important; }
     
-    .status-bar { display: flex; justify-content: space-between; background-color: #161b22; padding: 18px; border-radius: 15px; border: 1px solid #30363d; margin-bottom: 20px; }
-    .pito-notu { background-color: #1E1E2F; border-radius: 12px; padding: 22px; border-left: 6px solid #00FF00; margin-top: 15px; color: #E0E0E0; font-style: italic; }
     .stButton>button { border-radius: 12px; background-color: #00FF00 !important; color: black !important; font-weight: 800; height: 3.8em; border: none !important; }
     div.stProgress > div > div > div > div { background-color: #00FF00 !important; }
     .progress-label { font-size: 0.9em; color: #00FF00; font-weight: bold; margin-bottom: 8px; display: flex; justify-content: space-between; }
     
+    .status-bar { display: flex; justify-content: space-between; background-color: #161b22; padding: 18px; border-radius: 15px; border: 1px solid #30363d; margin-bottom: 20px; }
+    .pito-notu { background-color: #1E1E2F !important; border-radius: 12px !important; padding: 22px !important; border-left: 6px solid #00FF00 !important; color: #E0E0E0 !important; font-style: italic; }
+    
     /* LİDERLİK KARTLARI */
-    .leader-card {
-        background: #1E1E2F !important;
-        border: 1px solid #30363d !important;
-        border-radius: 12px !important;
-        padding: 12px 18px !important;
-        margin-bottom: 10px !important;
-        display: flex !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-    }
+    .leader-card { background: #1E1E2F !important; border: 1px solid #30363d !important; border-radius: 12px !important; padding: 12px 18px !important; margin-bottom: 10px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; }
     .rank-badge { padding: 3px 10px !important; border-radius: 20px !important; font-size: 0.75em !important; font-weight: 800 !important; text-transform: uppercase !important; }
     .badge-comez { background-color: #4B4B4B !important; color: #FFFFFF !important; }
     .badge-pythonist { background-color: #00CCFF !important; color: #000000 !important; }
@@ -247,15 +246,18 @@ else:
         if m_idx >= total_m:
             st.balloons(); pito_gorseli_yukle("mezun", size=280)
             st.markdown(f"<h2 style='text-align:center; color:#00FF00;'>🏆 TEBRİKLER {u['ad_soyad'].upper()}!</h2>", unsafe_allow_html=True)
+            if st.button("🔄 Baştan Başla"):
+                supabase.table("kullanicilar").update({"toplam_puan": 0, "mevcut_egzersiz": "1.1", "mevcut_modul": 1}).eq("ogrenci_no", u['ogrenci_no']).execute()
+                st.session_state.user = None; st.rerun()
         else:
             modul = mufredat[m_idx]
             egz = next((e for e in modul['egzersizler'] if e['id'] == str(u['mevcut_egzersiz'])), modul['egzersizler'][0])
             
-            # HERO PANEL (MODÜL İSMİ TAMİR EDİLDİ)
+            # HERO PANEL (YENİ RENK: MAVİ BAŞLIK)
             st.markdown(f"<div class='hero-panel'><h3>🚀 {modul['modul_adi']}</h3><p>{u['ad_soyad']} | {u['rutbe']} | {int(u['toplam_puan'])} XP</p></div>", unsafe_allow_html=True)
             
             with st.expander(f"📖 KONU ANLATIMI", expanded=True):
-                st.markdown(f"<div class='anlatim-box' style='background:#000 !important; color:#fff !important; padding:15px; border-radius:10px;'>{modul.get('pito_anlatimi', 'Yükleniyor...')}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='anlatim-box'>{modul.get('pito_anlatimi', 'İçerik yükleniyor...')}</div>", unsafe_allow_html=True)
 
             c_idx, t_egz = modul['egzersizler'].index(egz) + 1, len(modul['egzersizler'])
             st.markdown(f"<div class='progress-label'><span>🗺️ Modül Görevleri</span><span>{c_idx} / {t_egz} Görev</span></div>", unsafe_allow_html=True)
@@ -278,32 +280,25 @@ else:
                     st.session_state.current_code = k_in
                     if kod_normalize_et(k_in) == kod_normalize_et(egz['dogru_cevap_kodu']):
                         st.session_state.cevap_dogru, st.session_state.pito_mod = True, "basari"
-                    else:
-                        st.session_state.error_count += 1
-                        st.session_state.pito_mod = "hata"
-                    st.rerun()
+                    else: st.session_state.error_count += 1; st.rerun()
             elif st.session_state.cevap_dogru:
                 st.success(f"✅ Harika! +{p_pot} XP")
-                st.markdown(f"<div style='background:#000; color:#0f0; padding:15px; border-radius:10px; border:1px solid #333;'>💻 Çıktı: {egz.get('beklenen_cikti', 'Tamamlandı.')}</div>", unsafe_allow_html=True)
+                # ÇIKTI KUTUSU (ZİFİRİ SİYAH ÜSTÜNE MAVİ)
+                st.markdown(f"<div style='background:#000; color:#00CCFF; padding:15px; border-radius:10px; border:1px solid #00CCFF; font-family:monospace;'>💻 Çıktı: {egz.get('beklenen_cikti', 'Tamamlandı.')}</div>", unsafe_allow_html=True)
                 if st.button("Sonraki Göreve Geç ➡️"):
                     s_idx = modul['egzersizler'].index(egz) + 1
-                    if s_idx < len(modul['egzersizler']):
-                        n_id, n_m = modul['egzersizler'][s_idx]['id'], u['mevcut_modul']
-                    else:
-                        n_id, n_m = f"{u['mevcut_modul']+1}.1", u['mevcut_modul'] + 1
+                    if s_idx < len(modul['egzersizler']): n_id, n_m = modul['egzersizler'][s_idx]['id'], u['mevcut_modul']
+                    else: n_id, n_m = f"{u['mevcut_modul']+1}.1", u['mevcut_modul'] + 1
                     ilerleme_kaydet(p_pot, st.session_state.current_code, egz['id'], n_id, n_m)
             elif st.session_state.error_count >= 4:
-                st.error("🚫 Bu görevden puan kazanılamadı.")
+                st.error("🚫 Puan kazanılamadı.")
                 with st.expander("📖 Pito'nun Çözümü", expanded=True):
-                    # KOD BLOĞU TAMİRİ
+                    # ÇÖZÜM KOD BLOĞU (ZİFİRİ SİYAH ÜSTÜNE MAVİ)
                     st.code(egz['cozum'], language="python")
                 if st.button("Anladım, Sıradaki Göreve Geç ➡️"):
                     s_idx = modul['egzersizler'].index(egz) + 1
-                    if s_idx < len(modul['egzersizler']):
-                        n_id, n_m = modul['egzersizler'][s_idx]['id'], u['mevcut_modul']
-                    else:
-                        n_id, n_m = f"{u['mevcut_modul']+1}.1", u['mevcut_modul'] + 1
+                    if s_idx < len(modul['egzersizler']): n_id, n_m = modul['egzersizler'][s_idx]['id'], u['mevcut_modul']
+                    else: n_id, n_m = f"{u['mevcut_modul']+1}.1", u['mevcut_modul'] + 1
                     ilerleme_kaydet(0, "Çözüm İncelendi", egz['id'], n_id, n_m)
 
-    with col_side: 
-        liderlik_tablosu_goster(u['sinif'])
+    with col_side: liderlik_tablosu_goster(u['sinif'])
