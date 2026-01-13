@@ -2,12 +2,20 @@ import streamlit as st
 import random
 
 def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fonksiyonu, normalize_fonksiyonu, supabase):
-    # --- 0. SİBER-HUD (STIKY BAR) VE GÖRSEL CSS ---
+    # --- 0. SİBER-HUD VE RESPONSIVE CSS MÜHRÜ ---
     st.markdown('''
         <style>
         .stApp { background-color: #0e1117; }
         
-        /* SABİT ÜST HUD BAR */
+        /* Sayfa Genel Boşlukları */
+        .block-container {
+            padding-top: 0rem !important;
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+            max-width: 100% !important;
+        }
+
+        /* SABİT ÜST HUD BAR (Duyarlı Yapı) */
         .cyber-hud {
             position: fixed; top: 0; left: 0; width: 100%;
             background: rgba(14, 17, 23, 0.98);
@@ -16,12 +24,22 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             display: flex; justify-content: space-between; align-items: center;
             box-shadow: 0 4px 20px rgba(0, 229, 255, 0.3);
             backdrop-filter: blur(15px);
+            flex-wrap: wrap; /* Mobilde alt alta gelme desteği */
         }
-        .hud-item { color: #E0E0E0; font-family: 'Fira Code', monospace; font-size: 0.9rem; }
+        .hud-item { color: #E0E0E0; font-family: 'Fira Code', monospace; font-size: 0.9rem; margin: 2px 5px; }
         .hud-v { color: #00E5FF; font-weight: bold; text-shadow: 0 0 5px #00E5FF; }
 
-        /* HUD Altında Kalmaması İçin İçerik Kaydırma */
+        /* Duyarlı İçerik Kaydırma */
         .main-container { margin-top: 70px; }
+
+        /* MOBİL VE TABLET ÖZEL AYARLARI */
+        @media (max-width: 768px) {
+            .cyber-hud { padding: 8px 10px; justify-content: center; }
+            .hud-item { font-size: 0.75rem; margin: 2px 8px; }
+            .main-container { margin-top: 110px; } /* Mobilde HUD 2 satır olursa içeriği aşağı it */
+            .academy-header { font-size: 1.5rem !important; }
+            .kokpit-label { font-size: 0.7rem !important; }
+        }
 
         .console-box {
             background-color: #000 !important; color: #00E5FF !important;
@@ -38,7 +56,6 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
     # --- 1. HUD VERİ HESAPLAMA ---
     p_xp = max(0, 20 - (st.session_state.error_count * 5))
     
-    # HUD HTML Çıktısı
     st.markdown(f'''
         <div class="cyber-hud">
             <div class="hud-item">👤 <span class="hud-v">{u['ad_soyad']}</span></div>
@@ -61,13 +78,14 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
 
     col_prog1, col_prog2 = st.columns(2)
     with col_prog1:
-        st.markdown(f"<div style='color:#00E5FF; font-weight:bold; font-size:0.8rem;'>🚀 AKADEMİ: %{int((m_idx/total_m)*100)}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='color:#00E5FF; font-weight:bold; font-size:0.8rem;' class='kokpit-label'>🚀 AKADEMİ: %{int((m_idx/total_m)*100)}</div>", unsafe_allow_html=True)
         st.progress(min((m_idx) / total_m, 1.0))
     with col_prog2:
-        st.markdown(f"<div style='color:#00E5FF; font-weight:bold; font-size:0.8rem;'>📍 MODÜL {m_idx+1} - GÖREV {c_i}/{t_i}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='color:#00E5FF; font-weight:bold; font-size:0.8rem;' class='kokpit-label'>📍 MODÜL {m_idx+1} - GÖREV {c_i}/{t_i}</div>", unsafe_allow_html=True)
         st.progress(c_i / t_i)
 
     st.markdown("<br>", unsafe_allow_html=True)
+    # Streamlit'te st.columns mobilde otomatik olarak alt alta gelir (stacking)
     cl, cr = st.columns([7.2, 2.8])
     
     with cl:
