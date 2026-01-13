@@ -44,8 +44,14 @@ def inceleme_modu_paneli(u, mufredat, pito_goster, supabase):
     st.markdown("<h2 style='color:#ADFF2F;'>🔍 Görev Çözüm Kütüphanesi</h2>", unsafe_allow_html=True)
     st.markdown("Başarıyla tamamladığın görevlerin en ideal çözümlerini buradan inceleyebilirsin arkadaşım!")
     
-    if st.button("⬅️ Mezuniyet Ekranına Dön"):
+    # --- DİNAMİK YÖNLENDİRME ZIRHI ---
+    # Öğrencinin mevcut modülü müfredat sayısını geçtiyse mezun sayılır.
+    is_graduated = int(u['mevcut_modul']) > len(mufredat)
+    geri_butonu_metni = "⬅️ Mezuniyet Ekranına Dön" if is_graduated else "⬅️ Eğitime Dön"
+    
+    if st.button(geri_butonu_metni):
         st.session_state.in_review = False; st.rerun()
+    # --------------------------------
 
     try:
         # Veritabanından sadece hangi görevlerin bittiğini çekiyoruz
