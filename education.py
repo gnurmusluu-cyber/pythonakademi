@@ -2,13 +2,13 @@ import streamlit as st
 import random
 
 def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fonksiyonu, normalize_fonksiyonu, supabase):
-    """Satır bazlı korumalı kod editörü motoru."""
+    """Bütünlüğü korunmuş, satır içi gömülü editör motoru."""
     
     m_idx = int(u['mevcut_modul']) - 1
     total_m = len(mufredat)
     ad_k = u['ad_soyad'].split()[0]
 
-    # --- 1. ÜST PANEL ---
+    # --- ÜST PANEL ---
     st.markdown(f"<div class='progress-label'><span>🎓 Akademi</span><span>Modül {m_idx + 1} / {total_m}</span></div>", unsafe_allow_html=True)
     st.progress(min((m_idx) / total_m, 1.0))
 
@@ -17,15 +17,12 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
     
     cl, cr = st.columns([7, 3])
     with cl:
-        rn, rc = ranks_module.rütbe_ata(u['toplam_puan'])
-        st.markdown(f"<div class='hero-panel'><h3>🚀 {modul['modul_adi']}</h3><p>{ad_k} | <span class='rank-badge' style='background:black; color:#ADFF2F;'>{rn}</span></p></div>", unsafe_allow_html=True)
-        
-        # Pito Mesajı ve XP Durumu
+        # Pito ve Bilgi Kartı
         p_xp = max(0, 20 - (st.session_state.error_count * 5))
         p_mod = emotions_module.pito_durum_belirle(st.session_state.error_count, st.session_state.cevap_dogru)
         
-        cp1, cp2 = st.columns([1, 2])
-        with cp1: emotions_module.pito_goster(p_mod, size=140)
+        cp1, cp2 = st.columns([1, 3])
+        with cp1: emotions_module.pito_goster(p_mod)
         with cp2:
             st.markdown(f"💎 **{p_xp} XP** | ⚠️ **Hata: {st.session_state.error_count}/4**")
             if st.session_state.error_count > 0:
@@ -33,49 +30,61 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             else:
                 st.markdown(f"<div class='pito-notu'>💬 {msgs['welcome'].format(ad_k)}</div>", unsafe_allow_html=True)
 
-        # --- 2. SATIR BAZLI AKILLI EDİTÖR ---
+        # --- BÜTÜNLEŞİK SATIR İÇİ EDİTÖR ---
         if not st.session_state.cevap_dogru and st.session_state.error_count < 4:
             st.markdown(f"<div class='gorev-box'><span class='gorev-label'>📍 GÖREV {egz['id']}</span><div class='gorev-text'>{egz['yonerge']}</div></div>", unsafe_allow_html=True)
             
-            sablon_satirlari = egz.get('sablon', '').split('\n')
-            cevap_inputlari = {}
-
-            st.markdown("💻 **Kod Defteri (Boşlukları Doldur):**")
+            st.markdown("💻 **Pito Bütünleşik Editör (Boşlukları Tamamla):**")
             
-            for idx, satir in enumerate(sablon_satirlari):
+            sablon_satirlari = egz.get('sablon', '').split('\n')
+            final_cevaplar = {}
+
+            # Her satırı tek tek işliyoruz
+            for s_idx, satir in enumerate(sablon_satirlari):
                 if "___" in satir:
-                    # İçinde boşluk olan satır için giriş kutusu aç
-                    # Satırın başındaki boşlukları (indentation) korumak için placeholder kullanıyoruz
-                    indent = len(satir) - len(satir.lstrip())
-                    label = " " * indent + "📝 Satır " + str(idx + 1)
+                    # Satırı boşluklardan parçala
+                    parcalar = satir.split("___")
+                    cols = st.columns([len(p) if len(p) > 0 else 5 for p in parcalar] + [10] * (len(parcalar)-1))
                     
-                    user_val = st.text_input(
-                        label, 
-                        key=f"ln_{egz['id']}_{idx}", 
-                        placeholder=satir.strip(),
-                        help="Bu satırdaki ___ kısmını doldur."
-                    )
-                    cevap_inputlari[idx] = user_val
+                    satir_cevaplari = []
+                    col_idx = 0
+                    for p_idx, parca in enumerate(parcalar):
+                        # Sabit parça
+                        if parca:
+                            cols[col_idx].markdown(f"```python\n{parca}\n```")
+                        col_idx += 1
+                        
+                        # Giriş kutusu (Eğer son parça değilse)
+                        if p_idx < len(parcalar) - 1:
+                            ans = cols[col_idx].text_input(
+                                f"L{s_idx}B{p_idx}", 
+                                key=f"input_{egz['id']}_{s_idx}_{p_idx}",
+                                label_visibility="collapsed",
+                                placeholder="?"
+                            )
+                            satir_cevaplari.append(ans)
+                            col_idx += 1
+                    final_cevaplar[s_idx] = satir_cevaplari
                 else:
-                    # Sabit satırları direkt kod olarak göster (silemezler)
+                    # İçinde boşluk olmayan satırı olduğu gibi, bütün halde göster
                     st.code(satir if satir.strip() else " ", language="python")
 
-            if st.button("Kodu Çalıştır 🚀", use_container_width=True):
-                # Satırları birleştirerek nihai kodu oluştur
-                final_kod_listesi = []
-                for idx, satir in enumerate(sablon_satirlari):
-                    if idx in cevap_inputlari:
-                        # Boşluklu satırı öğrencinin girdisiyle oluştur
-                        # Eğer öğrenci satırı tamamen yazdıysa onu al, sadece ___ kısmını yazdıysa replace et
-                        girdi = cevap_inputlari[idx]
-                        if "___" in satir and girdi:
-                            final_kod_listesi.append(satir.replace("___", girdi))
-                        else:
-                            final_kod_listesi.append(girdi if girdi else satir)
+            st.write("---")
+            if st.button("Kodu Çalıştır ⚡", use_container_width=True):
+                # Kod parçalarını öğrenci girdileriyle birleştir
+                olusan_kod_satirlari = []
+                for s_idx, satir in enumerate(sablon_satirlari):
+                    if s_idx in final_cevaplar:
+                        parcalar = satir.split("___")
+                        yeni_satir = ""
+                        for i in range(len(final_cevaplar[s_idx])):
+                            yeni_satir += parcalar[i] + final_cevaplar[s_idx][i]
+                        yeni_satir += parcalar[-1]
+                        olusan_kod_satirlari.append(yeni_satir)
                     else:
-                        final_kod_listesi.append(satir)
+                        olusan_kod_satirlari.append(satir)
                 
-                final_code = "\n".join(final_kod_listesi)
+                final_code = "\n".join(olusan_kod_satirlari)
                 st.session_state.current_code = final_code
                 
                 if normalize_fonksiyonu(final_code) == normalize_fonksiyonu(egz['dogru_cevap_kodu']):
@@ -84,9 +93,9 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
                     st.session_state.error_count += 1
                 st.rerun()
 
-        # --- 3. BAŞARI / HATA DURUMLARI ---
+        # Başarı ve Hata durumları (Mevcut yapı korunur)
         elif st.session_state.cevap_dogru:
-            st.success(f"✅ Harika iş çıkardın {ad_k}!")
+            st.success(f"✅ Harika! Kod başarıyla çalıştırıldı.")
             st.code(st.session_state.current_code, language="python")
             if st.button("Sonraki Göreve Geç ➡️", use_container_width=True):
                 s_idx = modul['egzersizler'].index(egz) + 1
@@ -94,7 +103,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
                 ilerleme_fonksiyonu(p_xp, st.session_state.current_code, egz['id'], n_id, n_m)
         
         elif st.session_state.error_count >= 4:
-            st.warning("🚨 Pito: 'Bu biraz zordu ama üzülme, işte doğrusu!'")
+            st.warning("🚨 Pito: 'Bu seferlik ben yardım edeyim, işte doğru çözüm!'")
             st.code(egz['cozum'], language="python")
             if st.button("Sıradaki Göreve Geç ➡️", use_container_width=True):
                 s_idx = modul['egzersizler'].index(egz) + 1
