@@ -29,20 +29,19 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             max-width: 100% !important;
         }
 
-        /* SABİT ÜST HUD BAR (GIF DESTEKLİ) */
+        /* SABİT ÜST HUD BAR (GIF DESTEKLİ & TAM OPAK) */
         .cyber-hud {
             position: fixed; top: 0; left: 0; width: 100%;
-            background: rgba(14, 17, 23, 0.98);
+            background-color: #0e1117 !important; /* Tam opak zemin */
             border-bottom: 2px solid #00E5FF;
             z-index: 999999; padding: 10px 25px;
             display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 0 4px 20px rgba(0, 229, 255, 0.4);
-            backdrop-filter: blur(15px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
         }
 
         /* PITO GIF ÇERÇEVESİ (KOKPİT) - BÜYÜTÜLDÜ */
         .hud-pito-gif img {
-            width: 65px; height: 65px;
+            width: 70px; height: 70px;
             border-radius: 50%; border: 3px solid #00E5FF;
             object-fit: cover; background: #000;
             margin-right: 15px;
@@ -53,7 +52,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
 
         /* HUD Altında Kalmaması İçin İçerik Kaydırma */
         .main-container { 
-            margin-top: 95px; 
+            margin-top: 100px; 
             animation: fadeIn 0.4s ease-in;
         }
 
@@ -63,8 +62,8 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         @media (max-width: 768px) {
             .cyber-hud { padding: 8px 10px; justify-content: center; }
             .hud-item { font-size: 0.8rem; margin: 2px 5px; }
-            .main-container { margin-top: 135px; }
-            .hud-pito-gif img { width: 50px; height: 50px; }
+            .main-container { margin-top: 145px; }
+            .hud-pito-gif img { width: 55px; height: 55px; }
             [data-testid="stSidebar"] { min-width: 100% !important; }
         }
 
