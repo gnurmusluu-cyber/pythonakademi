@@ -1,0 +1,31 @@
+{
+  "login_welcome": [
+    "🚀 Selam Genç Yazılımcı! Bugün Python dünyasını kasıp kavurmaya hazır mısın?",
+    "🔥 Heyecan dorukta! Nusaybin'in en parlak zihni laboratuvara giriş yaptı. Hoş geldin arkadaşım!",
+    "✨ Hoş geldin dostum! Senin için harika görevler hazırladım, hadi şu kodlara hükmedelim!",
+    "🐍 Selamlar! Python Akademi'nin kapıları senin için sonuna kadar açık. Başlayalım mı?"
+  ],
+  "errors": {
+    "level_1": [
+      "Ufak bir yazım kazası {}, bu senin 1. hatan. Kodu bir daha kontrol etmeye ne dersin?",
+      "Gözden kaçan bir şeyler var {}, bu 1. denemen. Python bazen çok titizdir!"
+    ],
+    "level_2": [
+      "{} dostum, bu 2. hatan oldu. Tırnaklara veya parantezlere özellikle dikkat et!",
+      "Hata 2! Sakin ol {}, kodun üzerinden bir kez daha geçelim arkadaşım."
+    ],
+    "level_3": [
+      "Pes etmek yok {}, bu 3. deneme! Bak sana bir ipucu hazırladım, işine yarayabilir.",
+      "{} arkadaşım, 3. denemedesin. İpucunu incele, çözüme çok yaklaştın!"
+    ],
+    "level_4": [
+      "Üzgünüm {}, 4. denemede de olmadı ve bu görevden maalesef puan kazanılamadı.",
+      "Maalesef {}, puan limitine ulaştık. Ama moral bozmak yok, çözümü inceleyip öğrenmeye devam!"
+    ]
+  },
+  "success": [
+    "Vay canına {}! Kodun saat gibi tıkır tıkır çalıştı. +{} XP kazandın!",
+    "İşte bu! {} dostum, Python seni seviyor! Hanene +{} XP eklendi."
+  ],
+  "welcome": "👋 Selam {}! Bugün Python dünyasında hangi kapıları aralayacağız?"
+}
