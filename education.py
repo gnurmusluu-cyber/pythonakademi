@@ -1,7 +1,7 @@
 import streamlit as st
 import random
 
-def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fonksiyonu, normalize_fonksiyonu, supabase):
+def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fonksiyonu, normalize_fonksiyonu, supabase, inceleme_modu=False):
     # --- 0. SİBER-BUZ (ELECTRIC BLUE) KOKPİT CSS ---
     st.markdown('''
         <style>
@@ -36,6 +36,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             padding: 15px;
             font-family: 'Courier New', monospace;
             margin: 10px 0;
+            box-shadow: 0 0 10px rgba(0, 229, 255, 0.1);
         }
 
         /* Neon Editör */
@@ -76,19 +77,18 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
     egz = next((e for e in modul['egzersizler'] if e['id'] == str(u['mevcut_egzersiz'])), modul['egzersizler'][0])
     c_i, t_i = modul['egzersizler'].index(egz) + 1, len(modul['egzersizler'])
 
-    # --- 2. ÜST PANEL: İLERLEME GÖSTERGELERİ ---
+    # --- 2. ÜST PANEL: İLERLEME GÖSTERGELERİ (NETLEŞTİRİLMİŞ) ---
     col_acad, col_mod = st.columns(2)
     with col_acad:
         st.markdown(f"<div class='kokpit-label'>🚀 AKADEMİ YOLCULUĞU (%{int((m_idx/total_m)*100)})</div>", unsafe_allow_html=True)
         st.progress(min((m_idx) / total_m, 1.0))
     with col_mod:
-        # Netleştirilmiş Modül ve Görev Takibi
         st.markdown(f"<div class='kokpit-label'>📍 MODÜL {m_idx + 1} - GÖREV {c_i} / {t_i}</div>", unsafe_allow_html=True)
         st.progress(c_i / t_i)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # --- 3. ANA DÜZEN (7:3) ---
+    # --- 3. ANA DÜZEN (7.2 : 2.8) ---
     main_col, side_col = st.columns([7.2, 2.8])
     
     with main_col:
@@ -99,27 +99,39 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         c_pito, c_info = st.columns([1, 4])
         with c_pito: emotions_module.pito_goster(p_mod)
         with c_info:
-            st.markdown(f"💎 **{p_xp} XP** | ⚠️ **Hata: {st.session_state.error_count}/4**")
-            st.markdown(f"<div style='color:#00E5FF; font-style:italic;'>💬 {msgs['welcome'].format(ad_k)}</div>", unsafe_allow_html=True)
+            if inceleme_modu:
+                st.markdown(f"<div style='color:#00E5FF; font-weight:bold; font-size:1.1rem;'>🔍 İNCELEME MODU</div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='color:#00E5FF; font-style:italic;'>💬 Bu görevdeki ideal siber-çözümü inceliyorsun.</div>", unsafe_allow_html=True)
+            else:
+                st.markdown(f"💎 **{p_xp} XP** | ⚠️ **Hata: {st.session_state.error_count}/4**")
+                st.markdown(f"<div style='color:#00E5FF; font-style:italic;'>💬 {msgs['welcome'].format(ad_k)}</div>", unsafe_allow_html=True)
 
-        # Konu Anlatımı ve Görev Alanı
         with st.expander(f"📖 {modul['modul_adi']}", expanded=True):
             st.markdown(f"<div class='cyber-card'>{modul['pito_anlatimi']}</div>", unsafe_allow_html=True)
             st.markdown(f"### 🎯 GÖREV {egz['id']}")
             st.info(egz['yonerge'])
 
-        # --- 4. EDİTÖR VE KONSOL AKIŞI ---
-        if not st.session_state.cevap_dogru and st.session_state.error_count < 4:
-            # Hata ve İpucu (Tam Editör Üzerinde)
+        # --- 4. AKIŞ MANTIĞI ---
+        if inceleme_modu:
+            # İNCELEME MODU: Direkt Çözüm ve Çıktı (Mezunlar/Eğitmenler İçin)
+            st.markdown("📖 **Pito'nun İdeal Çözümü:**")
+            st.code(egz['cozum'], language="python")
+            st.markdown("💻 **Konsol Çıktısı:**")
+            st.markdown(f"<div class='console-box'>{egz.get('beklenen_cikti', 'Çıktı üretiliyor...')}</div>", unsafe_allow_html=True)
+            if st.button("SONRAKİ İNCELEMEYE GEÇ ➡️", type="primary", use_container_width=True):
+                # Mantık p_akademi tarafında kontrol edilir.
+                pass
+
+        elif not st.session_state.cevap_dogru and st.session_state.error_count < 4:
+            # EĞİTİM MODU: Hata/İpucu ve Editör
             if st.session_state.error_count > 0:
                 st.error(f"🚨 **Pito:** {random.choice(msgs['errors'][f'level_{min(st.session_state.error_count, 4)}']).format(ad_k)}")
                 if st.session_state.error_count == 3:
-                    st.warning(f"💡 **İPUCU:** {egz.get('ipucu', 'Kodu tekrar kontrol et!')}")
+                    st.warning(f"💡 **İPUCU:** {egz.get('ipucu', 'Kodu tekrar kontrol et arkadaşım!')}")
 
-            # Editör Alanı
             if "reset_trigger" not in st.session_state: st.session_state.reset_trigger = 0
             user_code = st.text_area("Siber-Editor", value=egz['sablon'], height=180, 
-                                     key=f"final_ux_{egz['id']}_{st.session_state.reset_trigger}", label_visibility="collapsed")
+                                     key=f"pro_final_ux_{egz['id']}_{st.session_state.reset_trigger}", label_visibility="collapsed")
 
             b_run, b_res = st.columns([4, 1.5])
             with b_run:
@@ -127,26 +139,25 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
                     st.session_state.current_code = user_code
                     if normalize_fonksiyonu(user_code) == normalize_fonksiyonu(egz['dogru_cevap_kodu']):
                         st.session_state.cevap_dogru = True
-                        st.balloons() # Kutlama balonları sadece "başarı anında" uçar
-                    else:
-                        st.session_state.error_count += 1
+                        st.balloons() # BALONLAR SADECE BU ANLIK UÇAR
+                    else: st.session_state.error_count += 1
                     st.rerun()
             with b_res:
                 if st.button("🔄 SIFIRLA", type="secondary", use_container_width=True):
                     st.session_state.reset_trigger += 1; st.rerun()
 
-        # BAŞARI DURUMU: Konsol çıktısı ve devam butonu
         elif st.session_state.cevap_dogru:
+            # BAŞARI EKRANI: Konsol Çıktısı ve İlerleme
             st.markdown("💻 **Konsol Çıktısı:**")
             st.markdown(f"<div class='console-box'>{egz.get('beklenen_cikti', 'Kod başarıyla çalıştırıldı...')}</div>", unsafe_allow_html=True)
-            st.success(f"✅ Harika iş çıkardın {ad_k}! Kodun siber-onay aldı.")
+            st.success(f"✅ Müthişsin {ad_k}! Kodun siber-onay aldı.")
             if st.button("SIRADAKİ GÖREVE GEÇ ➡️", type="primary", use_container_width=True):
                 s_idx = modul['egzersizler'].index(egz) + 1
                 n_id, n_m = (modul['egzersizler'][s_idx]['id'], u['mevcut_modul']) if s_idx < len(modul['egzersizler']) else (f"{int(u['mevcut_modul'])+1}.1", int(u['mevcut_modul']) + 1)
                 ilerleme_fonksiyonu(p_xp, st.session_state.current_code, egz['id'], n_id, n_m)
 
-        # HATA SINIRI: Kesin çözüm ve Konsol çıktısı
         elif st.session_state.error_count >= 4:
+            # HATA SINIRI: İdeal Çözüm ve Konsol Çıktısı
             st.warning("🚨 Limit doldu! Pito'nun ideal çözümü ve çıktısı:")
             st.code(egz['cozum'], language="python")
             st.markdown("💻 **Kodun Çıktısı:**")
@@ -158,5 +169,5 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
 
     with side_col:
         # LİDERLİK TABLOSU (Sağ Kanatta Sabit)
-        st.markdown("<div style='text-align:center; color:#00E5FF; font-weight:bold; font-size:1.1rem;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='text-align:center; color:#00E5FF; font-weight:bold; font-size:1.1rem;'>🏆 ONUR KÜRSÜSÜ</div>", unsafe_allow_html=True)
         ranks_module.liderlik_tablosu_goster(supabase, current_user=u)
