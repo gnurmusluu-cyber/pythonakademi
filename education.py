@@ -7,23 +7,24 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         <style>
         .stApp { background-color: #0e1117; }
         
-        /* Sayfa Genel Boşlukları */
+        /* Sayfa Genel Boşluklarını Minimize Etme */
         .block-container {
             padding-top: 0rem !important;
-            padding-left: 1.5rem !important;
-            padding-right: 1.5rem !important;
+            padding-bottom: 0rem !important;
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
             max-width: 100% !important;
         }
 
-        /* SABİT ÜST HUD BAR (MÜHÜRLÜ GÖRÜNÜM) */
+        /* SABİT ÜST HUD BAR (KATMAN AYARI) */
         .cyber-hud {
             position: fixed; 
             top: 0; 
             left: 0; 
             width: 100%;
-            background: #161b22; /* Daha belirgin bir arka plan */
+            background: #161b22; /* Belirgin Arka Plan */
             border-bottom: 2px solid #00E5FF;
-            z-index: 999; /* Sidebar menüsünün (1000+) altında kalması için */
+            z-index: 99; /* Sidebar'ın (1100+) altında kalması için düşük tutuldu */
             padding: 12px 30px;
             display: flex; 
             justify-content: space-between; 
@@ -33,24 +34,24 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         .hud-item { color: #E0E0E0; font-family: 'Fira Code', monospace; font-size: 0.9rem; }
         .hud-v { color: #00E5FF; font-weight: bold; text-shadow: 0 0 5px #00E5FF; }
 
-        /* SIDEBAR DÜZELTME: HUD Barı düğmeleri kapatmasın diye sidebar içeriğini aşağı itiyoruz */
+        /* SIDEBAR DÜZELTME: Düğmelerin yukarı kaçmasını engelle */
         [data-testid="stSidebar"] {
-            padding-top: 70px !important;
+            padding-top: 20px !important; /* Düğmeleri yukarıdan normal mesafeye al */
         }
         
-        /* Sidebar içindeki butonların görünürlüğü */
-        [data-testid="stSidebarNav"] {
-            padding-top: 0px !important;
+        /* Sidebar içeriğini barın altından başlat */
+        [data-testid="stSidebarUserContent"] {
+            padding-top: 60px !important;
         }
 
         /* Ana İçeriği HUD Barından Kurtarma */
-        .main-container { margin-top: 75px; }
+        .main-container { margin-top: 65px; }
 
         .academy-header {
             text-align: center; color: #00E5FF; font-family: 'Fira Code', monospace;
             font-size: 1.8rem; font-weight: bold; letter-spacing: 1px;
             text-shadow: 0 0 15px rgba(0, 229, 255, 0.4);
-            margin-top: 0px !important; margin-bottom: 15px !important;
+            margin-top: 0px !important; margin-bottom: 10px !important;
         }
 
         .console-box {
@@ -73,13 +74,13 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
     st.markdown(f'''
         <div class="cyber-hud">
             <div class="hud-item">👤 <span class="hud-v">{u['ad_soyad']}</span></div>
-            <div class="hud-item">💎 Kazanılacak: <span class="hud-v">{p_xp} XP</span></div>
+            <div class="hud-item">💎 Potansiyel: <span class="hud-v">{p_xp} XP</span></div>
             <div class="hud-item">⚠️ Hata: <span class="hud-v">{st.session_state.error_count}/4</span></div>
             <div class="hud-item">🏆 Toplam: <span class="hud-v">{int(u['toplam_puan'])} XP</span></div>
         </div>
     ''', unsafe_allow_html=True)
 
-    # --- 2. ANA İÇERİK DÜZENİ ---
+    # --- 2. ANA İÇERİK ---
     st.markdown('<div class="main-container">', unsafe_allow_html=True)
     st.markdown("<div class='academy-header'>🎓 PİTO PYTHON AKADEMİ</div>", unsafe_allow_html=True)
 
@@ -101,7 +102,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
 
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # Çalışma Alanı ve Onur Kürsüsü
+    # Yerleşim: Çalışma Alanı ve Onur Kürsüsü
     cl, cr = st.columns([7.5, 2.5])
     
     with cl:
@@ -119,7 +120,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             st.markdown(f"### 🎯 GÖREV {egz['id']}")
             st.info(egz['yonerge'])
 
-        # AKIŞ KONTROLÜ
+        # --- AKIŞ KONTROLÜ ---
         if inceleme_modu:
             st.markdown("📖 **Pito'nun İdeal Çözümü:**")
             st.code(egz['cozum'], language="python")
@@ -132,7 +133,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
                 if st.session_state.error_count == 3: st.warning(f"💡 **İPUCU:** {egz.get('ipucu', 'Kodu tekrar kontrol et!')}")
 
             if "reset_trigger" not in st.session_state: st.session_state.reset_trigger = 0
-            user_code = st.text_area("Siber-Editor", value=egz['sablon'], height=180, key=f"fixed_v3_{egz['id']}_{st.session_state.reset_trigger}", label_visibility="collapsed")
+            user_code = st.text_area("Siber-Editor", value=egz['sablon'], height=180, key=f"fix_vfinal_{egz['id']}_{st.session_state.reset_trigger}", label_visibility="collapsed")
 
             b1, b2 = st.columns([4, 1.5])
             with b1:
@@ -165,7 +166,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
                 ilerleme_fonksiyonu(0, "Çözüm İncelendi", egz['id'], n_id, n_m)
 
     with cr:
-        # Liderlik Tablosu (Sağ Kolon)
+        # Onur Kürsüsü sağ kolona mühürlendi
         ranks_module.liderlik_tablosu_goster(supabase, current_user=u)
 
     st.markdown('</div>', unsafe_allow_html=True)
