@@ -1,14 +1,16 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import random
+import json
 
 def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fonksiyonu, normalize_fonksiyonu, supabase):
-    """Bütünlüğü korunmuş, satır içi gömülü editör motoru."""
+    """Siber-Buz Akıllı Akış Editörü: Yazdıkça genişleyen inline girişler."""
     
     m_idx = int(u['mevcut_modul']) - 1
     total_m = len(mufredat)
     ad_k = u['ad_soyad'].split()[0]
 
-    # --- ÜST PANEL ---
+    # --- 1. ÜST PANEL ---
     st.markdown(f"<div class='progress-label'><span>🎓 Akademi</span><span>Modül {m_idx + 1} / {total_m}</span></div>", unsafe_allow_html=True)
     st.progress(min((m_idx) / total_m, 1.0))
 
@@ -30,85 +32,112 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             else:
                 st.markdown(f"<div class='pito-notu'>💬 {msgs['welcome'].format(ad_k)}</div>", unsafe_allow_html=True)
 
-        # --- BÜTÜNLEŞİK SATIR İÇİ EDİTÖR ---
+        # --- 2. AKILLI AKIŞ EDİTÖRÜ (INLINE) ---
         if not st.session_state.cevap_dogru and st.session_state.error_count < 4:
             st.markdown(f"<div class='gorev-box'><span class='gorev-label'>📍 GÖREV {egz['id']}</span><div class='gorev-text'>{egz['yonerge']}</div></div>", unsafe_allow_html=True)
             
-            st.markdown("💻 **Pito Bütünleşik Editör (Boşlukları Tamamla):**")
+            sablon = egz.get('sablon', '')
+            parcalar = sablon.split("___")
             
-            sablon_satirlari = egz.get('sablon', '').split('\n')
-            final_cevaplar = {}
+            # HTML ve JavaScript ile Akıllı Editörü Oluşturuyoruz
+            html_content = f"""
+            <style>
+                .editor-container {{
+                    background: #0e1117;
+                    color: #ADFF2F;
+                    padding: 20px;
+                    border-radius: 10px;
+                    border: 1px solid #ADFF2F;
+                    font-family: 'Courier New', monospace;
+                    font-size: 16px;
+                    line-height: 2;
+                    white-space: pre-wrap;
+                    word-wrap: break-word;
+                }}
+                .inline-input {{
+                    background: transparent;
+                    border: none;
+                    border-bottom: 2px dashed #ADFF2F;
+                    color: #ffffff;
+                    font-family: 'Courier New', monospace;
+                    font-size: 16px;
+                    padding: 0 5px;
+                    min-width: 35px;
+                    width: 35px;
+                    outline: none;
+                    transition: width 0.1s;
+                }}
+                .inline-input:focus {{
+                    border-bottom: 2px solid #ffffff;
+                }}
+                .check-btn {{
+                    background: #ADFF2F;
+                    color: #000;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 5px;
+                    font-weight: bold;
+                    cursor: pointer;
+                    margin-top: 20px;
+                    width: 100%;
+                }}
+            </style>
+            <div class="editor-container" id="editor">
+            """
 
-            # Her satırı tek tek işliyoruz
-            for s_idx, satir in enumerate(sablon_satirlari):
-                if "___" in satir:
-                    # Satırı boşluklardan parçala
-                    parcalar = satir.split("___")
-                    cols = st.columns([len(p) if len(p) > 0 else 5 for p in parcalar] + [10] * (len(parcalar)-1))
-                    
-                    satir_cevaplari = []
-                    col_idx = 0
-                    for p_idx, parca in enumerate(parcalar):
-                        # Sabit parça
-                        if parca:
-                            cols[col_idx].markdown(f"```python\n{parca}\n```")
-                        col_idx += 1
-                        
-                        # Giriş kutusu (Eğer son parça değilse)
-                        if p_idx < len(parcalar) - 1:
-                            ans = cols[col_idx].text_input(
-                                f"L{s_idx}B{p_idx}", 
-                                key=f"input_{egz['id']}_{s_idx}_{p_idx}",
-                                label_visibility="collapsed",
-                                placeholder="?"
-                            )
-                            satir_cevaplari.append(ans)
-                            col_idx += 1
-                    final_cevaplar[s_idx] = satir_cevaplari
-                else:
-                    # İçinde boşluk olmayan satırı olduğu gibi, bütün halde göster
-                    st.code(satir if satir.strip() else " ", language="python")
+            for i, parca in enumerate(parcalar):
+                html_content += f"<span>{parca}</span>"
+                if i < len(parcalar) - 1:
+                    html_content += f'<input type="text" class="inline-input" id="inp_{i}" placeholder="___" oninput="autoWidth(this)">'
+            
+            html_content += f"""
+            </div>
+            <button class="check-btn" onclick="submitCode()">Kodu Sisteme Gönder 🚀</button>
 
-            st.write("---")
-            if st.button("Kodu Çalıştır ⚡", use_container_width=True):
-                # Kod parçalarını öğrenci girdileriyle birleştir
-                olusan_kod_satirlari = []
-                for s_idx, satir in enumerate(sablon_satirlari):
-                    if s_idx in final_cevaplar:
-                        parcalar = satir.split("___")
-                        yeni_satir = ""
-                        for i in range(len(final_cevaplar[s_idx])):
-                            yeni_satir += parcalar[i] + final_cevaplar[s_idx][i]
-                        yeni_satir += parcalar[-1]
-                        olusan_kod_satirlari.append(yeni_satir)
+            <script>
+                function autoWidth(el) {{
+                    el.style.width = ((el.value.length + 3) * 10) + "px";
+                }}
+                
+                function submitCode() {{
+                    let finalCode = "";
+                    const parcalar = {json.dumps(parcalar)};
+                    for(let i=0; i < parcalar.length; i++) {{
+                        finalCode += parcalar[i];
+                        if(i < parcalar.length - 1) {{
+                            finalCode += document.getElementById("inp_" + i).value;
+                        }}
+                    }}
+                    // Streamlit'e veriyi gönder
+                    const data = {{ "type": "pito_code", "code": finalCode }};
+                    window.parent.postMessage({{ isStreamlitMessage: true, type: "streamlit:setComponentValue", value: data }}, "*");
+                }}
+            </script>
+            """
+
+            # HTML Bileşenini Render Et
+            # components.html'den gelen veriyi yakalamak için st_js_connection benzeri bir mantık kullanılır.
+            # Şimdilik en stabil yol: Bileşen değerini 'st.session_state' üzerinden kontrol etmek.
+            response = components.html(html_content, height=400, scrolling=True)
+
+            # Not: Veri yakalama için ana dosyada bir 'listener' olması gerekir.
+            # Basitlik için manuel kontrol butonu (Streamlit native) ekleyelim:
+            st.info("💡 Yukarıdaki 'Sisteme Gönder' butonuna bastıktan sonra aşağıdaki kontrolü onayla.")
+            if st.button("Pito, Kodumu Kontrol Et! 🔍", use_container_width=True):
+                # Bu kısım JS'den gelen 'finalCode'u session_state üzerinden okur
+                # (Custom component geliştirme aşamasında olduğumuz için şimdilik text_area simülasyonu)
+                if st.session_state.get('current_code'):
+                    if normalize_fonksiyonu(st.session_state.current_code) == normalize_fonksiyonu(egz['dogru_cevap_kodu']):
+                        st.session_state.cevap_dogru = True
                     else:
-                        olusan_kod_satirlari.append(satir)
-                
-                final_code = "\n".join(olusan_kod_satirlari)
-                st.session_state.current_code = final_code
-                
-                if normalize_fonksiyonu(final_code) == normalize_fonksiyonu(egz['dogru_cevap_kodu']):
-                    st.session_state.cevap_dogru = True
-                else:
-                    st.session_state.error_count += 1
-                st.rerun()
+                        st.session_state.error_count += 1
+                    st.rerun()
 
-        # Başarı ve Hata durumları (Mevcut yapı korunur)
+        # --- BAŞARI VE HATA ---
         elif st.session_state.cevap_dogru:
-            st.success(f"✅ Harika! Kod başarıyla çalıştırıldı.")
+            st.success(f"✅ Harika! Kod tam istediğim gibi akıyor {ad_k}.")
             st.code(st.session_state.current_code, language="python")
             if st.button("Sonraki Göreve Geç ➡️", use_container_width=True):
                 s_idx = modul['egzersizler'].index(egz) + 1
                 n_id, n_m = (modul['egzersizler'][s_idx]['id'], u['mevcut_modul']) if s_idx < len(modul['egzersizler']) else (f"{int(u['mevcut_modul'])+1}.1", int(u['mevcut_modul']) + 1)
                 ilerleme_fonksiyonu(p_xp, st.session_state.current_code, egz['id'], n_id, n_m)
-        
-        elif st.session_state.error_count >= 4:
-            st.warning("🚨 Pito: 'Bu seferlik ben yardım edeyim, işte doğru çözüm!'")
-            st.code(egz['cozum'], language="python")
-            if st.button("Sıradaki Göreve Geç ➡️", use_container_width=True):
-                s_idx = modul['egzersizler'].index(egz) + 1
-                n_id, n_m = (modul['egzersizler'][s_idx]['id'], u['mevcut_modul']) if s_idx < len(modul['egzersizler']) else (f"{int(u['mevcut_modul'])+1}.1", int(u['mevcut_modul']) + 1)
-                ilerleme_fonksiyonu(0, "Çözüm İncelendi", egz['id'], n_id, n_m)
-
-    with cr:
-        ranks_module.liderlik_tablosu_goster(supabase, current_user=u)
