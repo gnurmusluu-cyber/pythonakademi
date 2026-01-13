@@ -1,31 +1,49 @@
 import streamlit as st
 import random
 
-def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fonksiyonu, normalize_fonksiyonu, supabase):
-    # --- 0. SİBER-HUD VE DARALTILMIŞ CSS ---
+def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fonksiyonu, normalize_fonksiyonu, supabase, inceleme_modu=False):
+    # --- 0. SİBER-HUD VE RESPONSIVE CSS MÜHRÜ ---
     st.markdown('''
         <style>
         .stApp { background-color: #0e1117; }
         
-        /* HUD BAR (SABİT ÜST) */
+        /* Sayfa Genel Boşlukları */
+        .block-container {
+            padding-top: 0rem !important;
+            padding-bottom: 0rem !important;
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+        }
+        
+        /* SABİT ÜST HUD BAR (Duyarlı Yapı) */
         .cyber-hud {
             position: fixed; top: 0; left: 0; width: 100%;
             background: rgba(14, 17, 23, 0.98);
             border-bottom: 2px solid #00E5FF;
-            z-index: 999999; padding: 10px 25px;
-            display: flex; justify-content: space-between; align-items: center;
+            z-index: 999999; padding: 10px 20px;
+            display: flex; justify-content: space-around; align-items: center;
+            flex-wrap: wrap; /* Mobilde alt alta gelme desteği */
             box-shadow: 0 4px 20px rgba(0, 229, 255, 0.3);
             backdrop-filter: blur(15px);
         }
-        .hud-item { color: #E0E0E0; font-family: 'Fira Code', monospace; font-size: 0.9rem; }
+        .hud-item { color: #E0E0E0; font-family: 'Fira Code', monospace; font-size: 0.9rem; margin: 2px 10px; }
         .hud-v { color: #00E5FF; font-weight: bold; text-shadow: 0 0 5px #00E5FF; }
 
-        /* YUKARI ÇEKİLMİŞ ANA KONTEYNER */
-        .main-container { margin-top: 45px; }
+        /* Duyarlı İçerik Kaydırma */
+        .main-container { margin-top: 55px; }
+
+        /* MOBİL VE TABLET AYARLARI */
+        @media (max-width: 768px) {
+            .cyber-hud { padding: 5px; justify-content: center; }
+            .hud-item { font-size: 0.75rem; margin: 2px 5px; }
+            .main-container { margin-top: 100px; } /* Mobilde HUD 2 satır olursa içeriği aşağı it */
+            .academy-header { font-size: 1.4rem !important; }
+        }
 
         .academy-header {
-            text-align: center; color: #00E5FF; font-size: 1.8rem; font-weight: bold;
-            text-shadow: 0 0 15px rgba(0, 229, 255, 0.4); 
+            text-align: center; color: #00E5FF; font-family: 'Fira Code', monospace;
+            font-size: 1.8rem; font-weight: bold; letter-spacing: 1px;
+            text-shadow: 0 0 15px rgba(0, 229, 255, 0.4);
             margin-top: 0px !important; margin-bottom: 10px !important;
         }
 
@@ -33,12 +51,19 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             background-color: #000 !important; color: #00E5FF !important;
             border: 1px solid #333; border-radius: 8px;
             padding: 12px; font-family: 'Courier New', monospace; margin: 8px 0;
+            box-shadow: 0 0 10px rgba(0, 229, 255, 0.1);
         }
-        
+
         .stTextArea textarea {
             background-color: #161b22 !important; color: #00E5FF !important;
             border: 1px solid #00E5FF !important; border-radius: 12px !important;
             font-family: 'Fira Code', monospace !important;
+        }
+
+        button[kind="secondary"] {
+            border: 2px solid #00E5FF !important; color: #00E5FF !important;
+            background: rgba(0, 229, 255, 0.05) !important;
+            border-radius: 10px !important; font-weight: bold !important;
         }
         </style>
     ''', unsafe_allow_html=True)
@@ -54,11 +79,11 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         </div>
     ''', unsafe_allow_html=True)
 
-    # --- 2. YAN PANEL (SIDEBAR) AKTİF ---
+    # --- 2. YAN PANEL (SIDEBAR) ---
     with st.sidebar:
         ranks_module.liderlik_tablosu_goster(supabase, current_user=u)
 
-    # --- 3. ANA İÇERİK (HUD ALTINA YAKINLAŞTIRILDI) ---
+    # --- 3. ANA İÇERİK ---
     st.markdown('<div class="main-container">', unsafe_allow_html=True)
     st.markdown("<div class='academy-header'>🎓 PİTO PYTHON AKADEMİ</div>", unsafe_allow_html=True)
 
@@ -74,7 +99,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         st.markdown(f"<div style='color:#00E5FF; font-weight:bold; font-size:0.8rem;'>🚀 AKADEMİ: %{int((m_idx/total_m)*100)}</div>", unsafe_allow_html=True)
         st.progress(min((m_idx) / total_m, 1.0))
     with col_prog2:
-        st.markdown(f"<div style='color:#00E5FF; font-weight:bold; font-size:0.8rem;'>📍 MODÜL {m_idx+1} - GÖREV {c_i}/{t_i}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='color:#00E5FF; font-weight:bold; font-size:0.8rem;'>📍 MODÜL {m_idx + 1} - GÖREV {c_i}/{t_i}</div>", unsafe_allow_html=True)
         st.progress(c_i / t_i)
 
     st.markdown("<br>", unsafe_allow_html=True)
@@ -83,7 +108,11 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
     p_mod = emotions_module.pito_durum_belirle(st.session_state.error_count, st.session_state.cevap_dogru)
     cp1, cp2 = st.columns([1, 5])
     with cp1: emotions_module.pito_goster(p_mod)
-    with cp2: st.markdown(f"<div style='color:#00E5FF; font-style:italic;'>💬 {msgs['welcome'].format(ad_k)}</div>", unsafe_allow_html=True)
+    with cp2:
+        if inceleme_modu:
+            st.markdown(f"<div style='color:#00E5FF; font-weight:bold;'>🔍 İNCELEME MODU AKTİF</div>", unsafe_allow_html=True)
+        else:
+            st.markdown(f"<div style='color:#00E5FF; font-style:italic;'>💬 {msgs['welcome'].format(ad_k)}</div>", unsafe_allow_html=True)
 
     with st.expander(f"📖 {modul['modul_adi']}", expanded=True):
         st.markdown(f"<div style='background:rgba(0,229,255,0.03); padding:15px; border-radius:10px;'>{modul['pito_anlatimi']}</div>", unsafe_allow_html=True)
