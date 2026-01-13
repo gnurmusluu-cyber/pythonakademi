@@ -1,75 +1,142 @@
 import streamlit as st
-import pandas as pd
-import json
 import random
-from supabase import create_client, Client
-import mechanics  # Mezuniyet/İnceleme
-import auth       # Giriş/Kayıt
-import ranks      # Rütbe ve Liderlik (Yeni!)
 
-# --- 1. KAYNAK YÜKLEME ---
-st.set_page_config(page_title="Pito Python Akademi", layout="wide", initial_sidebar_state="collapsed")
+def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fonksiyonu, normalize_fonksiyonu, supabase):
+    # --- 0. SİBER-BUZ (ELECTRIC BLUE) KOKPİT CSS ---
+    st.markdown("""
+        <style>
+        .stApp { background-color: #0e1117; }
+        
+        /* Kokpit Göstergeleri */
+        .kokpit-label { color: #00E5FF; font-family: 'Fira Code', monospace; font-size: 0.85rem; font-weight: bold; margin-bottom: 5px; }
+        .stProgress > div > div > div > div { background-image: linear-gradient(to right, #00B8D4, #00E5FF) !important; }
+        
+        /* Modern Siber Kart */
+        .cyber-card {
+            background: rgba(0, 229, 255, 0.03);
+            border: 1px solid rgba(0, 229, 255, 0.2);
+            border-radius: 15px;
+            padding: 20px; margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        
+        /* Neon Editör */
+        .stTextArea textarea {
+            background-color: #161b22 !important;
+            color: #00E5FF !important;
+            border: 1px solid #00E5FF !important;
+            border-radius: 12px !important;
+            font-family: 'Fira Code', monospace !important;
+            font-size: 1.05rem !important;
+            box-shadow: inset 0 0 15px rgba(0, 229, 255, 0.1) !important;
+        }
 
-def load_resources():
-    try:
-        with open('style.json', 'r', encoding='utf-8') as f:
-            st.markdown(json.load(f)['siber_buz_armor'], unsafe_allow_html=True)
-        with open('messages.json', 'r', encoding='utf-8') as f:
-            st.session_state.pito_messages = json.load(f)
-    except: st.error("⚠️ Kaynak dosyaları eksik!")
+        /* Estetik Sıfırlama Butonu (Siber-Punk) */
+        button[kind="secondary"] {
+            border: 2px solid #00E5FF !important;
+            color: #00E5FF !important;
+            background: rgba(0, 229, 255, 0.05) !important;
+            border-radius: 10px !important;
+            font-weight: bold !important;
+            transition: 0.4s all;
+        }
+        button[kind="secondary"]:hover {
+            box-shadow: 0 0 20px #00E5FF !important;
+            background: rgba(0, 229, 255, 0.15) !important;
+            transform: scale(1.02);
+        }
+        </style>
+    """, unsafe_allow_html=True)
 
-load_resources()
-
-# --- 2. MOTORLAR ---
-@st.cache_resource
-def init_supabase():
-    try: return create_client(st.secrets["supabase"]["url"], st.secrets["supabase"]["key"])
-    except: st.error("⚠️ Supabase hatası!"); st.stop()
-
-supabase: Client = init_supabase()
-
-# --- 3. SESSION STATE ---
-keys = ["user", "temp_user", "show_reg", "error_count", "cevap_dogru", "pito_mod", "current_code", "in_review"]
-for k in keys:
-    if k not in st.session_state:
-        st.session_state[k] = None if "user" in k else (0 if "count" in k else (False if "show" in k or "cevap" in k or "in_" in k else ("merhaba" if "mod" in k else "")))
-
-# --- 4. NAVİGASYON ---
-def ilerleme_kaydet(puan, kod, egz_id, n_id, n_m):
-    y_xp = int(st.session_state.user['toplam_puan']) + puan
-    r_ad, _ = ranks.rütbe_ata(y_xp)  # ranks.py'den çağırıyoruz
-    # Veritabanı ve state güncellemeleri... (V110 standartları)
-    # ...
-    st.rerun()
-
-# --- 5. ANA AKIŞ ---
-try:
-    with open('mufredat.json', 'r', encoding='utf-8') as f:
-        mufredat = json.load(f)['pito_akademi_mufredat']
-except: st.error("mufredat.json eksik!"); st.stop()
-
-if st.session_state.user is None:
-    # Liderlik tablosu fonksiyonunu parametre olarak auth modülüne gönderiyoruz
-    auth.login_ekrani(supabase, st.session_state.pito_messages, mechanics.load_pito, 
-                      lambda: ranks.liderlik_tablosu_goster(supabase))
-
-else:
-    u = st.session_state.user
+    # --- VERİ HAZIRLIĞI ---
     m_idx = int(u['mevcut_modul']) - 1
     total_m = len(mufredat)
-    
-    # Üst Navigasyon
-    if st.button("🔍 İnceleme Modu"): st.session_state.in_review = True; st.rerun()
+    ad_k = u['ad_soyad'].split()[0]
+    modul = mufredat[m_idx]
+    egz = next((e for e in modul['egzersizler'] if e['id'] == str(u['mevcut_egzersiz'])), modul['egzersizler'][0])
+    c_i, t_i = modul['egzersizler'].index(egz) + 1, len(modul['egzersizler'])
 
-    if st.session_state.in_review:
-        mechanics.inceleme_modu_paneli(u, mufredat, mechanics.load_pito)
-    elif m_idx >= total_m:
-        mechanics.mezuniyet_ekrani(u, st.session_state.pito_messages, mechanics.load_pito, supabase)
-    else:
-        # Eğitim akışı sırasında sağ kolonda liderlik tablosu gösterimi
-        cl, cr = st.columns([7, 3])
-        with cl:
-            # Eğitim kutuları...
-            pass
-        with cr:
-            ranks.liderlik_tablosu_goster(supabase, current_user=u)
+    # --- 1. ÜST PANEL: ÇİFTLİ İLERLEME GÖSTERGELERİ ---
+    col_acad, col_mod = st.columns(2)
+    with col_acad:
+        st.markdown(f"<div class='kokpit-label'>🎓 AKADEMİ YOLCULUĞU (%{int((m_idx/total_m)*100)})</div>", unsafe_allow_html=True)
+        st.progress(min((m_idx) / total_m, 1.0))
+    with col_mod:
+        st.markdown(f"<div class='kokpit-label'>📍 MODÜL GÖREVİ ({c_i} / {t_i})</div>", unsafe_allow_html=True)
+        st.progress(c_i / t_i)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # --- 2. ANA DÜZEN (7:3) ---
+    main_col, side_col = st.columns([7.2, 2.8])
+    
+    with main_col:
+        # Pito Bilgi Paneli
+        p_xp = max(0, 20 - (st.session_state.error_count * 5))
+        p_mod = emotions_module.pito_durum_belirle(st.session_state.error_count, st.session_state.cevap_dogru)
+        
+        c_pito, c_info = st.columns([1, 4])
+        with c_pito: emotions_module.pito_goster(p_mod)
+        with c_info:
+            st.markdown(f"💎 **{p_xp} XP** | ⚠️ **Hata: {st.session_state.error_count}/4**")
+            st.markdown(f"<div style='color:#00E5FF; font-style:italic;'>💬 {msgs['welcome'].format(ad_k)}</div>", unsafe_allow_html=True)
+
+        # Konu ve Görev Kartı
+        with st.expander(f"📖 {modul['modul_adi']}", expanded=True):
+            st.markdown(f"<div class='cyber-card'>{modul['pito_anlatimi']}</div>", unsafe_allow_html=True)
+            st.markdown(f"### 📍 GÖREV {egz['id']}")
+            st.info(egz['yonerge'])
+
+        # --- 3. KRİTİK ALAN: HATA MESAJI VE EDİTÖR ---
+        if not st.session_state.cevap_dogru and st.session_state.error_count < 4:
+            
+            # Hata ve İpucu (Tam Editör Üzerinde)
+            if st.session_state.error_count > 0:
+                err_lvl = f"level_{min(st.session_state.error_count, 4)}"
+                st.error(f"🚨 **Pito:** {random.choice(msgs['errors'][err_lvl]).format(ad_k)}")
+                
+                # 3. Hatada İpucu Çakması
+                if st.session_state.error_count == 3:
+                    st.warning(f"💡 **İPUCU:** {egz.get('ipucu', 'Kodu tekrar kontrol et arkadaşım!')}")
+
+            # Editör Alanı
+            if "reset_trigger" not in st.session_state: st.session_state.reset_trigger = 0
+            user_code = st.text_area("Siber-Editor", value=egz['sablon'], height=180, 
+                                     key=f"pro_vfinal_{egz['id']}_{st.session_state.reset_trigger}", label_visibility="collapsed")
+
+            # Aksiyon Butonları
+            b_run, b_res = st.columns([4, 1.5])
+            with b_run:
+                if st.button("KODU KONTROL ET 🚀", type="primary", use_container_width=True):
+                    st.session_state.current_code = user_code
+                    if normalize_fonksiyonu(user_code) == normalize_fonksiyonu(egz['dogru_cevap_kodu']):
+                        st.session_state.cevap_dogru = True
+                    else:
+                        st.session_state.error_count += 1
+                    st.rerun()
+            with b_res:
+                if st.button("🔄 SIFIRLA", type="secondary", use_container_width=True):
+                    st.session_state.reset_trigger += 1
+                    st.rerun()
+
+        # Başarı Ekranı
+        elif st.session_state.cevap_dogru:
+            st.balloons()
+            st.success(f"✅ Harika iş çıkardın {ad_k}! Bir sonraki göreve hazır mısın?")
+            if st.button("SIRADAKİ GÖREVE GEÇ ➡️", type="primary", use_container_width=True):
+                s_idx = modul['egzersizler'].index(egz) + 1
+                n_id, n_m = (modul['egzersizler'][s_idx]['id'], u['mevcut_modul']) if s_idx < len(modul['egzersizler']) else (f"{int(u['mevcut_modul'])+1}.1", int(u['mevcut_modul']) + 1)
+                ilerleme_fonksiyonu(p_xp, st.session_state.current_code, egz['id'], n_id, n_m)
+        
+        elif st.session_state.error_count >= 4:
+            st.warning("🚨 Limit doldu! Çözümü inceleyerek öğrenmeye devam et:")
+            st.code(egz['cozum'], language="python")
+            if st.button("ANLADIM, DEVAM ET ➡️", type="primary", use_container_width=True):
+                s_idx = modul['egzersizler'].index(egz) + 1
+                n_id, n_m = (modul['egzersizler'][s_idx]['id'], u['mevcut_modul']) if s_idx < len(modul['egzersizler']) else (f"{int(u['mevcut_modul'])+1}.1", int(u['mevcut_modul']) + 1)
+                ilerleme_fonksiyonu(0, "Çözüm İncelendi", egz['id'], n_id, n_m)
+
+    # --- 4. SAĞ KANAT (LİDERLİK TABLOSU) ---
+    with side_col:
+        st.markdown("<div style='text-align:center; color:#00E5FF; font-weight:bold; font-size:1.1rem;'>🏆 ONUR KÜRSÜSÜ</div>", unsafe_allow_html=True)
+        ranks_module.liderlik_tablosu_goster(supabase, current_user=u)
