@@ -14,18 +14,36 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             max-width: 100% !important;
         }
 
-        /* SABİT ÜST HUD BAR (Duygu Durumu Eklenmiş) */
+        /* SABİT ÜST HUD BAR */
         .cyber-hud {
             position: fixed; top: 0; left: 0; width: 100%;
             background: rgba(14, 17, 23, 0.98);
             border-bottom: 2px solid #00E5FF;
-            z-index: 999999; padding: 10px 25px;
+            z-index: 999999; padding: 8px 25px; /* Padding biraz azaltıldı */
             display: flex; justify-content: space-between; align-items: center;
             box-shadow: 0 4px 20px rgba(0, 229, 255, 0.3);
             backdrop-filter: blur(15px);
             flex-wrap: wrap;
         }
-        .hud-pito-state { font-size: 1.5rem; margin-right: 15px; } /* Pito'nun ikon alanı */
+
+        /* --- GIF İÇİN YENİ STİLLER --- */
+        .hud-pito-state {
+            margin-right: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        /* GIF'in boyutu ve siber-çerçevesi */
+        .hud-pito-gif {
+            width: 45px; /* PC için ideal boyut */
+            height: 45px;
+            border-radius: 50%; /* Yuvarlak görünüm */
+            border: 2px solid rgba(0, 229, 255, 0.7); /* Siber-neon çerçeve */
+            object-fit: cover; /* Görüntüyü çerçeveye sığdır */
+            background-color: rgba(0,0,0,0.3); /* Şeffaf GIF'ler için arka plan */
+        }
+        /* --------------------------- */
+
         .hud-item { color: #E0E0E0; font-family: 'Fira Code', monospace; font-size: 0.85rem; margin: 2px 8px; }
         .hud-v { color: #00E5FF; font-weight: bold; text-shadow: 0 0 5px #00E5FF; }
 
@@ -34,7 +52,9 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         @media (max-width: 768px) {
             .cyber-hud { padding: 5px 10px; justify-content: center; }
             .main-container { margin-top: 115px; }
-            .hud-pito-state { margin-right: 5px; font-size: 1.2rem; }
+            /* Mobilde GIF boyutunu ayarla */
+            .hud-pito-state { margin-right: 8px; }
+            .hud-pito-gif { width: 35px; height: 35px; }
         }
 
         .console-box {
@@ -49,16 +69,18 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         </style>
     ''', unsafe_allow_html=True)
 
-    # --- 1. HUD VERİLERİ VE DUYGU DURUMU ---
+    # --- 1. HUD VERİLERİ VE PİTO GIF'İ ---
     p_xp = max(0, 20 - (st.session_state.error_count * 5))
     
-    # Pito'nun o anki duygusunu (ikonunu) belirliyoruz
-    pito_icon = emotions_module.pito_durum_belirle(st.session_state.error_count, st.session_state.cevap_dogru)
+    # emotions_module artık bir GIF URL'si/yolu döndürmeli!
+    pito_gif_url = emotions_module.pito_durum_belirle(st.session_state.error_count, st.session_state.cevap_dogru)
     
     st.markdown(f'''
         <div class="cyber-hud">
             <div style="display: flex; align-items: center;">
-                <div class="hud-pito-state">{pito_icon}</div>
+                <div class="hud-pito-state">
+                    <img src="{pito_gif_url}" class="hud-pito-gif" alt="Pito Mood">
+                </div>
                 <div class="hud-item">👤 <span class="hud-v">{u['ad_soyad']}</span></div>
             </div>
             <div style="display: flex; align-items: center;">
@@ -92,7 +114,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
     cl, cr = st.columns([7.5, 2.5])
     
     with cl:
-        # Pito Mesajı ve İnceleme Butonu (Daha Kompakt)
+        # Pito Mesajı ve İnceleme Butonu
         c_msg, c_rev = st.columns([0.7, 0.3])
         with c_msg:
             st.markdown(f"<div style='color:#00E5FF; font-style:italic; font-size:1.1rem;'>💬 {msgs['welcome'].format(ad_k)}</div>", unsafe_allow_html=True)
@@ -113,7 +135,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
                 if st.session_state.error_count == 3: st.warning(f"💡 **İPUCU:** {egz.get('ipucu', 'Kodu tekrar kontrol et!')}")
 
             if "reset_trigger" not in st.session_state: st.session_state.reset_trigger = 0
-            user_code = st.text_area("Siber-Editor", value=egz['sablon'], height=180, key=f"v_hud_{egz['id']}_{st.session_state.reset_trigger}", label_visibility="collapsed")
+            user_code = st.text_area("Siber-Editor", value=egz['sablon'], height=180, key=f"v_hud_gif_{egz['id']}_{st.session_state.reset_trigger}", label_visibility="collapsed")
 
             b1, b2 = st.columns([4, 1.5])
             with b1:
