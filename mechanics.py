@@ -5,7 +5,7 @@ def mezuniyet_ekrani(u, msgs, pito_goster, supabase, ranks_module):
     """Mezuniyet töreni, onur kürsüsü ve sıfırlama seçeneği."""
     st.balloons()
     st.snow()
-    st.markdown("<div class='academy-title'>🎓 PİTO PYTHON AKADEMİ MEZUNİYETİ</div>", unsafe_allow_html=True)
+    st.markdown("<div class='academy-header'>🎓 PİTO PYTHON AKADEMİ MEZUNİYETİ</div>", unsafe_allow_html=True)
     
     cl, cr = st.columns([7, 3])
     with cl:
@@ -16,8 +16,8 @@ def mezuniyet_ekrani(u, msgs, pito_goster, supabase, ranks_module):
             st.markdown(f"<div class='pito-notu'>💬 <b>Pito:</b> {raw_msg.format(u['ad_soyad'])}</div>", unsafe_allow_html=True)
 
         st.markdown(f"""
-            <div class='gorev-box' style='text-align:center; border: 2px solid #ADFF2F;'>
-                <h2 style='color:#ADFF2F;'>📜 BAŞARI SERTİFİKASI</h2>
+            <div class='cyber-card' style='text-align:center; border: 2px solid #00E5FF;'>
+                <h2 style='color:#00E5FF;'>📜 BAŞARI SERTİFİKASI</h2>
                 <p>Sayın <b>{u['ad_soyad']}</b>,<br>
                 Python temellerini başarıyla kavrayarak Pito Python Akademi'den 
                 <b>{int(u['toplam_puan'])} XP</b> ile mezun oldunuz.</p>
@@ -37,41 +37,39 @@ def mezuniyet_ekrani(u, msgs, pito_goster, supabase, ranks_module):
                 st.session_state.user = None; st.rerun()
 
     with cr:
+        # 'Onur Kürsüsü' başlığı ranks_module içinden geldiği için burada ekstra başlık eklemiyoruz
         ranks_module.liderlik_tablosu_goster(supabase, current_user=u)
 
 def inceleme_modu_paneli(u, mufredat, pito_goster, supabase):
     """Sadece müfredattaki ideal çözümleri gösteren gelişim paneli."""
-    st.markdown("<h2 style='color:#ADFF2F;'>🔍 Görev Çözüm Kütüphanesi</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='color:#00E5FF;'>🔍 Görev Çözüm Kütüphanesi</h2>", unsafe_allow_html=True)
     st.markdown("Başarıyla tamamladığın görevlerin en ideal çözümlerini buradan inceleyebilirsin arkadaşım!")
     
-    # --- AKILLI YÖNLENDİRME ZIRHI ---
-    # Eğer mevcut modül numarası toplam modül sayısından fazlaysa mezun sayılır.
     is_graduated = int(u['mevcut_modul']) > len(mufredat)
     geri_metni = "⬅️ Mezuniyet Ekranına Dön" if is_graduated else "⬅️ Eğitime Dön"
     
     if st.button(geri_metni):
         st.session_state.in_review = False; st.rerun()
-    # --------------------------------
 
     try:
-        # Veritabanından sadece hangi görevlerin bittiğini çekiyoruz
         res = supabase.table("egzersiz_kayitlari").select("egz_id, alinan_puan").eq("ogrenci_no", int(u['ogrenci_no'])).execute()
         
         if res.data:
-            # Bitirilen görevleri bir listeye alalım
             biten_id_listesi = [str(item['egz_id']) for item in res.data]
             
-            # Müfredatı tarayarak sadece bitirilen görevlerin ideal çözümlerini göster
             for m in mufredat:
-                # Bu modülde biten görev var mı kontrol et
                 modulun_bitenleri = [e for e in m['egzersizler'] if str(e['id']) in biten_id_listesi]
                 
                 if modulun_bitenleri:
                     with st.expander(f"📦 {m['modul_adi']}"):
                         for egz in modulun_bitenleri:
                             st.markdown(f"📍 **Görev {egz['id']}:** {egz.get('yonerge')}")
-                            st.markdown("🤖 **Pito'nun İdeal Çözümü:**")
+                            st.markdown("🤖 **Pito'un İdeal Çözümü:**")
                             st.code(egz.get('cozum', '# Çözüm hazırlanıyor...'), language="python")
+                            
+                            # --- KRİTİK GÜNCELLEME: İnceleme modunda çıktı desteği ---
+                            st.markdown("💻 **Konsol Çıktısı:**")
+                            st.markdown(f"<div class='console-box'>{egz.get('beklenen_cikti', 'Çıktı üretiliyor...')}</div>", unsafe_allow_html=True)
                             st.divider()
         else:
             st.info("Henüz tamamlanmış bir görevin bulunmuyor genç yazılımcı. Önce biraz kod yazalım!")
