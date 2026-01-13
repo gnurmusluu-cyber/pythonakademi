@@ -5,7 +5,7 @@ import random
 import re
 from supabase import create_client, Client
 
-# Özel Modüllerimiz
+# Özel Modüllerimiz (Aynı dizinde bulunmalıdır)
 import mechanics  # Mezuniyet ve İnceleme Modu
 import auth       # Giriş ve Kayıt Mekanizması
 import ranks      # Rütbe ve Liderlik Motoru
@@ -16,7 +16,7 @@ st.set_page_config(page_title="Pito Python Akademi", layout="wide", initial_side
 
 def load_resources():
     try:
-        # style.json'dan CSS zırhını mühürle
+        # style.json'dan CSS zırhını yükle
         with open('style.json', 'r', encoding='utf-8') as f:
             st.markdown(json.load(f)['siber_buz_armor'], unsafe_allow_html=True)
         # messages.json'dan Pito ses bankasını yükle
@@ -45,7 +45,7 @@ def ilerleme_kaydet(puan, kod, egz_id, n_id, n_m):
     yeni_xp = int(st.session_state.user['toplam_puan']) + puan
     r_ad, _ = ranks.rütbe_ata(yeni_xp)
     
-    # Veritabanı Güncellemesi
+    # Veritabanını mühürle
     supabase.table("kullanicilar").update({
         "toplam_puan": yeni_xp, 
         "mevcut_egzersiz": str(n_id), 
@@ -53,7 +53,7 @@ def ilerleme_kaydet(puan, kod, egz_id, n_id, n_m):
         "rutbe": r_ad
     }).eq("ogrenci_no", int(st.session_state.user['ogrenci_no'])).execute()
     
-    # Egzersiz Loglama
+    # Egzersiz kaydını logla
     supabase.table("egzersiz_kayitlari").insert({
         "ogrenci_no": int(st.session_state.user['ogrenci_no']), 
         "egz_id": str(egz_id), 
@@ -61,7 +61,7 @@ def ilerleme_kaydet(puan, kod, egz_id, n_id, n_m):
         "basarili_kod": str(kod)
     }).execute()
     
-    # Session State Güncelleme
+    # State'i güncelle
     st.session_state.user.update({
         "toplam_puan": yeni_xp, 
         "mevcut_egzersiz": str(n_id), 
@@ -89,10 +89,11 @@ except:
 
 # --- GİRİŞ KONTROLÜ ---
 if st.session_state.user is None:
+    # emotions.pito_goster doğrudan gönderildi (TypeError onarıldı)
     auth.login_ekrani(
         supabase, 
         st.session_state.pito_messages, 
-        lambda: emotions.pito_goster("merhaba"), 
+        emotions.pito_goster, 
         lambda: ranks.liderlik_tablosu_goster(supabase)
     )
 
@@ -103,17 +104,18 @@ else:
     msgs = st.session_state.pito_messages
     ad_k = u['ad_soyad'].split()[0]
 
-    # Navigasyon Çubuğu
+    # --- ÜST NAVİGASYON ---
     c_nav1, c_nav2 = st.columns([4, 1])
     with c_nav2:
         if st.button("🔍 İnceleme Modu"):
             st.session_state.in_review = True
             st.rerun()
 
-    # Durum Yönetimi
+    # --- DURUM YÖNETİMİ ---
     if st.session_state.in_review:
         mechanics.inceleme_modu_paneli(u, mufredat, emotions.pito_goster)
     elif m_idx >= total_m:
+        # MEZUNİYET: Balonlar ve Sertifika
         mechanics.mezuniyet_ekrani(u, msgs, emotions.pito_goster, supabase)
     else:
         # --- EĞİTİM AKIŞI ---
@@ -138,7 +140,7 @@ else:
             p_xp = max(0, 20 - (st.session_state.error_count * 5))
             st.markdown(f'<div style="background:#161b22; padding:12px; border-radius:12px; border:1px solid #ADFF2F; color:#ADFF2F; font-weight:bold;">💎 {p_xp} XP | ⚠️ Hata: {st.session_state.error_count}/4</div>', unsafe_allow_html=True)
             
-            # Pito Duygu Belirleme ve Gösterim
+            # --- PİTO DUYGU VE ETKİLEŞİM ---
             p_mod = emotions.pito_durum_belirle(st.session_state.error_count, st.session_state.cevap_dogru)
             cp1, cp2 = st.columns([1, 2])
             with cp1:
@@ -153,7 +155,7 @@ else:
                 else:
                     st.markdown(f"<div class='pito-notu'>💬 <b>Pito:</b> {msgs['welcome'].format(ad_k)}</div>", unsafe_allow_html=True)
 
-            # Görev ve Editör Alanı
+            # --- GÖREV VE EDİTÖR ---
             if not st.session_state.cevap_dogru and st.session_state.error_count < 4:
                 st.markdown(f"<div class='gorev-box'><span class='gorev-label'>📍 GÖREV {egz['id']}</span><div class='gorev-text'>{egz['yonerge']}</div></div>", unsafe_allow_html=True)
                 k_i = st.text_area("Pito Kod Editörü:", value=egz['sablon'], height=150)
@@ -181,4 +183,5 @@ else:
                     ilerleme_kaydet(0, "Çözüm İncelendi", egz['id'], n_id, n_m)
         
         with cr:
+            # Liderlik tablosu her zaman aktif
             ranks.liderlik_tablosu_goster(supabase, current_user=u)
