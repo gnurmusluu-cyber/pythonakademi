@@ -3,15 +3,19 @@ import json
 import re
 from supabase import create_client, Client
 
-# Özel Modüllerimiz
+# Özel Modüllerimiz (Aynı dizinde bulunmalıdır)
 import auth
 import mechanics
 import ranks
 import emotions
 import education
 
-# --- 1. KAYNAK VE GÖRSEL ZIRH YÜKLEME ---
-st.set_page_config(page_title="Pito Python Akademi", layout="wide", initial_sidebar_state="collapsed")
+# --- 1. SİBER-ZIRH VE KAYNAK YÜKLEME ---
+st.set_page_config(
+    page_title="Pito Python Akademi", 
+    layout="wide", 
+    initial_sidebar_state="collapsed"
+)
 
 def load_resources():
     try:
@@ -26,16 +30,16 @@ def load_resources():
 
 load_resources()
 
-# --- 2. VERİTABANI MOTORU ---
+# --- 2. VERİTABANI MOTORU (GÜVENLİ BAĞLANTI) ---
 @st.cache_resource
 def init_supabase():
     try:
-        c = create_client(st.secrets["supabase"]["url"], st.secrets["supabase"]["key"])
-        st.session_state.supabase_client = c 
-        return c
+        # Client'ı oluştur ve ana değişkene aktar
+        return create_client(st.secrets["supabase"]["url"], st.secrets["supabase"]["key"])
     except:
         st.error("⚠️ Supabase bağlantısı kurulamadı!"); st.stop()
 
+# Veritabanı istemcisini tüm modüllere iletmek üzere başlatıyoruz
 supabase: Client = init_supabase()
 
 def normalize(k): 
@@ -46,7 +50,7 @@ def ilerleme_kaydet(puan, kod, egz_id, n_id, n_m):
     yeni_xp = int(st.session_state.user['toplam_puan']) + puan
     r_ad, _ = ranks.rütbe_ata(yeni_xp)
     
-    # Veritabanı Güncelle
+    # Veritabanı Güncellemesi
     supabase.table("kullanicilar").update({
         "toplam_puan": yeni_xp, 
         "mevcut_egzersiz": str(n_id), 
@@ -54,7 +58,7 @@ def ilerleme_kaydet(puan, kod, egz_id, n_id, n_m):
         "rutbe": r_ad
     }).eq("ogrenci_no", int(st.session_state.user['ogrenci_no'])).execute()
     
-    # Egzersiz Loglama
+    # Egzersiz Başarı Logu
     supabase.table("egzersiz_kayitlari").insert({
         "ogrenci_no": int(st.session_state.user['ogrenci_no']), 
         "egz_id": str(egz_id), 
@@ -62,7 +66,7 @@ def ilerleme_kaydet(puan, kod, egz_id, n_id, n_m):
         "basarili_kod": str(kod)
     }).execute()
     
-    # Session State Güncelle
+    # Session State Güncelleme
     st.session_state.user.update({
         "toplam_puan": yeni_xp, 
         "mevcut_egzersiz": str(n_id), 
@@ -72,7 +76,8 @@ def ilerleme_kaydet(puan, kod, egz_id, n_id, n_m):
     st.session_state.error_count, st.session_state.cevap_dogru, st.session_state.current_code = 0, False, ""
     st.rerun()
 
-# --- 4. SESSION STATE (NAMEERROR ZIRHI) ---
+# --- 4. SESSION STATE (ZIRHLI HAFIZA) ---
+# Uygulama boyunca NameError hatalarını engellemek için anahtarları önceden tanımlıyoruz
 keys = ["user", "temp_user", "show_reg", "error_count", "cevap_dogru", "current_code", "user_num", "in_review"]
 for k in keys:
     if k not in st.session_state:
@@ -102,7 +107,7 @@ else:
     u = st.session_state.user
     m_idx = int(u['mevcut_modul']) - 1
     
-    # Üst Navigasyon (İnceleme Modu Butonu)
+    # Navigasyon (İnceleme Modu Butonu)
     c_nav1, c_nav2 = st.columns([4, 1])
     with c_nav2:
         if st.button("🔍 İnceleme Modu"):
@@ -113,11 +118,16 @@ else:
     if st.session_state.in_review:
         mechanics.inceleme_modu_paneli(u, mufredat, emotions.pito_goster)
     
-    # Mezuniyet Durumu (Tüm modüller bittiyse)
+    # Mezuniyet Durumu (Müfredat tamamlandıysa)
     elif m_idx >= len(mufredat):
-        mechanics.mezuniyet_ekrani(u, st.session_state.pito_messages, emotions.pito_goster, supabase)
+        mechanics.mezuniyet_ekrani(
+            u, 
+            st.session_state.pito_messages, 
+            emotions.pito_goster, 
+            supabase
+        )
     
-    # Eğitim Motoru (Ders İşleme Modu)
+    # Eğitim Akışı (Ders İşleme Modu)
     else:
         education.egitim_ekrani(
             u, 
@@ -126,5 +136,6 @@ else:
             emotions, 
             ranks, 
             ilerleme_kaydet, 
-            normalize
+            normalize, 
+            supabase
         )
