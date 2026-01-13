@@ -17,7 +17,6 @@ st.set_page_config(
 st.markdown("""
     <style>
     /* 1. ANA TEMA VE SAYFA YAPISI */
-    /* Uygulamanın her modda koyu temada kalmasını zorunlu kılıyoruz (Siber-Estetik için en iyisi) */
     .stApp { 
         background-color: #0E1117 !important; 
         color: #FFFFFF !important; 
@@ -31,8 +30,21 @@ st.markdown("""
         padding-left: 5% !important;
         padding-right: 5% !important;
     }
-    
-    /* 2. TABS (SEKMELER) - HER KOŞULDA NET OKUNURLUK */
+
+    /* 2. GİRİŞ EKRANI - OKUL NUMARASI VE YAZI TAMİRİ */
+    /* Input etiketleri (Okul Numaran vb.) */
+    .stNumberInput label, .stTextInput label, .stSelectbox label {
+        color: #00FF00 !important; /* Etiketler her zaman yeşil ve okunur */
+        font-weight: bold !important;
+        font-size: 1.1em !important;
+    }
+    /* Input içindeki yazılar */
+    input {
+        color: #FFFFFF !important;
+        background-color: #161b22 !important;
+    }
+
+    /* 3. TABS (SEKMELER) - NET OKUNURLUK */
     .stTabs [data-baseweb="tab-list"] {
         background-color: #1E1E2F !important;
         border-radius: 12px 12px 0 0;
@@ -44,45 +56,46 @@ st.markdown("""
         background-color: #262730 !important;
         border-radius: 8px !important;
         border: 1px solid #3d3d3d !important;
-        padding: 0 20px !important;
     }
     .stTabs [data-baseweb="tab"] p {
-        color: #B0B0B0 !important; /* Seçili olmayan yazı: Açık Gri */
+        color: #E0E0E0 !important;
         font-weight: bold !important;
-        font-size: 1em !important;
     }
     .stTabs [aria-selected="true"] {
-        background-color: #00FF00 !important; /* Seçili: Parlayan Yeşil */
+        background-color: #00FF00 !important;
         border: 1px solid #00FF00 !important;
-        box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
     }
     .stTabs [aria-selected="true"] p {
-        color: #000000 !important; /* Seçili Yazı: Siyah */
+        color: #000000 !important;
     }
 
-    /* 3. MODÜL ANLATIMI (EXPANDER) - BEYAZ EKRAN TAMİRİ */
+    /* 4. MODÜL ANLATIMI (EXPANDER) - GÖZ KAMAŞMASI TAMİRİ */
     [data-testid="stExpander"] {
         background-color: #1E1E2F !important;
         border: 1px solid #00FF00 !important;
         border-radius: 12px !important;
-        margin-bottom: 20px;
+    }
+    /* Modül Başlığı (Yeşil yazı, Koyu arka plan) */
+    [data-testid="stExpander"] details summary {
+        background-color: #1E1E2F !important;
+        color: #00FF00 !important;
     }
     [data-testid="stExpander"] details summary p {
         color: #00FF00 !important;
         font-weight: 800 !important;
-        font-size: 1.1em !important;
     }
+    /* Anlatım Kutusu */
     .anlatim-box {
-        background-color: #161b22; 
+        background-color: #000000 !important; /* Arka planı tamamen kararttık */
         border-radius: 10px; 
         padding: 20px;
         line-height: 1.7; 
         color: #e6edf3 !important; 
+        border: 1px solid #30363d;
         border-left: 5px solid #00CCFF;
-        margin: 10px 0;
     }
 
-    /* 4. KARTLAR VE BAŞLIKLAR */
+    /* 5. KARTLAR VE BAŞLIKLAR */
     .academy-title { 
         font-size: 3.5em; font-weight: 800; text-align: left;
         background: linear-gradient(90deg, #00FF00, #00CCFF); 
@@ -90,10 +103,16 @@ st.markdown("""
         margin-bottom: 25px;
     }
     .hero-panel { 
-        background: linear-gradient(135deg, #1E1E2F 0%, #2D2D44 100%); 
+        background: linear-gradient(135deg, #1E1E2F 0%, #2D2D44 100%) !important; 
         padding: 20px; border-radius: 15px; border-left: 8px solid #00FF00; 
         margin-bottom: 20px;
     }
+    /* Hero panel içindeki Modül İsmi */
+    .hero-panel h3 {
+        color: #00FF00 !important;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+
     .status-bar { 
         display: flex; justify-content: space-between; background-color: #161b22; 
         padding: 18px; border-radius: 15px; border: 1px solid #30363d; margin-bottom: 20px;
@@ -115,9 +134,8 @@ st.markdown("""
     .stButton>button { 
         border-radius: 12px; background-color: #00FF00 !important; 
         color: black !important; font-weight: 800; width: 100%; height: 3.8em;
-        border: none !important; transition: transform 0.2s;
+        border: none !important;
     }
-    .stButton>button:hover { transform: scale(1.02); }
 
     /* LİDERLİK KARTLARI */
     .leader-card {
@@ -129,7 +147,6 @@ st.markdown("""
         color: black !important; font-weight: bold;
     }
     
-    /* Progress Bar */
     div.stProgress > div > div > div > div { background-color: #00FF00; }
     
     /* Input alanları metin rengi sabitleme */
@@ -231,6 +248,7 @@ if st.session_state.user is None:
         st.markdown('<div class="academy-title">Pito Python<br>Akademi</div>', unsafe_allow_html=True)
         pito_gorseli_yukle("merhaba", size=200)
         if st.session_state.temp_user is None:
+            # OKUL NUMARASI ETİKETİ TAMİRİ
             numara = st.number_input("Okul Numaran:", step=1, value=0)
             if numara > 0 and st.button("Akademiye Gir 🚀"):
                 res = supabase.table("kullanicilar").select("*").eq("ogrenci_no", int(numara)).execute()
@@ -266,9 +284,10 @@ else:
             modul = mufredat[m_idx]
             egz = next((e for e in modul['egzersizler'] if e['id'] == str(u['mevcut_egzersiz'])), modul['egzersizler'][0])
             
-            st.markdown(f"<div class='hero-panel'><h3>🚀 {u['ad_soyad']} | MODÜL {u['mevcut_modul']}</h3><p>{u['rutbe']} • {int(u['toplam_puan'])} XP</p></div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='hero-panel'><h3>🚀 {u['ad_soyad']} | {modul['modul_adi']}</h3><p>{u['rutbe']} • {int(u['toplam_puan'])} XP</p></div>", unsafe_allow_html=True)
             
-            with st.expander(f"📖 {modul['modul_adi']} - Pito Anlatımı", expanded=True):
+            # --- MODÜL ANLATIMI - GÖZ KAMAŞMASI TAMİRİ ---
+            with st.expander(f"📖 KONU ANLATIMI: {modul['modul_adi']}", expanded=True):
                 st.markdown(f"<div class='anlatim-box'>{modul.get('pito_anlatimi', 'Konu içeriği hazırlanıyor...')}</div>", unsafe_allow_html=True)
 
             c_idx, t_egz = modul['egzersizler'].index(egz) + 1, len(modul['egzersizler'])
@@ -280,7 +299,6 @@ else:
             with c_p: pito_gorseli_yukle(st.session_state.pito_mod, size=180)
             with c_e:
                 st.info(f"**GÖREV:** {egz['yonerge']}")
-                # --- SABİT FEEDBACK ALANI ---
                 if st.session_state.error_count == 1: st.error("🤔 Pito: 'Ufak bir yazım kazası mı?'")
                 elif st.session_state.error_count == 2: st.error("🧐 Pito: 'Parantezleri ve tırnakları bir daha say!'")
                 elif st.session_state.error_count == 3: st.warning(f"💡 İpucu: {egz['ipucu']}")
