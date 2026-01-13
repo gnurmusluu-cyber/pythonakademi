@@ -1,21 +1,19 @@
 {
+  "welcome": "Hoş geldin {}, bugün harika kodlar yazmaya hazır mısın?",
   "login_welcome": [
-    "🚀 Selam Genç Yazılımcı! Bugün Python dünyasını kasıp kavurmaya hazır mısın?",
-    "🔥 Heyecan dorukta! Nusaybin'in en parlak zihni laboratuvara giriş yaptı. Hoş geldin arkadaşım!",
-    "✨ Hoş geldin dostum! Senin için harika görevler hazırladım, hadi şu kodlara hükmedelim!",
-    "🐍 Selamlar! Python Akademi'nin kapıları senin için sonuna kadar açık. Başlayalım mı?"
+    "Okul numaranı yaz, Python dünyasına giriş yapalım!",
+    "Genç yazılımcı, akademi seni bekliyor!",
+    "Pito burada, peki sen neredesin?"
+  ],
+  "mezuniyet_mesaji": "Vay canına {}! Tüm modülleri başarıyla tamamladın. Artık Nusaybin'in tescilli Python savaşçılarından birisin. Seninle gurur duyuyorum!",
+  "success": [
+    "Harika iş {}! {} XP kazandın.",
+    "Bunu bir profesyonel gibi çözdün! +{} XP."
   ],
   "errors": {
-    "level_1": ["{}, bu senin 1. hatan arkadaşım. Kodu bir daha kontrol etmeye ne dersin?"],
-    "level_2": ["{} dostum, bu 2. hatan oldu. Tırnaklara veya parantezlere özellikle dikkat et!"],
-    "level_3": ["Pes etmek yok {}, bu 3. deneme! Bak sana bir ipucu hazırladım."],
-    "level_4": ["Maalesef {}, 4. hatada puan limitine ulaştık ve bu görevden puan kazanılamadı. Ama öğrenmeye devam!"]
-  },
-  "success": ["Vay canına {}! Kodun saat gibi tıkır tıkır çalıştı. +{} XP kazandın!"],
-  "welcome": "👋 Selam {}! Bugün Python dünyasında hangi kapıları aralayacağız?",
-  "graduation": [
-    "🏆 İNANILMAZ! {} dostum, Python Akademisi'nin tüm zorluklarını aşarak bir BİLGE oldun! Seninle gurur duyuyorum arkadaşım!",
-    "🎓 Şapka çıkarıyorum {}! Nusaybin'in tozunu kodlarınla attırdın. Artık gerçek bir Python ustasısın. Yolun açık olsun genç yazılımcı!",
-    "🌟 Muazzam bir başarı! {} arkadaşım, tüm modülleri mühürledin ve zirveye ulaştın. Python dünyası artık senin oyun alanın!"
-  ]
+    "level_1": ["Küçük bir hata ama pes etmek yok {}!"],
+    "level_2": ["{} arkadaşım, parantezlere veya tırnaklara dikkat et."],
+    "level_3": ["Üçüncü hata... Bir ipucu ister misin?"],
+    "level_4": ["Dördüncü hata! Sorun değil, beraber öğrenelim."]
+  }
 }
