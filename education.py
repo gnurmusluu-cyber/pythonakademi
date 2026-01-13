@@ -4,17 +4,22 @@ import os
 import base64
 
 def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fonksiyonu, normalize_fonksiyonu, supabase):
-    # --- 0. SİBER-KALKAN (SIFIR SIZINTI & SIFIR ŞEFFAFLIK) ---
+    # --- 0. SİBER-BETON CSS (HAYALET YAZI ÖNLEYİCİ MÜHÜR) ---
     st.markdown('''
         <style>
-        /* 1. STREAMLIT VARSAYILANLARINI SİSTEMDEN SİL */
-        header[data-testid="stHeader"] { display: none !important; visibility: hidden !important; height: 0px !important; }
+        /* 1. STREAMLIT VARSAYILANLARINI KÖKTEN SİL */
+        header[data-testid="stHeader"] { display: none !important; }
         [data-testid="stDecoration"] { display: none !important; }
-        footer { visibility: hidden; }
+        footer { display: none !important; }
         
-        /* 2. ANA ZEMİNİ ÇİVİLE */
+        /* 2. ANA UYGULAMA ZEMİNİ VE KAYDIRMA ALANI */
         .stApp { background-color: #0e1117 !important; }
-        
+
+        /* FİZİKSEL ENGEL: İçeriği HUD'ın arkasına asla sokma */
+        [data-testid="stMainViewContainer"] {
+            padding-top: 110px !important; /* HUD yüksekliğinden fazla boşluk */
+        }
+
         /* 3. SIDEBAR STABİLİZASYONU */
         [data-testid="stSidebar"] {
             min-width: 320px !important;
@@ -23,46 +28,54 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             border-right: 2px solid #00E5FF;
         }
 
-        /* 4. SABİT ÜST HUD BAR (SIFIR GEÇİRGENLİK ZIRHI) */
+        /* 4. SABİT ÜST HUD BAR (SIFIR SIZINTI ZIRHI) */
         .cyber-hud {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            height: 100px; /* Yüksekliği netleştir */
-            background-color: #0e1117 !important; /* ARKA PLANLA AYNI VE TAM OPAK */
+            height: 110px; /* Net ve yüksek sabit alan */
+            background-color: #0e1117 !important; /* ARKA PLANLA AYNI VE %100 OPAK */
             border-bottom: 3px solid #00E5FF;
-            z-index: 1000000 !important; /* MİLYONLUK Z-INDEX: HER ŞEYİN ÜSTÜNDE */
-            padding: 0 25px;
+            z-index: 10000000 !important; /* On milyonluk z-index: En üst katman */
+            padding: 0 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            opacity: 1 !important; /* Şeffaflığı yasakla */
-            box-shadow: 0 10px 40px #000000 !important; /* ALTI TAMAMEN KARART */
+            box-shadow: 0 20px 50px #000000 !important; /* Alt katmanı tamamen karartır */
         }
 
         /* PITO KOKPİT GÖRSELİ (BÜYÜTÜLDÜ) */
         .hud-pito-gif img {
-            width: 75px; height: 75px;
-            border-radius: 50%; border: 3px solid #00E5FF;
-            object-fit: cover; background: #000;
-            margin-right: 18px;
-            box-shadow: 0 0 10px #00E5FF;
+            width: 80px; 
+            height: 80px;
+            border-radius: 50%; 
+            border: 3px solid #00E5FF;
+            object-fit: cover; 
+            background: #000;
+            margin-right: 20px;
+            box-shadow: 0 0 15px #00E5FF;
         }
 
-        .hud-item { color: #E0E0E0; font-family: 'Fira Code', monospace; font-size: 0.95rem; margin: 0 12px; }
-        .hud-v { color: #00E5FF; font-weight: bold; text-shadow: 0 0 8px #00E5FF; }
+        .hud-item { color: #E0E0E0; font-family: 'Fira Code', monospace; font-size: 1rem; margin: 0 15px; }
+        .hud-v { color: #00E5FF; font-weight: bold; text-shadow: 0 0 10px #00E5FF; }
 
-        /* 5. ANA İÇERİK KAYDIRMA (BARİYERLİ) */
+        /* 5. ANA İÇERİK KONTEYNERI */
         .main-container { 
-            margin-top: 120px !important; /* HUD ALTINDA KALMAMASI İÇİN NET BOŞLUK */
-            padding: 20px;
             position: relative;
-            z-index: 1; /* HUD'IN ALTINDA KALMASINI GARANTİLE */
+            z-index: 1;
+            padding: 10px;
+            animation: fadeIn 0.6s ease-in-out;
         }
 
-        /* Streamlit'in bloklar arası boşluklarını daralt */
-        .block-container { padding-top: 0rem !important; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* MOBİL UYUMLULUK */
+        @media (max-width: 768px) {
+            .cyber-hud { padding: 5px 10px; justify-content: center; height: auto; min-height: 110px; }
+            [data-testid="stMainViewContainer"] { padding-top: 160px !important; }
+            .hud-pito-gif img { width: 60px; height: 60px; }
+        }
         </style>
     ''', unsafe_allow_html=True)
 
@@ -70,8 +83,8 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
     p_xp = max(0, 20 - (st.session_state.error_count * 5))
     p_mod = emotions_module.pito_durum_belirle(st.session_state.error_count, st.session_state.cevap_dogru)
     
+    # GIF'i kokpite Base64 ile mühürleme
     def get_base64_gif(mod):
-        # Assets klasöründeki GIF'i Base64 formatına çevirir
         path = os.path.join(os.path.dirname(__file__), "assets", f"pito_{mod}.gif")
         if os.path.exists(path):
             with open(path, "rb") as f:
@@ -98,7 +111,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
 
     # --- 2. ANA İÇERİK ---
     st.markdown('<div class="main-container">', unsafe_allow_html=True)
-    st.markdown(f"<h1 style='text-align:center; color:#00E5FF; text-shadow: 0 0 15px #00E5FF; margin-bottom:25px;'>🎓 PİTO PYTHON AKADEMİ</h1>", unsafe_allow_html=True)
+    st.markdown(f"<h1 style='text-align:center; color:#00E5FF; text-shadow: 0 0 15px #00E5FF; margin-bottom:30px;'>🎓 PİTO PYTHON AKADEMİ</h1>", unsafe_allow_html=True)
 
     m_idx = int(u['mevcut_modul']) - 1
     total_m = len(mufredat)
@@ -109,10 +122,10 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
     # İlerleme Barları
     col_p1, col_p2 = st.columns(2)
     with col_p1:
-        st.markdown(f"<div style='color:#00E5FF; font-weight:bold; font-size:0.8rem;'>🚀 AKADEMİ: %{int((m_idx/total_m)*100)}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='color:#00E5FF; font-weight:bold; font-size:0.85rem;'>🚀 AKADEMİ: %{int((m_idx/total_m)*100)}</div>", unsafe_allow_html=True)
         st.progress(min((m_idx) / total_m, 1.0))
     with col_p2:
-        st.markdown(f"<div style='color:#00E5FF; font-weight:bold; font-size:0.8rem;'>📍 MODÜL {m_idx + 1} - GÖREV {modul['egzersizler'].index(egz) + 1}/{len(modul['egzersizler'])}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='color:#00E5FF; font-weight:bold; font-size:0.85rem;'>📍 MODÜL {m_idx + 1} - GÖREV {modul['egzersizler'].index(egz) + 1}/{len(modul['egzersizler'])}</div>", unsafe_allow_html=True)
         st.progress((modul['egzersizler'].index(egz) + 1) / len(modul['egzersizler']))
 
     st.markdown("<br>", unsafe_allow_html=True)
@@ -124,7 +137,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         with c_msg:
             st.markdown(f"<div style='color:#00E5FF; font-style:italic; font-size:1.1rem;'>💬 {msgs['welcome'].format(ad_k)}</div>", unsafe_allow_html=True)
         with c_rev:
-            if st.button("🔍 Önceki egzersizleri incele", help="Geçmiş çözümleri gör", key="rev_btn_fixed", use_container_width=True):
+            if st.button("🔍 Önceki egzersizleri incele", help="Geçmiş çözümleri gör", key="rev_btn_final", use_container_width=True):
                 st.session_state.in_review = True
                 st.rerun()
 
@@ -150,7 +163,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
                     else: st.session_state.error_count += 1
                     st.rerun()
             with b2:
-                if st.button("🔄 SIFIRLA", help="Kodu ilk haline döndür", use_container_width=True):
+                if st.button("🔄 SIFIRLA", use_container_width=True):
                     st.session_state.reset_trigger += 1; st.rerun()
 
         elif st.session_state.cevap_dogru:
@@ -171,7 +184,6 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
                 ilerleme_fonksiyonu(0, "Çözüm İncelendi", egz['id'], n_id, n_m)
 
     with cr:
-        # Onur Kürsüsü sağ kolonda mühürlendi
         ranks_module.liderlik_tablosu_goster(supabase, current_user=u)
 
     st.markdown('</div>', unsafe_allow_html=True)
