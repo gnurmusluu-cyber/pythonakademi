@@ -1,524 +1,124 @@
 {
   "pito_akademi_mufredat": [
-{
-  "modul_id": 1,
-  "modul_adi": "Python Dünyasına Giriş: İlk Komutlar",
-  "pito_anlatimi": "Merhaba Genç Yazılımcı! Ben Pito. Bugün bilgisayarların o sessiz dünyasına ilk sesini vereceğiz. Yazılım dünyasında 'Algoritma', bir problemi çözmek için adım adım izlediğimiz o stratejik yoldur. Python ise bu stratejiyi bilgisayara anlatma dilimizdir. Bilgisayarla en temel konuşma aracımız 'print()' fonksiyonudur. Kural 1: Eğer bilgisayara bir metin (karakter dizisi) söyletmek istiyorsan, o metni mutlaka tek (' ') veya çift (\" \") tırnak içine almalısın. Kural 2: Sayılarla işlem yaparken tırnak kullanmana gerek yoktur; sayılar özgürdür! Hazırsan, dijital evrene ilk 'Merhaba'mızı bırakalım!",
-  "egzersizler": [
     {
-      "id": "1.1",
-      "yonerge": "Bilgisayarın seninle konuşmasını sağla! 'print()' fonksiyonunun parantezleri içerisindeki boşluğa, tırnak işaretleri kullanarak 'Merhaba Dunya' yazmalısın. Unutma, Python tırnaksız metinleri anlamaz!",
-      "sablon": "print(____)",
-      "dogru_cevap_kodu": "print('Merhaba Dunya')",
-      "beklenen_cikti": "Merhaba Dunya",
-      "ipucu": "Metni tırnak içine alarak yazmayı dene: 'Merhaba Dunya'",
-      "cozum": "print('Merhaba Dunya')"
+      "modul_id": 1,
+      "modul_adi": "Python Dünyasına Giriş: İlk Komutlar",
+      "pito_anlatimi": "Merhaba Genç Yazılımcı! Ben Pito. Bugün bilgisayarların o sessiz dünyasına ilk sesini vereceğiz. Yazılım dünyasında 'Algoritma', bir problemi çözmek için adım adım izlediğimiz o stratejik yoldur. Python ise bu stratejiyi bilgisayara anlatma dilimizdir. Bilgisayarla en temel konuşma aracımız 'print()' fonksiyonudur. Kural 1: Eğer bilgisayara bir metin (karakter dizisi) söyletmek istiyorsan, o metni mutlaka tek (' ') veya çift (\" \") tırnak içine almalısın. Kural 2: Sayılarla işlem yaparken tırnak kullanmana gerek yoktur; sayılar özgürdür! Hazırsan, dijital evrene ilk 'Merhaba'mızı bırakalım!",
+      "egzersizler": [
+        { "id": "1.1", "yonerge": "Bilgisayarın seninle konuşmasını sağla! 'print()' fonksiyonunun parantezleri içerisindeki boşluğa, tırnak işaretleri kullanarak 'Merhaba Dunya' yazmalısın.", "sablon": "print(____)", "dogru_cevap_kodu": "print('Merhaba Dunya')", "beklenen_cikti": "Merhaba Dunya", "ipucu": "Metni tırnak içine al: 'Merhaba Dunya'", "cozum": "print('Merhaba Dunya')" },
+        { "id": "1.2", "yonerge": "Şimdi tırnak işaretleri arasına tam olarak 'Python Ogreniyorum' yazarak kodunu tamamla.", "sablon": "print('____')", "dogru_cevap_kodu": "print('Python Ogreniyorum')", "beklenen_cikti": "Python Ogreniyorum", "ipucu": "Sadece boş bırakılan yere cümleyi yaz.", "cozum": "print('Python Ogreniyorum')" },
+        { "id": "1.3", "yonerge": "Pito Akademi'nin bir parçası olduğunu belirtmek için tırnakların arasına 'Benim adim Pito' yazmalısın.", "sablon": "print('____')", "dogru_cevap_kodu": "print('Benim adim Pito')", "beklenen_cikti": "Benim adim Pito", "ipucu": "İsmini tırnakların tam ortasına yaz.", "cozum": "print('Benim adim Pito')" },
+        { "id": "1.4", "yonerge": "Sayılar tırnak istemez! Boşluğa tırnak kullanmadan sadece 2026 sayısını yaz.", "sablon": "print(____)", "dogru_cevap_kodu": "print(2026)", "beklenen_cikti": "2026", "ipucu": "Sayıyı direkt parantez içine yaz.", "cozum": "print(2026)" },
+        { "id": "1.5", "yonerge": "Alttaki ikinci 'print()' fonksiyonunun boşluğuna tırnaklar içinde 'Harika' yazarak görevi bitir.", "sablon": "print('Python')\nprint('____')", "dogru_cevap_kodu": "print('Python')\nprint('Harika')", "beklenen_cikti": "Python\nHarika", "ipucu": "Alt satırdaki tırnakların içine 'Harika' yaz.", "cozum": "print('Harika')" }
+      ]
     },
     {
-      "id": "1.2",
-      "yonerge": "Şimdi bir adım ileri gidelim. Python'ın ne kadar eğlenceli olduğunu haykıralım! Boşluğa tırnak işaretleri arasına tam olarak 'Python Ogreniyorum' yazarak kodunu tamamla.",
-      "sablon": "print('____')",
-      "dogru_cevap_kodu": "print('Python Ogreniyorum')",
-      "beklenen_cikti": "Python Ogreniyorum",
-      "ipucu": "Sadece boş bırakılan yere cümleni yerleştir.",
-      "cozum": "print('Python Ogreniyorum')"
+      "modul_id": 2,
+      "modul_adi": "Değişkenler ve Veri Tipleri: Veriyi Hafızaya Mühürlemek",
+      "pito_anlatimi": "Merhaba Genç Yazılımcı! Bugün kodun hafızasıyla tanışacağız. Değişkenler, bilgisayarın hafızasındaki 'etiketli kutular' gibidir. Bir değeri daha sonra kullanmak üzere bu kutulara koyarız. Kural 1: Değişken isimlerinde boşluk olmaz, 'ogrenci_no' gibi alt çizgi (_) kullanmalısın. Kural 2: İsimler asla sayıyla başlayamaz. Kural 3: Büyük-küçük harf duyarlıdır! Veri tipleri ise 'int' (tam sayı), 'float' (ondalıklı), 'str' (metin) ve 'bool' (Doğru/Yanlış) olarak ayrılır.",
+      "egzersizler": [
+        { "id": "2.1", "yonerge": "'yas' isimli bir değişken oluştur ve içine 17 sayısını mühürle.", "sablon": "____ = 17", "dogru_cevap_kodu": "yas = 17", "beklenen_cikti": "", "ipucu": "Değişken adı olarak yas yaz.", "cozum": "yas = 17" },
+        { "id": "2.2", "yonerge": "'sehir' değişkeninin içine tırnak işaretleri kullanarak 'Nusaybin' yaz.", "sablon": "sehir = '____'", "dogru_cevap_kodu": "sehir = 'Nusaybin'", "beklenen_cikti": "", "ipucu": "Boşluğa sadece şehrin adını yaz.", "cozum": "sehir = 'Nusaybin'" },
+        { "id": "2.3", "yonerge": "'pi' isimli bir değişken oluştur ve ona 3.14 değerini ata.", "sablon": "____", "dogru_cevap_kodu": "pi = 3.14", "beklenen_cikti": "", "ipucu": "Tüm satırı yaz: pi = 3.14", "cozum": "pi = 3.14" },
+        { "id": "2.4", "yonerge": "'ders' değişkenini ekrana yazdırmak için print() içine değişken adını tırnaksız yaz.", "sablon": "ders = 'Python'\nprint(____)", "dogru_cevap_kodu": "ders = 'Python'\nprint(ders)", "beklenen_cikti": "Python", "ipucu": "Parantez içine ders yaz.", "cozum": "print(ders)" },
+        { "id": "2.5", "yonerge": "'puan' değişkeninin değerini 100 olarak güncelle.", "sablon": "puan = 50\n____", "dogru_cevap_kodu": "puan = 50\npuan = 100", "beklenen_cikti": "", "ipucu": "puan = 100 yazmalısın.", "cozum": "puan = 100" }
+      ]
     },
     {
-      "id": "1.3",
-      "yonerge": "Bilgisayar senin kim olduğunu bilmeli! Pito Akademi'nin bir parçası olduğunu belirtmek için tırnakların arasına 'Benim adim Pito' yazmalısın.",
-      "sablon": "print('____')",
-      "dogru_cevap_kodu": "print('Benim adim Pito')",
-      "beklenen_cikti": "Benim adim Pito",
-      "ipucu": "İsmini mühürlenmiş tırnakların tam ortasına yaz.",
-      "cozum": "print('Benim adim Pito')"
+      "modul_id": 3,
+      "modul_adi": "Matematiksel Operatörler: Sayıların Gücü",
+      "pito_anlatimi": "Python'ı devasa bir hesap makinesine dönüştüreceğiz! Temel işlemler: Toplama (+), Çıkarma (-), Çarpma (*) ve Bölme (/). Özel operatörler: Kalanı bulma (%), üs alma (**) ve taban bölme (//). İşlem önceliği her zaman parantez içindedir!",
+      "egzersizler": [
+        { "id": "3.1", "yonerge": "İki sayıyı toplamak için boşluğa (+) operatörünü koy.", "sablon": "sayi1 = 15\nsayi2 = 25\nprint(sayi1 ____ sayi2)", "dogru_cevap_kodu": "sayi1 = 15\nsayi2 = 25\nprint(sayi1 + sayi2)", "beklenen_cikti": "40", "ipucu": "Toplama işareti + kullan.", "cozum": "print(sayi1 + sayi2)" },
+        { "id": "3.2", "yonerge": "5 ile 8'i çarpmak için boşluğa yıldız (*) yerleştir.", "sablon": "print(5 ____ 8)", "dogru_cevap_kodu": "print(5 * 8)", "beklenen_cikti": "40", "ipucu": "Çarpma işareti * kullan.", "cozum": "print(5 * 8)" },
+        { "id": "3.3", "yonerge": "10'un 3'e bölümünden kalanı bulmak için yüzde (%) işaretini koy.", "sablon": "kalan = 10 ____ 3\nprint(kalan)", "dogru_cevap_kodu": "kalan = 10 % 3\nprint(kalan)", "beklenen_cikti": "1", "ipucu": "Mod operatörü % kullan.", "cozum": "kalan = 10 % 3" },
+        { "id": "3.4", "yonerge": "2'nin 4. kuvvetini hesaplamak için çift yıldız (**) koy.", "sablon": "sonuc = 2 ____ 4\nprint(sonuc)", "dogru_cevap_kodu": "sonuc = 2 ** 4\nprint(sonuc)", "beklenen_cikti": "16", "ipucu": "Üs alma işareti ** kullan.", "cozum": "sonuc = 2 ** 4" },
+        { "id": "3.5", "yonerge": "Öncelik vermek için işlemi parantez içine al.", "sablon": "islem = ____10 + 5____ * 2\nprint(islem)", "dogru_cevap_kodu": "islem = (10 + 5) * 2\nprint(islem)", "beklenen_cikti": "30", "ipucu": "Başa ve sona ( ) koy.", "cozum": "islem = (10 + 5) * 2" }
+      ]
     },
     {
-      "id": "1.4",
-      "yonerge": "Matematiksel bir gerçeği ekrana yazdıralım. Sayılar tırnak istemez! Boşluğa tırnak kullanmadan sadece güncel yılımız olan 2026 sayısını yaz.",
-      "sablon": "print(____)",
-      "dogru_cevap_kodu": "print(2026)",
-      "beklenen_cikti": "2026",
-      "ipucu": "Sayıları direkt parantez içine yazabilirsin, tırnaklara veda et!",
-      "cozum": "print(2026)"
+      "modul_id": 4,
+      "modul_adi": "Kullanıcı Etkileşimi: Bilgisayarı Dinlemek",
+      "pito_anlatimi": "'input()' fonksiyonu bilgisayarın klavyeye kulak kesilmesini sağlar. Gelen veriyi matematikte kullanmak istiyorsan 'int()' veya 'float()' ile sayıya tercüme etmelisin!",
+      "egzersizler": [
+        { "id": "4.1", "yonerge": "Kullanıcıya soru sor: tırnaklar içinde 'Adin nedir?' yaz.", "sablon": "input(____)", "dogru_cevap_kodu": "input('Adin nedir?')", "beklenen_cikti": "", "ipucu": "input('Adin nedir?') yaz.", "cozum": "input('Adin nedir?')" },
+        { "id": "4.2", "yonerge": "Kullanıcının gireceği şehri 'sehir' değişkenine mühürle.", "sablon": "____ = input('Sehir gir: ')", "dogru_cevap_kodu": "sehir = input('Sehir gir: ')", "beklenen_cikti": "", "ipucu": "Değişken adını sehir yaz.", "cozum": "sehir = input('Sehir gir: ')" },
+        { "id": "4.3", "yonerge": "Metni tam sayıya çevirmek için int() fonksiyonunu yaz.", "sablon": "yas = '17'\nyas = ____(yas)", "dogru_cevap_kodu": "yas = '17'\nyas = int(yas)", "beklenen_cikti": "", "ipucu": "Sayıya çevirme komutu int.", "cozum": "yas = int(yas)" },
+        { "id": "4.4", "yonerge": "Kullanıcıdan sayı alıp anında çevir: int(input()) yapısını kur.", "sablon": "puan = ____('Puan: ')", "dogru_cevap_kodu": "puan = int(input('Puan: '))", "beklenen_cikti": "", "ipucu": "int(input(...)) yazmalısın.", "cozum": "puan = int(input('Puan: '))" },
+        { "id": "4.5", "yonerge": "Girilen sayıyı 2 ile çarpıp ekrana yazdır.", "sablon": "sayi = int(input('Sayı: '))\nprint(____ * 2)", "dogru_cevap_kodu": "sayi = int(input('Sayı: '))\nprint(sayi * 2)", "beklenen_cikti": "", "ipucu": "Parantez içine sayi yaz.", "cozum": "print(sayi * 2)" }
+      ]
     },
     {
-      "id": "1.5",
-      "yonerge": "Python'da alt alta satırlar yazdırmak çok kolaydır. Alttaki ikinci 'print()' fonksiyonunun boşluğuna tırnaklar içinde 'Harika' yazarak görevi başarıyla bitir.",
-      "sablon": "print('Python')\nprint('____')",
-      "dogru_cevap_kodu": "print('Python')\nprint('Harika')",
-      "beklenen_cikti": "Python\nHarika",
-      "ipucu": "Alt satırdaki mühürlü tırnakların içine 'Harika' yazmalısın.",
-      "cozum": "print('Harika')"
+      "modul_id": 5,
+      "modul_adi": "Karar Mekanizmaları: Kodun Düşünme Gücü",
+      "pito_anlatimi": "Bugün koduna 'beyin' takıyoruz! 'if' (eğer) komutu ile program şartları kontrol eder. Girintileme (4 boşluk) Python'da hayati önem taşır!",
+      "egzersizler": [
+        { "id": "5.1", "yonerge": "Puan 50'den büyükse kontrolü için 'if' yaz.", "sablon": "puan = 75\n____ puan > 50:\n    print('Gectin')", "dogru_cevap_kodu": "puan = 75\nif puan > 50:\n    print('Gectin')", "beklenen_cikti": "Gectin", "ipucu": "Eğer komutu if yaz.", "cozum": "if puan > 50:" },
+        { "id": "5.2", "yonerge": "Şart tutmadığında çalışacak olan 'else' komutunu yaz.", "sablon": "if sifre == '1':\n    print('Ok')\n____:\n    print('No')", "dogru_cevap_kodu": "if sifre == '1':\n    print('Ok')\nelse:\n    print('No')", "beklenen_cikti": "", "ipucu": "Değilse komutu else: yaz.", "cozum": "else:" },
+        { "id": "5.3", "yonerge": "Eşitlik kontrolü için çift eşittir (==) kullan.", "sablon": "yas = 18\nif yas ____ 18:\n    print('Ok')", "dogru_cevap_kodu": "yas = 18\nif yas == 18:\n    print('Ok')", "beklenen_cikti": "Ok", "ipucu": "Eşitlik için == kullan.", "cozum": "if yas == 18:" },
+        { "id": "5.4", "yonerge": "İkinci bir şart eklemek için 'elif' kullan.", "sablon": "n = 90\nif n > 95:\n    p('A')\n____ n > 85:\n    p('B')", "dogru_cevap_kodu": "n = 90\nif n > 95:\n    p('A')\nelif n > 85:\n    p('B')", "beklenen_cikti": "", "ipucu": "Şart ekleme komutu elif.", "cozum": "elif n > 85:" },
+        { "id": "5.5", "yonerge": "Girinti testi: 4 boşluk bırakarak print('Sicak') yaz.", "sablon": "hava = 35\nif hava > 30:\n____", "dogru_cevap_kodu": "hava = 35\nif hava > 30:\n    print('Sicak')", "beklenen_cikti": "Sicak", "ipucu": "4 boşluk ve kod.", "cozum": "    print('Sicak')" }
+      ]
+    },
+    {
+      "modul_id": 6,
+      "modul_adi": "Döngüler: Bilgisayarın Bitmek Bilmeyen Enerjisi",
+      "pito_anlatimi": "Bilgisayarlar sıkılmaz! 'for' ile kaç kere döneceğimizi belirleriz, 'while' ile bir şart doğru olduğu sürece çalışırız.",
+      "egzersizler": [
+        { "id": "6.1", "yonerge": "5 kez dönmek için range parantezine 5 yaz.", "sablon": "for i in range(____):\n    print('Ok')", "dogru_cevap_kodu": "for i in range(5):\n    print('Ok')", "beklenen_cikti": "Ok\nOk\nOk\nOk\nOk", "ipucu": "Sadece 5 yaz.", "cozum": "range(5)" },
+        { "id": "6.2", "yonerge": "Liste taramak için 'in' kelimesini yaz.", "sablon": "for m ____ meyveler:\n    print(m)", "dogru_cevap_kodu": "for m in meyveler:\n    print(m)", "beklenen_cikti": "", "ipucu": "Liste içinde tarama kelimesi in.", "cozum": "in" },
+        { "id": "6.3", "yonerge": "Döngü değişkeni 'i' harfini yazdır.", "sablon": "for i in range(3):\n    print(____)", "dogru_cevap_kodu": "for i in range(3):\n    print(i)", "beklenen_cikti": "0\n1\n2", "ipucu": "Paranteze i yaz.", "cozum": "print(i)" },
+        { "id": "6.4", "yonerge": "5'ten küçük olduğu sürece kontrolü için (<) koy.", "sablon": "while s ____ 5:", "dogru_cevap_kodu": "while s < 5:", "beklenen_cikti": "", "ipucu": "Küçüktür işareti < kullan.", "cozum": "while s < 5:" },
+        { "id": "6.5", "yonerge": "Toplamı güncellemek için 'toplam + i' yaz.", "sablon": "for i in r(3):\n    toplam = ____", "dogru_cevap_kodu": "for i in r(3):\n    toplam = toplam + i", "beklenen_cikti": "", "ipucu": "toplam + i yazmalısın.", "cozum": "toplam = toplam + i" }
+      ]
+    },
+    {
+      "modul_id": 7,
+      "modul_adi": "Sözlükler ve Demetler: Veriye Anahtar Takmak",
+      "pito_anlatimi": "Verileri 'anahtar' kelimelerle saklamayı öğreneceğiz. Sözlükler '{}', değiştirilemez Demetler '()' ile gösterilir.",
+      "egzersizler": [
+        { "id": "7.1", "yonerge": "Tırnaklar içinde 'ad' anahtarını tanımla.", "sablon": "s = {____: 'Pito'}", "dogru_cevap_kodu": "s = {'ad': 'Pito'}", "beklenen_cikti": "", "ipucu": "Anahtar adı 'ad'.", "cozum": "s = {'ad': 'Pito'}" },
+        { "id": "7.2", "yonerge": "Sözlükteki 'ad' bilgisini çağır.", "sablon": "print(s[____])", "dogru_cevap_kodu": "print(s['ad'])", "beklenen_cikti": "Pito", "ipucu": "Köşeli paranteze 'ad' yaz.", "cozum": "print(s['ad'])" },
+        { "id": "7.3", "yonerge": "(1, 2, 3) demetini tamamlamak için 3 yaz.", "sablon": "d = (1, 2, ____)", "dogru_cevap_kodu": "d = (1, 2, 3)", "beklenen_cikti": "", "ipucu": "Eksik rakam 3.", "cozum": "d = (1, 2, 3)" },
+        { "id": "7.4", "yonerge": "Yeni anahtar 'yas' eklemek için tırnakla yaz.", "sablon": "s[____] = 16", "dogru_cevap_kodu": "s['yas'] = 16", "beklenen_cikti": "", "ipucu": "s['yas'] yazmalısın.", "cozum": "s['yas'] = 16" },
+        { "id": "7.5", "yonerge": "Anahtarları çekmek için 'keys' metodunu yaz.", "sablon": "print(s.____())", "dogru_cevap_kodu": "print(s.keys())", "beklenen_cikti": "", "ipucu": "Metot adı keys().", "cozum": "print(s.keys())" }
+      ]
+    },
+    {
+      "modul_id": 8,
+      "modul_adi": "Fonksiyonlar: Kodu Paketlemek ve Güçlendirmek",
+      "pito_anlatimi": "Kendimizi tekrar etmemeyi öğreneceğiz! 'def' ile kod paketleri hazırlar, 'return' ile sonuçları geri alırız.",
+      "egzersizler": [
+        { "id": "8.1", "yonerge": "Fonksiyon tanımlamak için 'def' yaz.", "sablon": "____ s():\n    print('Ok')", "dogru_cevap_kodu": "def s():\n    print('Ok')", "beklenen_cikti": "", "ipucu": "Başlatma kelimesi def.", "cozum": "def s():" },
+        { "id": "8.2", "yonerge": "Dışarıdan 'isim' parametresi almasını sağla.", "sablon": "def m(____):", "dogru_cevap_kodu": "def m(isim):", "beklenen_cikti": "", "ipucu": "Paranteze isim yaz.", "cozum": "def m(isim):" },
+        { "id": "8.3", "yonerge": "Sonucu geri döndürmek için 'return' yaz.", "sablon": "def c(a, b):\n    ____ a * b", "dogru_cevap_kodu": "def c(a, b):\n    return a * b", "beklenen_cikti": "", "ipucu": "Döndürme kelimesi return.", "cozum": "return a * b" },
+        { "id": "8.4", "yonerge": "Kütüphane eklemek için 'import' yaz.", "sablon": "____ math", "dogru_cevap_kodu": "import math", "beklenen_cikti": "", "ipucu": "Ekleme kelimesi import.", "cozum": "import math" },
+        { "id": "8.5", "yonerge": "Tanımladığın 'selam()' fonksiyonunu çağır.", "sablon": "def s():\n    p('Ok')\n____", "dogru_cevap_kodu": "def s():\n    p('Ok')\nselam()", "beklenen_cikti": "Ok", "ipucu": "selam() yazmalısın.", "cozum": "selam()" }
+      ]
+    },
+    {
+      "modul_id": 9,
+      "modul_adi": "Nesne Tabanlı Programlama: Kendi Dünyanı İnşa Et",
+      "pito_anlatimi": "OOP, dünyadaki karmaşık şeyleri koda dökme sanatıdır. 'class' ile maket tasarlar, nesnelerle bu tasarımı hayata geçiririz!",
+      "egzersizler": [
+        { "id": "9.1", "yonerge": "Sınıf tanımlamak için 'class' yaz.", "sablon": "____ Robot:", "dogru_cevap_kodu": "class Robot:", "beklenen_cikti": "", "ipucu": "class kelimesini kullan.", "cozum": "class Robot:" },
+        { "id": "9.2", "yonerge": "'Robot' sınıfından bir nesne üret.", "sablon": "a = ____", "dogru_cevap_kodu": "a = Robot()", "beklenen_cikti": "", "ipucu": "Robot() yazmalısın.", "cozum": "Robot()" },
+        { "id": "9.3", "yonerge": "Özellik atamak için 'self.ad' yaz.", "sablon": "def __init__(s, i):\n    ____ = i", "dogru_cevap_kodu": "def __init__(s, i):\n    self.ad = i", "beklenen_cikti": "", "ipucu": "self.ad yazmalısın.", "cozum": "self.ad = i" },
+        { "id": "9.4", "yonerge": "Metot içine 'self' kelimesini yaz.", "sablon": "def s(____):", "dogru_cevap_kodu": "def s(self):", "beklenen_cikti": "", "ipucu": "Paranteze self yaz.", "cozum": "self" },
+        { "id": "9.5", "yonerge": "'Robot' sınıfından miras almak için paranteze yaz.", "sablon": "class UcanRobot(____):", "dogru_cevap_kodu": "class UcanRobot(Robot):", "beklenen_cikti": "", "ipucu": "Paranteze Robot yaz.", "cozum": "Robot" }
+      ]
+    },
+    {
+      "modul_id": 10,
+      "modul_adi": "Hata Yönetimi ve Dosyalar: Kodun Dayanıklılığı",
+      "pito_anlatimi": "Tebrikler Final! 'try-except' ile hataları yakalar, 'open()' ile verileri kalıcı dosyalara mühürleriz.",
+      "egzersizler": [
+        { "id": "10.1", "yonerge": "Hata kontrolü için 'try' yaz.", "sablon": "____:\n    n = 1/0", "dogru_cevap_kodu": "try:\n    n = 1/0", "beklenen_cikti": "", "ipucu": "try: yazmalısın.", "cozum": "try:" },
+        { "id": "10.2", "yonerge": "Hata yakalama için 'except' yaz.", "sablon": "____:\n    print('Hata!')", "dogru_cevap_kodu": "except:\n    print('Hata!')", "beklenen_cikti": "Hata!", "ipucu": "except: yazmalısın.", "cozum": "except:" },
+        { "id": "10.3", "yonerge": "'notlar.txt' dosyasını 'w' modunda aç.", "sablon": "f = open(____, 'w')", "dogru_cevap_kodu": "f = open('notlar.txt', 'w')", "beklenen_cikti": "", "ipucu": "'notlar.txt' yaz.", "cozum": "'notlar.txt'" },
+        { "id": "10.4", "yonerge": "Dosyaya yazmak için 'write' metodunu kullan.", "sablon": "f.____('Pito')", "dogru_cevap_kodu": "f.write('Pito')", "beklenen_cikti": "", "ipucu": "Metot adı write.", "cozum": "write" },
+        { "id": "10.5", "yonerge": "Dosyayı kapatmak için 'close' fonksiyonunu yaz.", "sablon": "f.____()", "dogru_cevap_kodu": "f.close()", "beklenen_cikti": "", "ipucu": "close() yazmalısın.", "cozum": "close()" }
+      ]
     }
   ]
-}
-{
-  "modul_id": 2,
-  "modul_adi": "Değişkenler ve Veri Tipleri: Veriyi Hafızaya Mühürlemek",
-  "pito_anlatimi": "Merhaba Genç Yazılımcı! Bugün kodun hafızasıyla tanışacağız. Değişkenler, bilgisayarın hafızasındaki 'etiketli kutular' gibidir. Bir değeri daha sonra kullanmak üzere bu kutulara koyarız. \n\nKural 1: Değişken isimlerinde boşluk olmaz, 'ogrenci_no' gibi alt çizgi (_) kullanmalısın. \nKural 2: İsimler asla sayıyla başlayamaz. \nKural 3: Büyük-küçük harf duyarlıdır, 'puan' ile 'Puan' farklı kutulardır! \n\nVeri tipleri ise kutunun içindekinin ne olduğunu söyler: 'int' (tam sayılar), 'float' (ondalıklı sayılar), 'str' (metinler, hep tırnaklıdır) ve 'bool' (True/False - Doğru/Yanlış). Hazırsan hafıza yönetimine başlıyoruz!",
-  "egzersizler": [
-    {
-      "id": "2.1",
-      "yonerge": "Bir tam sayı değişkeni tanımlayalım. 'yas' isimli bir kutu (değişken) oluştur ve içine 17 sayısını mühürle. Unutma, sayılarda tırnak kullanmıyoruz!",
-      "sablon": "____ = 17",
-      "dogru_cevap_kodu": "yas = 17",
-      "beklenen_cikti": "",
-      "ipucu": "Boşluğa değişken adı olarak 'yas' yazmalısın.",
-      "cozum": "yas = 17"
-    },
-    {
-      "id": "2.2",
-      "yonerge": "Şimdi metinsel bir veri saklayalım. 'sehir' değişkeninin içine tırnak işaretleri kullanarak 'Nusaybin' yaz. Metinlerin her zaman tırnakla korunduğunu hatırla!",
-      "sablon": "sehir = '____'",
-      "dogru_cevap_kodu": "sehir = 'Nusaybin'",
-      "beklenen_cikti": "",
-      "ipucu": "Boşluğa sadece şehrimizin adını yaz.",
-      "cozum": "sehir = 'Nusaybin'"
-    },
-    {
-      "id": "2.3",
-      "yonerge": "Ondalıklı sayılar (float) için nokta (.) kullanırız. 'pi' isimli bir değişken oluştur ve ona 3.14 değerini ata. Eşittir (=) işaretini kullanmayı unutma!",
-      "sablon": "____",
-      "dogru_cevap_kodu": "pi = 3.14",
-      "beklenen_cikti": "",
-      "ipucu": "Tüm satırı yazmalısın: pi = 3.14",
-      "cozum": "pi = 3.14"
-    },
-    {
-      "id": "2.4",
-      "yonerge": "Kutudaki veriyi ekrana çağıralım! 'ders' değişkeninde 'Python' yazıyor. Bu değişkeni ekrana yazdırmak için print() fonksiyonunun parantezleri içine değişkenin adını (ders) tırnaksız şekilde yaz.",
-      "sablon": "ders = 'Python'\nprint(____)",
-      "dogru_cevap_kodu": "ders = 'Python'\nprint(ders)",
-      "beklenen_cikti": "Python",
-      "ipucu": "Parantez içine sadece ders yazmalısın.",
-      "cozum": "print(ders)"
-    },
-    {
-      "id": "2.5",
-      "yonerge": "Değişkenlerin değeri değişebilir! 'puan' değişkenine önce 50 verelim, sonraki satırda bu değeri 100 olarak güncelleyelim. Boşluğa 'puan = 100' yazarak hafızayı güncelle.",
-      "sablon": "puan = 50\n____",
-      "dogru_cevap_kodu": "puan = 50\npuan = 100",
-      "beklenen_cikti": "",
-      "ipucu": "Hafızayı güncellemek için aynı değişken adına yeni değer ata: puan = 100",
-      "cozum": "puan = 100"
-    }
-  ]
-}
-{
-  "modul_id": 3,
-  "modul_adi": "Matematiksel Operatörler: Sayıların Gücü",
-  "pito_anlatimi": "Selam Genç Yazılımcı! Bugün Python'ı devasa bir hesap makinesine dönüştüreceğiz. Bilgisayarlar aslında sadece sayılarla konuşur ve bu operatörler bizim en güçlü araçlarımızdır.\n\nKural 1: Temel işlemler tanıdıktır: Toplama (+), Çıkarma (-), Çarpma (*) ve Bölme (/). \nKural 2: Özel araçlarımız da var! Bölme işleminden kalanı bulmak için Mod (%) operatörünü, üslü sayılar için ise çift yıldız (**) kullanırız. \nKural 3: Eğer bir bölme işleminde virgülden sonrasını çöpe atmak istiyorsan 'Taban Bölme' (//) tam sana göre! \n\nİşlem önceliğine (parantez içi, üs, çarpma/bölme, toplama/çıkarma) dikkat ettiğin sürece Python asla hata yapmaz. Hazırsan hesaplamalar başlasın!",
-  "egzersizler": [
-    {
-      "id": "3.1",
-      "yonerge": "İki sayıyı toplayıp ekrana yazdıralım. 'sayi1' ve 'sayi2' değişkenlerini toplamak için boşluğa (+) operatörünü koy ve sonucu gör.",
-      "sablon": "sayi1 = 15\nsayi2 = 25\nprint(sayi1 ____ sayi2)",
-      "dogru_cevap_kodu": "sayi1 = 15\nsayi2 = 25\nprint(sayi1 + sayi2)",
-      "beklenen_cikti": "40",
-      "ipucu": "Toplama yapmak için + işaretini kullanmalısın.",
-      "cozum": "print(sayi1 + sayi2)"
-    },
-    {
-      "id": "3.2",
-      "yonerge": "Bir çarpma işlemi yapalım. 5 ile 8'i çarpmak için boşluğa çarpma operatörünü (*) yerleştir. Python'da çarpma işaretinin yıldız olduğunu unutma!",
-      "sablon": "print(5 ____ 8)",
-      "dogru_cevap_kodu": "print(5 * 8)",
-      "beklenen_cikti": "40",
-      "ipucu": "Çarpma işlemi için * işaretini kullan.",
-      "cozum": "print(5 * 8)"
-    },
-    {
-      "id": "3.3",
-      "yonerge": "Kalanı bulma vakti (Mod)! 10 sayısının 3'e bölümünden kalanı bulmak için boşluğa yüzde (%) işaretini koy. 10'un 3'e bölümünden kalan 1 olmalı.",
-      "sablon": "kalan = 10 ____ 3\nprint(kalan)",
-      "dogru_cevap_kodu": "kalan = 10 % 3\nprint(kalan)",
-      "beklenen_cikti": "1",
-      "ipucu": "Kalanı hesaplamak için % operatörünü kullanmalısın.",
-      "cozum": "kalan = 10 % 3"
-    },
-    {
-      "id": "3.4",
-      "yonerge": "Üslü sayılarla gücünü göster! 2'nin 4. kuvvetini (2x2x2x2) hesaplamak için boşluğa çift yıldız (**) koy. Bakalım 16 sonucuna ulaşabilecek misin?",
-      "sablon": "sonuc = 2 ____ 4\nprint(sonuc)",
-      "dogru_cevap_kodu": "sonuc = 2 ** 4\nprint(sonuc)",
-      "beklenen_cikti": "16",
-      "ipucu": "Üs almak için yan yana iki tane yıldız (**) kullanmalısın.",
-      "cozum": "sonuc = 2 ** 4"
-    },
-    {
-      "id": "3.5",
-      "yonerge": "İşlem önceliği testi! Önce parantez içini yaptırmak için boşluklara ( ) işaretlerini koy. (10 + 5) * 2 işleminin sonucu 30 çıkmalı.",
-      "sablon": "islem = ____10 + 5____ * 2\nprint(islem)",
-      "dogru_cevap_kodu": "islem = (10 + 5) * 2\nprint(islem)",
-      "beklenen_cikti": "30",
-      "ipucu": "Öncelik vermek istediğin işlemi parantez içine almalısın.",
-      "cozum": "islem = (10 + 5) * 2"
-    }
-  ]
-}
-{
-  "modul_id": 4,
-  "modul_adi": "Kullanıcı Etkileşimi: Bilgisayarı Dinlemek",
-  "pito_anlatimi": "Selam Genç Yazılımcı! Şimdi bilgisayarın o sessizliğini bozma vakti. 'input()' fonksiyonu, bilgisayarın klavyeye kulak kesilmesini sağlar. \n\nKritik Bilgi: Bilgisayar klavyeden gelen her şeyi 'metin' (string) olarak algılar. Eğer klavyeden '5' yazarsan, bilgisayar bunu bir sayı değil, tırnak içindeki bir yazı ('5') gibi görür. \n\nEğer bu gelen veriyi matematikte kullanmak istiyorsan, onu 'int()' (tam sayıya çevir) veya 'float()' (ondalıklı sayıya çevir) fonksiyonlarıyla tercüme etmelisin. Hazırsan, bilgisayarına ilk sorusunu sorduralım!",
-  "egzersizler": [
-    {
-      "id": "4.1",
-      "yonerge": "Bilgisayarın kullanıcıya bir soru sormasını sağla! Parantez içine tırnaklar içerisinde 'Adin nedir?' yazarak kullanıcının ismini girmesini bekle.",
-      "sablon": "input(____)",
-      "dogru_cevap_kodu": "input('Adin nedir?')",
-      "beklenen_cikti": "",
-      "ipucu": "Soru metnini tırnak içinde paranteze yaz: 'Adin nedir?'",
-      "cozum": "input('Adin nedir?')"
-    },
-    {
-      "id": "4.2",
-      "yonerge": "Gelen cevabı bir hafıza kutusuna (değişkene) koyalım. Kullanıcının gireceği şehri 'sehir' isimli değişkene mühürle.",
-      "sablon": "____ = input('Hangi sehirde yasiyorsun?')",
-      "dogru_cevap_kodu": "sehir = input('Hangi sehirde yasiyorsun?')",
-      "beklenen_cikti": "",
-      "ipucu": "Boşluğa değişken adını (sehir) yazmalısın.",
-      "cozum": "sehir = input('Hangi sehirde yasiyorsun?')"
-    },
-    {
-      "id": "4.3",
-      "yonerge": "Tercüme vakti! Klavyeden gelen 'yas' verisi şu an bir metin. Onu tam sayıya (integer) çevirmek için boşluğa int() fonksiyonunu yaz.",
-      "sablon": "yas = '17'\nyas = ____(yas)\nprint(yas + 1)",
-      "dogru_cevap_kodu": "yas = '17'\nyas = int(yas)\nprint(yas + 1)",
-      "beklenen_cikti": "18",
-      "ipucu": "Tam sayıya dönüştürmek için 'int' kelimesini kullan.",
-      "cozum": "yas = int(yas)"
-    },
-    {
-      "id": "4.4",
-      "yonerge": "Hızlı veri alma: Kullanıcıdan bir sayı alırken onu anında tam sayıya çevirebiliriz. Boşluğa 'int(input())' yapısını kurarak girilen sayıyı 'puan' değişkenine kaydet.",
-      "sablon": "puan = ____('Puani giriniz: ')",
-      "dogru_cevap_kodu": "puan = int(input('Puani giriniz: '))",
-      "beklenen_cikti": "",
-      "ipucu": "İç içe iki fonksiyon kullanmalısın: int(input(...))",
-      "cozum": "puan = int(input('Puani giriniz: '))"
-    },
-    {
-      "id": "4.5",
-      "yonerge": "Kullanıcı etkileşimli ilk mini uygulamamızı yapalım! Kullanıcıdan bir sayı al (input), onu tam sayıya çevir (int) ve 2 ile çarpıp ekrana yazdır.",
-      "sablon": "sayi = int(input('Bir sayi gir: '))\nprint(____ * 2)",
-      "dogru_cevap_kodu": "sayi = int(input('Bir sayi gir: '))\nprint(sayi * 2)",
-      "beklenen_cikti": "",
-      "ipucu": "Print içinde değişkenin adını (sayi) kullanmalısın.",
-      "cozum": "print(sayi * 2)"
-    }
-  ]
-}
-{
-  "modul_id": 5,
-  "modul_adi": "Karar Mekanizmaları: Kodun Düşünme Gücü",
-  "pito_anlatimi": "Selam Genç Yazılımcı! Bugün koduna 'beyin' takacağız. 'if' (eğer) komutu, programının bir şartın doğru olup olmadığına bakmasını sağlar. \n\nKural 1: Şartın sonuna mutlaka iki nokta üst üste (:) koymalısın. \nKural 2: En önemli kuralımız GİRİNTİLEME! Eğer bir kod satırı 'if' bloğuna aitse, o satır biraz içeriden (Tab tuşuyla) başlamalıdır. Python bu boşluğu görmezse hata verir. \nKural 3: Karşılaştırma yaparken '=' (atama) ile '==' (eşit mi?) işaretlerini karıştırma! \n\nEğer ilk şart tutmazsa 'elif' ile başka şartlara bakabilir, hiçbir şey tutmazsa 'else' ile 'o zaman bunu yap' diyebiliriz. Hazırsan ilk kararımızı verelim!",
-  "egzersizler": [
-    {
-      "id": "5.1",
-      "yonerge": "Basit bir kontrol yapalım. Eğer 'puan' 50'den büyükse ekrana 'Gectin' yazdıralım. Boşluğa karar komutumuz olan 'if' kelimesini yaz.",
-      "sablon": "puan = 75\n____ puan > 50:\n    print('Gectin')",
-      "dogru_cevap_kodu": "puan = 75\nif puan > 50:\n    print('Gectin')",
-      "beklenen_cikti": "Gectin",
-      "ipucu": "Eğer anlamındaki komutu (if) kullanmalısın.",
-      "cozum": "if puan > 50:"
-    },
-    {
-      "id": "5.2",
-      "yonerge": "İki ihtimalli bir karar! Şifre doğruysa 'Giris Basarili', değilse 'Hatali' yazsın. Boşluğa, şartın tutmadığı durumu temsil eden 'else' komutunu yaz.",
-      "sablon": "sifre = '1234'\nif sifre == '1234':\n    print('Giris Basarili')\n____:\n    print('Hatali')",
-      "dogru_cevap_kodu": "sifre = '1234'\nif sifre == '1234':\n    print('Giris Basarili')\nelse:\n    print('Hatali')",
-      "beklenen_cikti": "Giris Basarili",
-      "ipucu": "Şart sağlanmadığında çalışacak blok 'else:' bloğudur.",
-      "cozum": "else:"
-    },
-    {
-      "id": "5.3",
-      "yonerge": "Eşitlik kontrolü yapalım! 'yas' değişkeni 18'e eşit mi diye bakmak için boşluğa çift eşittir (==) operatörünü koy.",
-      "sablon": "yas = 18\nif yas ____ 18:\n    print('Ehliyet alabilirsin!')",
-      "dogru_cevap_kodu": "yas = 18\nif yas == 18:\n    print('Ehliyet alabilirsin!')",
-      "beklenen_cikti": "Ehliyet alabilirsin!",
-      "ipucu": "Eşitlik kontrolü için iki tane eşittir (==) kullanmalısın.",
-      "cozum": "if yas == 18:"
-    },
-    {
-      "id": "5.4",
-      "yonerge": "Çoklu karar zamanı! Sınav notu 85 ve üzeriyse 'Takdir' alsın. Boşluğa 'elif' komutunu ve şartını yazarak sistemi tamamla.",
-      "sablon": "not = 90\nif not >= 95:\n    print('Onur Belgesi')\n____ not >= 85:\n    print('Takdir')",
-      "dogru_cevap_kodu": "not = 90\nif not >= 95:\n    print('Onur Belgesi')\nelif not >= 85:\n    print('Takdir')",
-      "beklenen_cikti": "Takdir",
-      "ipucu": "İkinci bir şart eklemek için 'elif' kullanmalısın.",
-      "cozum": "elif not >= 85:"
-    },
-    {
-      "id": "5.5",
-      "yonerge": "Girinti (Indentation) testi! Python'da if bloğunun içindeki kodun içeride olması şarttır. Boşluğa print komutunu başına boşluk (girinti) koyarak 'Sicak' yazdır.",
-      "sablon": "hava = 35\nif hava > 30:\n____",
-      "dogru_cevap_kodu": "hava = 35\nif hava > 30:\n    print('Sicak')",
-      "beklenen_cikti": "Sicak",
-      "ipucu": "Alt satıra geç ve 4 boşluk bırakarak print('Sicak') yaz.",
-      "cozum": "    print('Sicak')"
-    }
-  ]
-}
-{
-  "modul_id": 6,
-  "modul_adi": "Döngüler: Bilgisayarın Bitmek Bilmeyen Enerjisi",
-  "pito_anlatimi": "Merhaba Genç Yazılımcı! Bugün bilgisayarın o efsane hızını kullanma vakti. Aynı işi 100 kere yapman gerekse çok sıkılırdın, değil mi? Ama bilgisayarlar sıkılmaz! \n\nKural 1: 'for' döngüsü, genellikle ne kadar tekrar yapacağımızı bildiğimizde kullanılır. 'range(5)' dediğinde bilgisayar 0'dan 4'e kadar (5 dahil değil) sayar. \nKural 2: 'while' döngüsü ise bir şart doğru olduğu sürece çalışmaya devam eder. 'Hava yağmurlu olduğu sürece şemsiyeni aç' demek gibidir. \nKural 3: Döngülerin içine yazdığın kodlar da tıpkı 'if' bloğunda olduğu gibi içeriden (girintili) başlamalıdır. \n\nHazırsan, tek satırla dünyaları yazdırmaya başlayalım!",
-  "egzersizler": [
-    {
-      "id": "6.1",
-      "yonerge": "En temel döngümüzle başlayalım. Ekrana 5 kez 'Merhaba' yazdırmak için 'range' fonksiyonunun parantezleri içine 5 yazmalısın. Python 0'dan başlayıp 5'e kadar (5 hariç) dönecektir.",
-      "sablon": "for i in range(____):\n    print('Merhaba')",
-      "dogru_cevap_kodu": "for i in range(5):\n    print('Merhaba')",
-      "beklenen_cikti": "Merhaba\nMerhaba\nMerhaba\nMerhaba\nMerhaba",
-      "ipucu": "Boşluğa sadece 5 yazmalısın.",
-      "cozum": "range(5)"
-    },
-    {
-      "id": "6.2",
-      "yonerge": "Bir listenin içindeki her şeyi sırayla ekrana yazdıralım. 'meyveler' listesindeki her bir elemanı 'meyve' değişkenine atayıp yazdırmak için boşluğa 'in' kelimesini yaz.",
-      "sablon": "meyveler = ['Elma', 'Muz', 'Cilek']\nfor meyve ____ meyveler:\n    print(meyve)",
-      "dogru_cevap_kodu": "meyveler = ['Elma', 'Muz', 'Cilek']\nfor meyve in meyveler:\n    print(meyve)",
-      "beklenen_cikti": "Elma\nMuz\nCilek",
-      "ipucu": "Döngü kurarken 'for eleman in liste:' kalıbını hatırla.",
-      "cozum": "in"
-    },
-    {
-      "id": "6.3",
-      "yonerge": "Döngü değişkenini kullanma vakti! 0'dan 3'e kadar olan sayıları ekrana yazdırmak için print fonksiyonunun parantezleri içine döngü değişkeni olan 'i' harfini yaz.",
-      "sablon": "for i in range(3):\n    print(____)",
-      "dogru_cevap_kodu": "for i in range(3):\n    print(i)",
-      "beklenen_cikti": "0\n1\n2",
-      "ipucu": "Boşluğa döngü değişkeni olan i harfini yazmalısın.",
-      "cozum": "print(i)"
-    },
-    {
-      "id": "6.4",
-      "yonerge": "Şartlı döngü (while) zamanı! 'sayac' değişkeni 5'ten küçük olduğu sürece döngünün dönmesi için boşluğa küçüktür (<) işaretini koy.",
-      "sablon": "sayac = 0\nwhile sayac ____ 5:\n    print(sayac)\n    sayac = sayac + 1",
-      "dogru_cevap_kodu": "sayac = 0\nwhile sayac < 5:\n    print(sayac)\n    sayac = sayac + 1",
-      "beklenen_cikti": "0\n1\n2\n3\n4",
-      "ipucu": "Küçüktür operatörünü (<) kullanmalısın.",
-      "cozum": "while sayac < 5:"
-    },
-    {
-      "id": "6.5",
-      "yonerge": "Döngüyle toplam hesaplayalım! 1'den 3'e kadar olan sayıları 'toplam' değişkeninde biriktirmek için boşluğa 'toplam + i' yazarak hafızayı güncelle.",
-      "sablon": "toplam = 0\nfor i in range(1, 4):\n    toplam = ____\nprint(toplam)",
-      "dogru_cevap_kodu": "toplam = 0\nfor i in range(1, 4):\n    toplam = toplam + i\nprint(toplam)",
-      "beklenen_cikti": "6",
-      "ipucu": "Eski toplamın üzerine yeni gelen i değerini eklemelisin.",
-      "cozum": "toplam = toplam + i"
-    }
-  ]
-}
-{
-  "modul_id": 7,
-  "modul_adi": "Sözlükler ve Demetler: Veriye Anahtar Takmak",
-  "pito_anlatimi": "Merhaba Genç Yazılımcı! Bugün verilerimizi sadece sırayla değil, 'anahtar' kelimelerle saklamayı öğreneceğiz. Sözlükler (Dictionaries), tıpkı gerçek bir sözlük gibidir: Bir kelime (Anahtar) ve onun karşılığı olan bir anlamı (Değer) vardır. \n\nKural 1: Sözlükler süslü parantez '{}' ile oluşturulur. \nKural 2: Anahtar ve değer arasına mutlaka iki nokta ':' konur. \nKural 3: Demetler (Tuples) ise listelerin 'değiştirilemez' kardeşleridir. Bir kez oluşturunca içini değiştiremezsin, bu yüzden çok güvenlidirler ve normal parantez '()' ile gösterilirler. \n\nHadi, verilerimize anahtarlar takmaya başlayalım!",
-  "egzersizler": [
-    {
-      "id": "7.1",
-      "yonerge": "Bir sözlükte bilgi saklamak için 'anahtar' kullanırız. Boşluğa tırnaklar içinde 'ad' yazarak 'Pito' ismine bir anahtar tanımla.",
-      "sablon": "sozluk = {____: 'Pito'}",
-      "dogru_cevap_kodu": "sozluk = {'ad': 'Pito'}",
-      "beklenen_cikti": "",
-      "ipucu": "Anahtar tırnaklı olmalıdır: 'ad'",
-      "cozum": "sozluk = {'ad': 'Pito'}"
-    },
-    {
-      "id": "7.2",
-      "yonerge": "Sözlükteki bir veriye ulaşmak için onun anahtarını çağırmalısın. Boşluğa tırnaklar içinde 'ad' yazarak ekrana 'Pito' yazdırılmasını sağla.",
-      "sablon": "sozluk = {'ad': 'Pito'}\nprint(sozluk[____])",
-      "dogru_cevap_kodu": "sozluk = {'ad': 'Pito'}\nprint(sozluk['ad'])",
-      "beklenen_cikti": "Pito",
-      "ipucu": "Değişken parantezi içine anahtar ismini tırnakla yaz.",
-      "cozum": "print(sozluk['ad'])"
-    },
-    {
-      "id": "7.3",
-      "yonerge": "Demetler (Tuples) değiştirilemez listelerdir. Boşluğa 3 sayısını yazarak (1, 2, 3) demetini tamamla.",
-      "sablon": "demet = (1, 2, ____)",
-      "dogru_cevap_kodu": "demet = (1, 2, 3)",
-      "beklenen_cikti": "",
-      "ipucu": "Sadece eksik olan 3 rakamını yerleştir.",
-      "cozum": "demet = (1, 2, 3)"
-    },
-    {
-      "id": "7.4",
-      "yonerge": "Sözlüğe yeni bir bilgi eklemek çok kolaydır! Boşluğa tırnaklar içinde 'yas' yazarak Pito'nun yaş bilgisini sözlüğe mühürle.",
-      "sablon": "sozluk = {'ad': 'Pito'}\nsozluk[____] = 16",
-      "dogru_cevap_kodu": "sozluk = {'ad': 'Pito'}\nsozluk['yas'] = 16",
-      "beklenen_cikti": "",
-      "ipucu": "Yeni anahtar adını tırnak içinde yaz: 'yas'",
-      "cozum": "sozluk['yas'] = 16"
-    },
-    {
-      "id": "7.5",
-      "yonerge": "Sözlükteki tüm anahtarları bir liste halinde görmek ister misin? Boşluğa 'keys' metodunu yazarak anahtar listesini çek.",
-      "sablon": "sozluk = {'ad': 'Pito', 'yas': 16}\nprint(sozluk.____())",
-      "dogru_cevap_kodu": "sozluk = {'ad': 'Pito', 'yas': 16}\nprint(sozluk.keys())",
-      "beklenen_cikti": "dict_keys(['ad', 'yas'])",
-      "ipucu": "Anahtar çekme komutu keys() fonksiyonudur.",
-      "cozum": "print(sozluk.keys())"
-    }
-  ]
-}
-{
-  "modul_id": 8,
-  "modul_adi": "Fonksiyonlar: Kodu Paketlemek ve Güçlendirmek",
-  "pito_anlatimi": "Selam Genç Yazılımcı! Bugün kod yazarken kendimizi tekrar etmemeyi öğreneceğiz. Fonksiyonlar, belirli bir işi yapan 'kod paketleri' gibidir. Bir kez hazırlar, istediğin her yerde bin kez kullanırsın! \n\nKural 1: Fonksiyon tanımlamak için 'def' (define - tanımla) kelimesini kullanırız. \nKural 2: Fonksiyonun çalışması için onu adı ve parantezleriyle 'çağırman' gerekir. \nKural 3: 'return' komutu, fonksiyonun yaptığı işin sonucunu bize paketleyip geri vermesini sağlar. \n\nHadi, kendi özel komutlarımızı yaratmaya başlayalım!",
-  "egzersizler": [
-    {
-      "id": "8.1",
-      "yonerge": "İlk fonksiyonumuzu tanımlayalım! Bir fonksiyonu başlatmak için en başa 'def' komutunu yazmalısın.",
-      "sablon": "____ selamla():\n    print('Merhaba!')",
-      "dogru_cevap_kodu": "def selamla():\n    print('Merhaba!')",
-      "beklenen_cikti": "",
-      "ipucu": "Tanımlama kelimesi olan 'def' yazmalısın.",
-      "cozum": "def selamla():"
-    },
-    {
-      "id": "8.2",
-      "yonerge": "Fonksiyonlara bilgi gönderebiliriz (Parametreler). Boşluğa 'isim' değişkenini yazarak fonksiyonun dışarıdan isim almasını sağla.",
-      "sablon": "def merhaba(____):\n    print('Selam ' + isim)",
-      "dogru_cevap_kodu": "def merhaba(isim):\n    print('Selam ' + isim)",
-      "beklenen_cikti": "",
-      "ipucu": "Parantez içine değişken adını (isim) yaz.",
-      "cozum": "def merhaba(isim):"
-    },
-    {
-      "id": "8.3",
-      "yonerge": "Fonksiyonun sonucu bize geri vermesi çok önemlidir. Boşluğa 'return' komutunu yazarak çarpma işleminin sonucunu dışarıya gönder.",
-      "sablon": "def carp(a, b):\n    ____ a * b",
-      "dogru_cevap_kodu": "def carp(a, b):\n    return a * b",
-      "beklenen_cikti": "",
-      "ipucu": "Döndürme kelimesi olan 'return' kullanmalısın.",
-      "cozum": "return a * b"
-    },
-    {
-      "id": "8.4",
-      "yonerge": "Bazen başkalarının yazdığı güçlü kütüphanelere ihtiyaç duyarız. Matematik kütüphanesini içeri çekmek için boşluğa 'import' yaz.",
-      "sablon": "____ math\nprint(math.sqrt(16))",
-      "dogru_cevap_kodu": "import math\nprint(math.sqrt(16))",
-      "beklenen_cikti": "4.0",
-      "ipucu": "İçe aktarma kelimesi olan 'import' kullan.",
-      "cozum": "import math"
-    },
-    {
-      "id": "8.5",
-      "yonerge": "Fonksiyonu uyandırma (çağırma) zamanı! Tanımladığımız 'selamla()' fonksiyonunu çalıştırmak için boşluğa sadece adını ve parantezlerini yaz.",
-      "sablon": "def selamla():\n    print('Pito Akademi')\n____",
-      "dogru_cevap_kodu": "def selamla():\n    print('Pito Akademi')\nselamla()",
-      "beklenen_cikti": "Pito Akademi",
-      "ipucu": "Fonksiyonun adını parantezlerle birlikte yaz: selamla()",
-      "cozum": "selamla()"
-    }
-  ]
-}
-{
-  "modul_id": 9,
-  "modul_adi": "Nesne Tabanlı Programlama: Kendi Dünyanı İnşa Et",
-  "pito_anlatimi": "Selam Genç Yazılımcı! Bugün gerçek bir yazılım mimarı olmaya adım atıyorsun. Nesne Tabanlı Programlama (OOP), dünyadaki karmaşık şeyleri koda dökme sanatıdır. \n\nKural 1: 'class' (Sınıf), bir nesnenin tasarımıdır; yani fabrikanın elindeki 'maket' veya 'kalıp' gibidir. \nKural 2: '__init__' fonksiyonu, bir nesne yaratıldığı an çalışan 'hazırlık' fonksiyonudur. \nKural 3: 'self', o an üzerinde çalıştığımız nesnenin bizzat kendisini temsil eder. \n\nBir 'Araba' sınıfı tasarlayıp ondan yüzlerce farklı renkte ve modelde araba nesnesi üretebiliriz. Hazırsan ilk sınıfını tanımlayalım!",
-  "egzersizler": [
-    {
-      "id": "9.1",
-      "yonerge": "İlk sınıfımızı (class) tanımlayalım! 'Robot' isimli bir sınıf oluşturmak için boşluğa 'class' komutunu yaz.",
-      "sablon": "____ Robot:\n    pass",
-      "dogru_cevap_kodu": "class Robot:\n    pass",
-      "beklenen_cikti": "",
-      "ipucu": "Sınıf tanımlamak için 'class' kelimesini kullan.",
-      "cozum": "class Robot:"
-    },
-    {
-      "id": "9.2",
-      "yonerge": "Sınıftan bir nesne (object) üretelim. 'Robot' sınıfından 'asistan' isimli bir nesne oluşturmak için boşluğa sınıfın adını ve parantezlerini yaz.",
-      "sablon": "class Robot:\n    pass\n\nasistan = ____",
-      "dogru_cevap_kodu": "class Robot:\n    pass\n\nasistan = Robot()",
-      "beklenen_cikti": "",
-      "ipucu": "Sınıfın adını parantezlerle yazmalısın: Robot()",
-      "cozum": "asistan = Robot()"
-    },
-    {
-      "id": "9.3",
-      "yonerge": "Nesnemize özellik katalım! Robotun adını hafızaya almak için hazırlık fonksiyonunda boşluğa 'self.ad' yazarak ismi mühürle.",
-      "sablon": "class Robot:\n    def __init__(self, isim):\n        ____ = isim",
-      "dogru_cevap_kodu": "class Robot:\n    def __init__(self, isim):\n        self.ad = isim",
-      "beklenen_cikti": "",
-      "ipucu": "Nesnenin kendisine ait bir özellik oluşturmak için 'self.' kullan.",
-      "cozum": "self.ad = isim"
-    },
-    {
-      "id": "9.4",
-      "yonerge": "Robotumuza bir yetenek (metot) kazandıralım! Robotun selam vermesi için fonksiyon parantezinin içine o meşhur 'self' kelimesini yaz.",
-      "sablon": "class Robot:\n    def selam_ver(____):\n        print('Sistem Aktif!')",
-      "dogru_cevap_kodu": "class Robot:\n    def selam_ver(self):\n        print('Sistem Aktif!')",
-      "beklenen_cikti": "",
-      "ipucu": "Sınıf içindeki fonksiyonlar (metotlar) ilk parametre olarak her zaman self alır.",
-      "cozum": "def selam_ver(self):"
-    },
-    {
-      "id": "9.5",
-      "yonerge": "Miras alma zamanı! 'UcanRobot' sınıfının 'Robot' sınıfındaki her şeyi miras alması için parantez içine 'Robot' yaz.",
-      "sablon": "class Robot:\n    pass\n\nclass UcanRobot(____):\n    pass",
-      "dogru_cevap_kodu": "class Robot:\n    pass\n\nclass UcanRobot(Robot):\n    pass",
-      "beklenen_cikti": "",
-      "ipucu": "Hangi sınıftan miras alacağını parantez içine yazmalısın.",
-      "cozum": "class UcanRobot(Robot):"
-    }
-  ]
-}
-{
-  "modul_id": 10,
-  "modul_adi": "Hata Yönetimi ve Dosyalar: Kodun Dayanıklılığı",
-  "pito_anlatimi": "Tebrikler Genç Yazılımcı! Akademi'nin final modülüne ulaştın. Artık kodun daha dayanıklı ve kalıcı olacak. \n\nKural 1: 'try-except' blokları, programının bir hata yüzünden 'küt' diye kapanmasını engeller. Bir nevi dijital hava yastığıdır! \nKural 2: Dosyalarla çalışırken 'open()' komutuyla kapıyı açar, işimiz bitince 'close()' ile kapıyı kapatırız. \nKural 3: 'w' (write) kipi dosyaya yazmak, 'r' (read) kipi dosyayı okumak içindir. \n\nHazırsan, programını sarsılmaz bir kaleye dönüştürelim!",
-  "egzersizler": [
-    {
-      "id": "10.1",
-      "yonerge": "Hata avcısı 'try' bloğunu başlatalım. Riskli bir işlem (sıfıra bölme gibi) yapmadan önce en başa 'try' yaz ve iki nokta koy.",
-      "sablon": "____\n    sonuc = 10 / 0",
-      "dogru_cevap_kodu": "try:\n    sonuc = 10 / 0",
-      "beklenen_cikti": "",
-      "ipucu": "Hata kontrolünü başlatan kelime try: şeklindedir.",
-      "cozum": "try:"
-    },
-    {
-      "id": "10.2",
-      "yonerge": "Hata olduğunda ne yapılacağını söyleyelim! Eğer try bloğunda hata çıkarsa çalışacak olan 'except' komutunu boşluğa yaz.",
-      "sablon": "try:\n    sonuc = 10 / 0\n____:\n    print('Bir hata olustu!')",
-      "dogru_cevap_kodu": "try:\n    sonuc = 10 / 0\nexcept:\n    print('Bir hata olustu!')",
-      "beklenen_cikti": "Bir hata olustu!",
-      "ipucu": "Hata yakalama komutu except: şeklindedir.",
-      "cozum": "except:"
-    },
-    {
-      "id": "10.3",
-      "yonerge": "Kalıcı bir dosya oluşturalım. 'notlar.txt' isimli dosyayı yazma modunda ('w') açmak için boşluğa dosya adını tırnak içinde yaz.",
-      "sablon": "dosya = open(____, 'w')",
-      "dogru_cevap_kodu": "dosya = open('notlar.txt', 'w')",
-      "beklenen_cikti": "",
-      "ipucu": "Dosya adını tırnak içinde belirt: 'notlar.txt'",
-      "cozum": "open('notlar.txt', 'w')"
-    },
-    {
-      "id": "10.4",
-      "yonerge": "Dosyaya bir mesaj bırakalım! Açtığımız dosyanın içine 'Pito Akademi' yazmak için 'write' metodunu kullan.",
-      "sablon": "dosya = open('notlar.txt', 'w')\ndosya.____('Pito Akademi')",
-      "dogru_cevap_kodu": "dosya = open('notlar.txt', 'w')\ndosya.write('Pito Akademi')",
-      "beklenen_cikti": "",
-      "ipucu": "Dosyaya veri mühürlemek için write() metodunu kullanmalısın.",
-      "cozum": "dosya.write('Pito Akademi')"
-    },
-    {
-      "id": "10.5",
-      "yonerge": "Altın kural: Dosyayı kapatmak! İşimiz bitince sistem kaynaklarını yormamak için boşluğa 'close' komutunu parantezleriyle yaz.",
-      "sablon": "dosya = open('notlar.txt', 'w')\ndosya.write('Gorev Tamam')\ndosya.____()",
-      "dogru_cevap_kodu": "dosya = open('notlar.txt', 'w')\ndosya.write('Gorev Tamam')\ndosya.close()",
-      "beklenen_cikti": "",
-      "ipucu": "Dosyayı kapatma komutu close() fonksiyonudur.",
-      "cozum": "dosya.close()"
-    }
-  ]
-}
-]
 }
