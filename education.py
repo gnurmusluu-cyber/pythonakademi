@@ -3,10 +3,24 @@ import random
 
 def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fonksiyonu, normalize_fonksiyonu, supabase):
     # --- 0. SİBER-BUZ (ELECTRIC BLUE) KOKPİT CSS ---
-    st.markdown("""
+    st.markdown('''
         <style>
         .stApp { background-color: #0e1117; }
         
+        /* Akademi Başlığı (Yeni) */
+        .academy-header {
+            text-align: center;
+            color: #00E5FF;
+            font-family: 'Fira Code', monospace;
+            font-size: 2.2rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-shadow: 0 0 20px rgba(0, 229, 255, 0.4);
+            margin-bottom: 20px;
+            border-bottom: 2px solid rgba(0, 229, 255, 0.2);
+            padding-bottom: 10px;
+        }
+
         /* Kokpit Göstergeleri */
         .kokpit-label { color: #00E5FF; font-family: 'Fira Code', monospace; font-size: 0.85rem; font-weight: bold; margin-bottom: 5px; }
         .stProgress > div > div > div > div { background-image: linear-gradient(to right, #00B8D4, #00E5FF) !important; }
@@ -46,7 +60,10 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             transform: scale(1.02);
         }
         </style>
-    """, unsafe_allow_html=True)
+    ''', unsafe_allow_html=True)
+
+    # --- 1. AKADEMİ BAŞLIĞI (Mühürlendi) ---
+    st.markdown("<div class='academy-header'>🎓 PİTO PYTHON AKADEMİ</div>", unsafe_allow_html=True)
 
     # --- VERİ HAZIRLIĞI ---
     m_idx = int(u['mevcut_modul']) - 1
@@ -56,10 +73,10 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
     egz = next((e for e in modul['egzersizler'] if e['id'] == str(u['mevcut_egzersiz'])), modul['egzersizler'][0])
     c_i, t_i = modul['egzersizler'].index(egz) + 1, len(modul['egzersizler'])
 
-    # --- 1. ÜST PANEL: ÇİFTLİ İLERLEME GÖSTERGELERİ ---
+    # --- 2. ÜST PANEL: ÇİFTLİ İLERLEME GÖSTERGELERİ ---
     col_acad, col_mod = st.columns(2)
     with col_acad:
-        st.markdown(f"<div class='kokpit-label'>🎓 AKADEMİ YOLCULUĞU (%{int((m_idx/total_m)*100)})</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='kokpit-label'>🚀 AKADEMİ YOLCULUĞU (%{int((m_idx/total_m)*100)})</div>", unsafe_allow_html=True)
         st.progress(min((m_idx) / total_m, 1.0))
     with col_mod:
         st.markdown(f"<div class='kokpit-label'>📍 MODÜL GÖREVİ ({c_i} / {t_i})</div>", unsafe_allow_html=True)
@@ -67,7 +84,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # --- 2. ANA DÜZEN (7:3) ---
+    # --- 3. ANA DÜZEN (7:3) ---
     main_col, side_col = st.columns([7.2, 2.8])
     
     with main_col:
@@ -87,7 +104,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             st.markdown(f"### 📍 GÖREV {egz['id']}")
             st.info(egz['yonerge'])
 
-        # --- 3. KRİTİK ALAN: HATA MESAJI VE EDİTÖR ---
+        # --- 4. KRİTİK ALAN: HATA MESAJI VE EDİTÖR ---
         if not st.session_state.cevap_dogru and st.session_state.error_count < 4:
             
             # Hata ve İpucu (Tam Editör Üzerinde)
@@ -102,7 +119,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             # Editör Alanı
             if "reset_trigger" not in st.session_state: st.session_state.reset_trigger = 0
             user_code = st.text_area("Siber-Editor", value=egz['sablon'], height=180, 
-                                     key=f"pro_vfinal_{egz['id']}_{st.session_state.reset_trigger}", label_visibility="collapsed")
+                                     key=f"pro_final_v5_{egz['id']}_{st.session_state.reset_trigger}", label_visibility="collapsed")
 
             # Aksiyon Butonları
             b_run, b_res = st.columns([4, 1.5])
@@ -136,7 +153,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
                 n_id, n_m = (modul['egzersizler'][s_idx]['id'], u['mevcut_modul']) if s_idx < len(modul['egzersizler']) else (f"{int(u['mevcut_modul'])+1}.1", int(u['mevcut_modul']) + 1)
                 ilerleme_fonksiyonu(0, "Çözüm İncelendi", egz['id'], n_id, n_m)
 
-    # --- 4. SAĞ KANAT (LİDERLİK TABLOSU) ---
+    # --- 5. SAĞ KANAT (LİDERLİK TABLOSU) ---
     with side_col:
         st.markdown("<div style='text-align:center; color:#00E5FF; font-weight:bold; font-size:1.1rem;'>🏆 ONUR KÜRSÜSÜ</div>", unsafe_allow_html=True)
         ranks_module.liderlik_tablosu_goster(supabase, current_user=u)
