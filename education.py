@@ -1,85 +1,54 @@
 import streamlit as st
 import random
 
-def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fonksiyonu, normalize_fonksiyonu, supabase, inceleme_modu=False):
-    # --- 0. SİBER-HUD VE RESPONSIVE KATMAN CSS ---
+def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fonksiyonu, normalize_fonksiyonu, supabase):
+    # --- 0. SİBER-HUD (STIKY BAR) VE GÖRSEL CSS ---
     st.markdown('''
         <style>
         .stApp { background-color: #0e1117; }
         
-        /* Sayfa Genel Boşlukları */
-        .block-container {
-            padding-top: 0rem !important;
-            padding-left: 1rem !important;
-            padding-right: 1rem !important;
-            max-width: 100% !important;
-        }
-
-        /* SABİT ÜST HUD BAR (SİBER-ZIRH) */
+        /* SABİT ÜST HUD BAR */
         .cyber-hud {
             position: fixed; top: 0; left: 0; width: 100%;
-            background: rgba(22, 27, 34, 0.98);
+            background: rgba(14, 17, 23, 0.98);
             border-bottom: 2px solid #00E5FF;
-            z-index: 999; /* Sidebar butonlarının altında kalması için optimize edildi */
-            padding: 10px 20px;
-            display: flex; justify-content: space-around; align-items: center;
-            flex-wrap: wrap;
+            z-index: 999999; padding: 12px 25px;
+            display: flex; justify-content: space-between; align-items: center;
             box-shadow: 0 4px 20px rgba(0, 229, 255, 0.3);
-            backdrop-filter: blur(12px);
+            backdrop-filter: blur(15px);
         }
-        .hud-item { color: #E0E0E0; font-family: 'Fira Code', monospace; font-size: 0.85rem; margin: 2px 8px; }
+        .hud-item { color: #E0E0E0; font-family: 'Fira Code', monospace; font-size: 0.9rem; }
         .hud-v { color: #00E5FF; font-weight: bold; text-shadow: 0 0 5px #00E5FF; }
 
-        /* KRİTİK: Sidebar İçeriğini HUD Altından Kurtarma */
-        [data-testid="stSidebarUserContent"] {
-            padding-top: 5rem !important; /* HUD yüksekliği kadar boşluk veriyoruz */
-        }
-
-        /* Ana İçeriği HUD Barına Yaklaştırma */
-        .main-container { margin-top: 60px; }
-
-        @media (max-width: 768px) {
-            .cyber-hud { padding: 5px; justify-content: center; }
-            .hud-item { font-size: 0.75rem; margin: 2px 5px; }
-            .main-container { margin-top: 105px; } /* Mobilde çift satır HUD koruması */
-            .academy-header { font-size: 1.4rem !important; }
-            [data-testid="stSidebarUserContent"] { padding-top: 8rem !important; }
-        }
-
-        .academy-header {
-            text-align: center; color: #00E5FF; font-family: 'Fira Code', monospace;
-            font-size: 1.8rem; font-weight: bold; letter-spacing: 1px;
-            text-shadow: 0 0 15px rgba(0, 229, 255, 0.4);
-            margin-top: 0px !important; margin-bottom: 10px !important;
-        }
+        /* HUD Altında Kalmaması İçin İçerik Kaydırma */
+        .main-container { margin-top: 70px; }
 
         .console-box {
-            background-color: #000000 !important; color: #00E5FF !important;
+            background-color: #000 !important; color: #00E5FF !important;
             border: 1px solid #333; border-radius: 8px;
-            padding: 12px; font-family: 'Courier New', monospace; margin: 10px 0;
-            box-shadow: 0 0 10px rgba(0, 229, 255, 0.2);
+            padding: 15px; font-family: 'Courier New', monospace; margin: 10px 0;
         }
-
-        .stTextArea textarea {
-            background-color: #161b22 !important; color: #00E5FF !important;
-            border: 1px solid #00E5FF !important; border-radius: 12px !important;
-            font-family: 'Fira Code', monospace !important;
+        .academy-header {
+            text-align: center; color: #00E5FF; font-size: 2rem; font-weight: bold;
+            text-shadow: 0 0 15px rgba(0, 229, 255, 0.4); margin-bottom: 20px;
         }
         </style>
     ''', unsafe_allow_html=True)
 
-    # --- 1. HUD (SABİT ÜST BAR) ---
+    # --- 1. HUD VERİ HESAPLAMA ---
     p_xp = max(0, 20 - (st.session_state.error_count * 5))
+    
+    # HUD HTML Çıktısı
     st.markdown(f'''
         <div class="cyber-hud">
             <div class="hud-item">👤 <span class="hud-v">{u['ad_soyad']}</span></div>
-            <div class="hud-item">💎 Kazanılacak: <span class="hud-v">{p_xp} XP</span></div>
+            <div class="hud-item">💎 XP Potansiyel: <span class="hud-v">{p_xp}</span></div>
             <div class="hud-item">⚠️ Hata: <span class="hud-v">{st.session_state.error_count}/4</span></div>
             <div class="hud-item">🏆 Toplam: <span class="hud-v">{int(u['toplam_puan'])} XP</span></div>
         </div>
     ''', unsafe_allow_html=True)
 
-    # --- 2. ANA İÇERİK DÜZENİ ---
+    # --- 2. ANA İÇERİK ---
     st.markdown('<div class="main-container">', unsafe_allow_html=True)
     st.markdown("<div class='academy-header'>🎓 PİTO PYTHON AKADEMİ</div>", unsafe_allow_html=True)
 
@@ -90,49 +59,35 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
     egz = next((e for e in modul['egzersizler'] if e['id'] == str(u['mevcut_egzersiz'])), modul['egzersizler'][0])
     c_i, t_i = modul['egzersizler'].index(egz) + 1, len(modul['egzersizler'])
 
-    # İlerleme Çubukları
-    col_p1, col_p2 = st.columns(2)
-    with col_p1:
+    col_prog1, col_prog2 = st.columns(2)
+    with col_prog1:
         st.markdown(f"<div style='color:#00E5FF; font-weight:bold; font-size:0.8rem;'>🚀 AKADEMİ: %{int((m_idx/total_m)*100)}</div>", unsafe_allow_html=True)
         st.progress(min((m_idx) / total_m, 1.0))
-    with col_p2:
-        st.markdown(f"<div style='color:#00E5FF; font-weight:bold; font-size:0.8rem;'>📍 MODÜL {m_idx + 1} - GÖREV {c_i}/{t_i}</div>", unsafe_allow_html=True)
+    with col_prog2:
+        st.markdown(f"<div style='color:#00E5FF; font-weight:bold; font-size:0.8rem;'>📍 MODÜL {m_idx+1} - GÖREV {c_i}/{t_i}</div>", unsafe_allow_html=True)
         st.progress(c_i / t_i)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    
-    # 7.5 : 2.5 Yerleşim (Onur Kürsüsü Eski Yerinde!)
-    cl, cr = st.columns([7.5, 2.5])
+    cl, cr = st.columns([7.2, 2.8])
     
     with cl:
         p_mod = emotions_module.pito_durum_belirle(st.session_state.error_count, st.session_state.cevap_dogru)
-        cp1, cp2 = st.columns([1, 5])
+        cp1, cp2 = st.columns([1, 4])
         with cp1: emotions_module.pito_goster(p_mod)
-        with cp2:
-            if inceleme_modu:
-                st.markdown(f"<div style='color:#00E5FF; font-weight:bold;'>🔍 İNCELEME MODU AKTİF</div>", unsafe_allow_html=True)
-            else:
-                st.markdown(f"<div style='color:#00E5FF; font-style:italic;'>💬 {msgs['welcome'].format(ad_k)}</div>", unsafe_allow_html=True)
+        with cp2: st.markdown(f"<div style='color:#00E5FF; font-style:italic;'>💬 {msgs['welcome'].format(ad_k)}</div>", unsafe_allow_html=True)
 
         with st.expander(f"📖 {modul['modul_adi']}", expanded=True):
             st.markdown(f"<div style='background:rgba(0,229,255,0.03); padding:15px; border-radius:10px;'>{modul['pito_anlatimi']}</div>", unsafe_allow_html=True)
             st.markdown(f"### 🎯 GÖREV {egz['id']}")
             st.info(egz['yonerge'])
 
-        # --- AKIŞ KONTROLÜ ---
-        if inceleme_modu:
-            st.markdown("📖 **Pito'nun İdeal Çözümü:**")
-            st.code(egz['cozum'], language="python")
-            st.markdown("💻 **Beklenen Çıktı:**")
-            st.markdown(f"<div class='console-box'>{egz.get('beklenen_cikti', 'Çıktı bilgisi yok.')}</div>", unsafe_allow_html=True)
-
-        elif not st.session_state.cevap_dogru and st.session_state.error_count < 4:
+        if not st.session_state.cevap_dogru and st.session_state.error_count < 4:
             if st.session_state.error_count > 0:
                 st.error(f"🚨 **Pito:** {random.choice(msgs['errors'][f'level_{min(st.session_state.error_count, 4)}']).format(ad_k)}")
                 if st.session_state.error_count == 3: st.warning(f"💡 **İPUCU:** {egz.get('ipucu', 'Kodu tekrar kontrol et!')}")
 
             if "reset_trigger" not in st.session_state: st.session_state.reset_trigger = 0
-            user_code = st.text_area("Siber-Editor", value=egz['sablon'], height=180, key=f"final_omni_{egz['id']}_{st.session_state.reset_trigger}", label_visibility="collapsed")
+            user_code = st.text_area("Siber-Editor", value=egz['sablon'], height=180, key=f"v_hud_{egz['id']}_{st.session_state.reset_trigger}", label_visibility="collapsed")
 
             b1, b2 = st.columns([4, 1.5])
             with b1:
@@ -149,7 +104,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         elif st.session_state.cevap_dogru:
             st.markdown("💻 **Konsol Çıktısı:**")
             st.markdown(f"<div class='console-box'>{egz.get('beklenen_cikti', '...')}</div>", unsafe_allow_html=True)
-            st.success(f"✅ Müthişsin {ad_k}!")
+            st.success(f"✅ Harika iş çıkardın {ad_k}!")
             if st.button("SIRADAKİ GÖREVE GEÇ ➡️", type="primary", use_container_width=True):
                 s_idx = modul['egzersizler'].index(egz) + 1
                 n_id, n_m = (modul['egzersizler'][s_idx]['id'], u['mevcut_modul']) if s_idx < len(modul['egzersizler']) else (f"{int(u['mevcut_modul'])+1}.1", int(u['mevcut_modul']) + 1)
@@ -165,7 +120,6 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
                 ilerleme_fonksiyonu(0, "Çözüm İncelendi", egz['id'], n_id, n_m)
 
     with cr:
-        # Onur Kürsüsü sağ kolona geri mühürlendi
         ranks_module.liderlik_tablosu_goster(supabase, current_user=u)
 
     st.markdown('</div>', unsafe_allow_html=True)
