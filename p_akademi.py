@@ -10,19 +10,19 @@ import mechanics  # Mezuniyet ve İnceleme Modu motoru
 import auth       # Giriş ve Kayıt Mekanizması
 import ranks      # Rütbe ve Liderlik Motoru
 
-# --- 1. KAYNAK VE GÖRSEL MOTORU ---
+# --- 1. SİBER-ZIRH VE SES BANKASI YÜKLEME ---
 st.set_page_config(page_title="Pito Python Akademi", layout="wide", initial_sidebar_state="collapsed")
 
 def load_resources():
     try:
-        # CSS Zırhını style.json'dan çek
+        # Görsel zırhı yükle
         with open('style.json', 'r', encoding='utf-8') as f:
             st.markdown(json.load(f)['siber_buz_armor'], unsafe_allow_html=True)
-        # Mesaj Bankasını messages.json'dan çek
+        # Pito'nun ses bankasını yükle
         with open('messages.json', 'r', encoding='utf-8') as f:
             st.session_state.pito_messages = json.load(f)
     except Exception as e:
-        st.error(f"⚠️ Kritik Kaynak Hatası: style.json veya messages.json eksik! {e}")
+        st.error(f"⚠️ Kritik Kaynak Hatası: style.json veya messages.json bulunamadı! {e}")
 
 load_resources()
 
@@ -46,7 +46,7 @@ def load_pito(mod, size=180):
             encoded = base64.b64encode(f.read()).decode()
         st.markdown(f'<img src="data:image/gif;base64,{encoded}" width="{size}">', unsafe_allow_html=True)
 
-# --- 3. SESSION STATE (ZIRHLI HAFIZA) ---
+# --- 3. SESSION STATE (NAMEERROR VE MANTIK ZIRHI) ---
 keys = ["user", "temp_user", "show_reg", "error_count", "cevap_dogru", "pito_mod", "current_code", "user_num", "in_review"]
 for k in keys:
     if k not in st.session_state:
@@ -61,17 +61,17 @@ def ilerleme_kaydet(puan, kod, egz_id, n_id, n_m):
     yeni_xp = int(st.session_state.user['toplam_puan']) + puan
     r_ad, _ = ranks.rütbe_ata(yeni_xp)
     
-    # Veritabanı Güncelle
+    # Veritabanını mühürle
     supabase.table("kullanicilar").update({
         "toplam_puan": yeni_xp, "mevcut_egzersiz": str(n_id), "mevcut_modul": int(n_m), "rutbe": r_ad
     }).eq("ogrenci_no", int(st.session_state.user['ogrenci_no'])).execute()
     
-    # Egzersiz Loglama
+    # Egzersiz kaydını logla
     supabase.table("egzersiz_kayitlari").insert({
         "ogrenci_no": int(st.session_state.user['ogrenci_no']), "egz_id": str(egz_id), "alinan_puan": int(puan), "basarili_kod": str(kod)
     }).execute()
     
-    # State Güncelleme
+    # State'i güncelle
     st.session_state.user.update({"toplam_puan": yeni_xp, "mevcut_egzersiz": str(n_id), "mevcut_modul": int(n_m), "rutbe": r_ad})
     st.session_state.error_count, st.session_state.cevap_dogru, st.session_state.pito_mod, st.session_state.current_code = 0, False, "merhaba", ""
     st.rerun()
@@ -80,12 +80,12 @@ def ilerleme_kaydet(puan, kod, egz_id, n_id, n_m):
 try:
     with open('mufredat.json', 'r', encoding='utf-8') as f:
         mufredat = json.load(f)['pito_akademi_mufredat']
-except: 
+except:
     st.error("mufredat.json bulunamadı!"); st.stop()
 
 if st.session_state.user is None:
-    # GİRİŞ KAPISI (auth.py ve ranks.py modülleriyle ortak çalışır)
-    auth.login_ekrani(supabase, st.session_state.pito_messages, load_pito, 
+    # --- GİRİŞ KAPISI (pito_merhaba.gif ile karşılar) ---
+    auth.login_ekrani(supabase, st.session_state.pito_messages, lambda: load_pito("merhaba"), 
                       lambda: ranks.liderlik_tablosu_goster(supabase))
 
 else:
@@ -95,7 +95,7 @@ else:
     msgs = st.session_state.pito_messages
     ad_k = u['ad_soyad'].split()[0]
 
-    # --- ÜST NAVİGASYON ---
+    # --- ÜST NAVİGASYON (İNCELEME BUTONU) ---
     c_nav1, c_nav2 = st.columns([4, 1])
     with c_nav2:
         if st.button("🔍 İnceleme Modu"):
@@ -106,11 +106,12 @@ else:
     if st.session_state.in_review:
         mechanics.inceleme_modu_paneli(u, mufredat, load_pito)
     elif m_idx >= total_m:
+        # MEZUNİYET: pito_mezun.gif ve balonlar/karlar
         mechanics.mezuniyet_ekrani(u, msgs, load_pito, supabase)
     else:
         # --- EĞİTİM AKIŞI ---
         st.markdown(f"<div class='progress-label'><span>🎓 Akademi Yolculuğu</span><span>Modül {m_idx + 1} / {total_m}</span></div>", unsafe_allow_html=True)
-        st.progress(min((m_idx) / total_m, 1.0) if total_m > 0 else 0)
+        st.progress(min((m_idx) / total_m, 1.0))
 
         modul = mufredat[m_idx]
         egz = next((e for e in modul['egzersizler'] if e['id'] == str(u['mevcut_egzersiz'])), modul['egzersizler'][0])
@@ -122,7 +123,7 @@ else:
         cl, cr = st.columns([7, 3])
         with cl:
             rn, rc = ranks.rütbe_ata(u['toplam_puan'])
-            st.markdown(f"<div class='hero-panel'><h3>🚀 {modul['modul_adi']}</h3><p>{u['ad_soyad']} | <span class='rank-badge' style='background:black; color:#ADFF2F;'>{rn}</span> | {int(u['toplam_puan'])} XP</p></div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='hero-panel'><h3>🚀 {modul['modul_adi']}</h3><p>{u['ad_soyad']} | <span class='rank-badge' style='background:black; color:#ADFF2F;'>{rn}</span></p></div>", unsafe_allow_html=True)
             
             with st.expander("📖 KONU ANLATIMI", expanded=True):
                 st.markdown(f"<div style='background:#000; padding:15px; border-radius:10px;'>{modul.get('pito_anlatimi', '...')}</div>", unsafe_allow_html=True)
@@ -130,7 +131,16 @@ else:
             p_xp = max(0, 20 - (st.session_state.error_count * 5))
             st.markdown(f'<div style="background:#161b22; padding:12px; border-radius:12px; border:1px solid #ADFF2F; color:#ADFF2F; font-weight:bold;">💎 {p_xp} XP | ⚠️ Hata: {st.session_state.error_count}/4</div>', unsafe_allow_html=True)
             
-            # Pito Etkileşim
+            # --- PİTO DUYGU MOTORU ---
+            if st.session_state.cevap_dogru:
+                st.session_state.pito_mod = "basari"
+            elif st.session_state.error_count in [1, 2, 3]:
+                st.session_state.pito_mod = "hata"
+            elif st.session_state.error_count >= 4:
+                st.session_state.pito_mod = "dusunuyor"
+            else:
+                st.session_state.pito_mod = "merhaba"
+
             cp1, cp2 = st.columns([1, 2])
             with cp1:
                 load_pito(st.session_state.pito_mod)
@@ -139,19 +149,19 @@ else:
                     lvl = f"level_{min(st.session_state.error_count, 4)}"
                     msg = random.choice(msgs['errors'][lvl]).format(ad_k)
                     st.error(f"🚨 Pito: {msg}")
-                    st.session_state.pito_mod = "hata" if st.session_state.error_count < 4 else "dusunuyor"
-                    if st.session_state.error_count == 3: st.warning(f"💡 İpucu: {egz['ipucu']}")
+                    if st.session_state.error_count == 3:
+                        st.warning(f"💡 İpucu: {egz['ipucu']}")
                 else:
                     st.markdown(f"<div class='pito-notu'>💬 <b>Pito:</b> {msgs['welcome'].format(ad_k)}</div>", unsafe_allow_html=True)
 
-            # Görev Alanı
+            # --- ETKİLEŞİM ALANI ---
             if not st.session_state.cevap_dogru and st.session_state.error_count < 4:
                 st.markdown(f"<div class='gorev-box'><span class='gorev-label'>📍 GÖREV {egz['id']}</span><div class='gorev-text'>{egz['yonerge']}</div></div>", unsafe_allow_html=True)
                 k_i = st.text_area("Pito Kod Editörü:", value=egz['sablon'], height=150)
                 if st.button("Kodu Kontrol Et 🔍"):
                     st.session_state.current_code = k_i
                     if normalize(k_i) == normalize(egz['dogru_cevap_kodu']):
-                        st.session_state.cevap_dogru, st.session_state.pito_mod = True, "basari"
+                        st.session_state.cevap_dogru = True
                     else:
                         st.session_state.error_count += 1
                     st.rerun()
@@ -172,4 +182,5 @@ else:
                     ilerleme_kaydet(0, "Çözüm İncelendi", egz['id'], n_id, n_m)
         
         with cr:
+            # Liderlik tablosu her zaman güncel kalır
             ranks.liderlik_tablosu_goster(supabase, current_user=u)
