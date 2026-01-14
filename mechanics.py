@@ -3,30 +3,22 @@ import pandas as pd
 import random
 
 def mezuniyet_ekrani(u, msgs, pito_goster, supabase, ranks_module):
-    """Mezuniyet töreni ve görsel kusursuzluk protokolü."""
+    """Mezuniyet töreni ve sadece animasyonlara özel görsel ayarlar."""
     
-    # --- NUCLEAR SİBER-ÇERÇEVE İMHA CSS (KESİN ÇÖZÜM) ---
+    # --- NOKTA ATIŞI SİBER-ÇERÇEVE SİLİCİ ---
+    # Sadece balon ve kar tanesi animasyonlarını hedef alır, diğer elementlere dokunmaz.
     st.markdown("""
         <style>
-        /* 1. TÜM ELEMENTLERİN ODAK ÇERÇEVESİNİ GLOBAL OLARAK SİL */
-        * :focus, * :focus-visible, * :active {
+        /* Sadece Streamlit animasyon katmanlarını ve içindeki spanları hedefle */
+        .stBalloons, .stSnow, [data-testid="stBalloon"], [data-testid="stSnow"], 
+        .stBalloons span, .stSnow span {
             outline: none !important;
             box-shadow: none !important;
+            border: none !important;
             -webkit-tap-highlight-color: transparent !important;
         }
-
-        /* 2. STREAMLIT'İN ÖZEL ANİMASYON KATMANLARINI HEDEFLE */
-        .stBalloons, .stSnow, [data-testid="stMarkdownContainer"] span {
-            outline: none !important;
-        }
-
-        /* 3. CANVAS VE SVG ELEMENTLERİ İÇİN EKSTRA GÜVENLİK */
-        canvas, svg, img {
-            outline: none !important;
-            user-select: none !important;
-        }
-
-        /* Sertifika ve Kart Tasarımı (Siber-Buz) */
+        
+        /* Sertifika tasarımı (Siber-Buz) */
         .cyber-card {
             text-align:center; 
             border: 2px solid #00E5FF; 
@@ -38,7 +30,7 @@ def mezuniyet_ekrani(u, msgs, pito_goster, supabase, ranks_module):
         </style>
     """, unsafe_allow_html=True)
 
-    # Efektleri CSS'ten SONRA çalıştır
+    # Efektleri tetikle
     st.balloons()
     st.snow()
     
@@ -69,7 +61,7 @@ def mezuniyet_ekrani(u, msgs, pito_goster, supabase, ranks_module):
         
         st.markdown("<br>", unsafe_allow_html=True)
         
-        # NAVİGASYON (MASTER DÜĞMELER)
+        # NAVİGASYON BUTONLARI
         col_btn1, col_btn2 = st.columns(2)
         with col_btn1:
             if st.button("🔍 Geçmiş egzersizler", use_container_width=True, key="rev_btn_mezun"):
@@ -88,7 +80,6 @@ def inceleme_modu(u, mufredat, supabase):
     """Bitmiş görevleri siber-arşivde ideal çözümlerle gösterir."""
     st.markdown("<h2 style='text-align:center; color:#00E5FF;'>🔍 SİBER-ARŞİV: GEÇMİŞ ÇÖZÜMLER</h2>", unsafe_allow_html=True)
     
-    # Kullanıcı mezunsa (modül 11) ana sayfaya, değilse eğitime döner
     graduated = int(u['mevcut_modul']) > len(mufredat)
     geri_metni = "⬅️ Mezuniyet Ekranına Dön" if graduated else "⬅️ Eğitime Dön"
     
