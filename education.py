@@ -4,16 +4,16 @@ import os
 import base64
 
 def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fonksiyonu, normalize_fonksiyonu, supabase):
-    # --- 0. SİBER-GÖRSEL ZIRH (BAŞLIK VE MOBİL GÖRÜNÜRLÜK MÜHRÜ) ---
+    # --- 0. SİBER-GÖRSEL ZIRH (GÖRÜNÜRLÜK, MOBİL UYUM VE OKUNABİLİRLİK MÜHRÜ) ---
     st.markdown('''
         <style>
-        /* STREAMLIT STANDARTLARINI GİZLE */
+        /* STREAMLIT VARSAYILANLARINI İMHA ET */
         header[data-testid="stHeader"], [data-testid="stDecoration"], footer { display: none !important; }
         .stApp { background-color: #0e1117 !important; }
 
-        /* ANA İÇERİK BOŞLUĞU (BAŞLIĞIN HUD ALTINDA KALMASINI ÖNLER) */
+        /* ANA İÇERİK BOŞLUĞU (BAŞLIK VE HUD ÇAKIŞMA ÖNLEYİCİ) */
         [data-testid="stMainViewContainer"] {
-            padding-top: 170px !important; /* Masaüstü için başlığı aşağı iter */
+            padding-top: 170px !important; /* Başlığı HUD'ın altından kurtarır */
         }
 
         /* SABİT ÜST HUD BAR */
@@ -32,15 +32,15 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             box-shadow: 0 0 15px #00E5FF;
         }
 
-        /* MOBİL DÜZENLEME (BAŞLIK VE GIF İÇİN EKSTRA BOŞLUK) */
+        /* MOBİL DÜZENLEME (HUD ESNETME VE BAŞLIK GÜVENLİĞİ) */
         @media (max-width: 768px) {
             .cyber-hud { height: 160px !important; flex-direction: column; justify-content: center; padding: 10px; }
             .hud-pito-gif img { width: 60px !important; height: 60px !important; margin-right: 0; margin-bottom: 5px; }
             .hud-item { font-size: 0.85rem !important; margin: 3px 5px !important; }
-            [data-testid="stMainViewContainer"] { padding-top: 240px !important; } /* Mobil HUD daha yüksek olduğu için */
+            [data-testid="stMainViewContainer"] { padding-top: 240px !important; } 
         }
 
-        /* BUTON OKUNABİLİRLİĞİ (SİYAH METİN) */
+        /* OKUNABİLİR BUTONLAR (SİYAH METİN MÜHRÜ) */
         div.stButton > button { background-color: #00E5FF !important; border: none !important; transition: 0.3s; }
         div.stButton > button p, div.stButton > button span { color: #000000 !important; font-weight: 900 !important; }
         div.stButton > button:hover { background-color: #ADFF2F !important; }
@@ -73,7 +73,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
 
     pito_gif_base64 = get_base64_gif(p_mod)
 
-    # HUD HTML
+    # HUD HTML ÇIKTISI
     st.markdown(f'''
         <div class="cyber-hud">
             <div style="display: flex; align-items: center; flex-direction: inherit;">
@@ -88,8 +88,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         </div>
     ''', unsafe_allow_html=True)
 
-    # --- 2. ANA İÇERİK VE BAŞLIK ---
-    # Başlığı buraya mühürlüyoruz ki HUD'ın altında değil, tam altında görünsün.
+    # --- 2. ANA BAŞLIK VE İLERLEME ---
     st.markdown(f"<h1 style='text-align:center; color:#00E5FF; text-shadow: 0 0 15px #00E5FF; margin-bottom:30px;'>🎓 PİTO PYTHON AKADEMİ</h1>", unsafe_allow_html=True)
 
     m_idx = int(u['mevcut_modul']) - 1
@@ -98,7 +97,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
     modul = mufredat[m_idx]
     egz = next((e for e in modul['egzersizler'] if e['id'] == str(u['mevcut_egzersiz'])), modul['egzersizler'][0])
 
-    # --- TEK İLERLEME ÇUBUĞU (10 MODÜL ÜZERİNDEN) ---
+    # TEK İLERLEME ÇUBUĞU (10 MODÜL)
     c_i = modul['egzersizler'].index(egz) + 1
     overall_progress = (m_idx + (c_i / len(modul['egzersizler']))) / total_m
 
@@ -128,7 +127,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             st.markdown(f"### 🎯 GÖREV {egz['id']}")
             st.info(egz['yonerge'])
 
-        # --- EDİTÖR ---
+        # --- 3. EDİTÖR VE HATA MANTIĞI ---
         if not st.session_state.cevap_dogru and st.session_state.error_count < 4:
             if st.session_state.error_count > 0:
                 lvl = f"level_{min(st.session_state.error_count, 4)}"
@@ -159,10 +158,11 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
                 ilerleme_fonksiyonu(p_xp, st.session_state.current_code, egz['id'], n_id, n_m)
 
         elif st.session_state.error_count >= 4:
-            st.warning("🚨 Çözümü incele ve devam et:")
+            # --- 4. HATA: ÖZEL MESAJ MÜHRÜ ---
+            st.warning("🚨 Bu egzersizden puan alamadın çözümü incele ve devam et")
             st.code(egz['cozum'], language="python")
             st.markdown(f"<div class='console-box'>{egz.get('beklenen_cikti', '...')}</div>", unsafe_allow_html=True)
-            if st.button("DEVAM ET ➡️", use_container_width=True):
+            if st.button("DEVAM ET ➡️", type="primary", use_container_width=True):
                 s_idx = modul['egzersizler'].index(egz) + 1
                 n_id, n_m = (modul['egzersizler'][s_idx]['id'], u['mevcut_modul']) if s_idx < len(modul['egzersizler']) else (f"{int(u['mevcut_modul'])+1}.1", int(u['mevcut_modul']) + 1)
                 ilerleme_fonksiyonu(0, "Çözüm İncelendi", egz['id'], n_id, n_m)
