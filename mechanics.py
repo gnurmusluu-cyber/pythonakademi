@@ -3,12 +3,12 @@ import pandas as pd
 import random
 
 def mezuniyet_ekrani(u, msgs, pito_goster, supabase, ranks_module):
-    """Mezuniyet töreni ve sızdırmaz görsel ayarlar."""
+    """Mezuniyet töreni, onur kürsüsü ve tam sistem sıfırlama seçeneği."""
     
-    # --- NOKTA ATIŞI SİBER-ÇERÇEVE SİLİCİ (HAYALET MODU) ---
+    # --- 0. SİBER-ÇERÇEVE SİLİCİ (POINTER-EVENTS PROTOKOLÜ) ---
     st.markdown("""
         <style>
-        /* Sadece balon ve kar tanesi animasyonlarını etkileşimsiz yap (Mavi Çerçeve İlacı) */
+        /* Balon ve Kar Tanelerini etkileşimsiz yap (Mavi Çerçeve Kesin Çözüm) */
         [data-testid="stBalloons"], [data-testid="stSnow"], 
         [data-testid="stBalloons"] *, [data-testid="stSnow"] * {
             pointer-events: none !important;
@@ -26,9 +26,10 @@ def mezuniyet_ekrani(u, msgs, pito_goster, supabase, ranks_module):
         </style>
     """, unsafe_allow_html=True)
 
-    # Efektleri tetikle
-    st.balloons()
-    st.snow()
+    # --- 1. EFEKT KONTROLÜ (SIFIRLAMA ANINDA ÇIKMAMASI İÇİN) ---
+    if "reset_proc" not in st.session_state:
+        st.balloons()
+        st.snow()
     
     st.markdown("<div class='academy-header'>🎓 PİTO PYTHON AKADEMİ MEZUNİYETİ</div>", unsafe_allow_html=True)
     
@@ -40,7 +41,7 @@ def mezuniyet_ekrani(u, msgs, pito_goster, supabase, ranks_module):
             raw_msg = msgs.get('mezuniyet_mesaji', "Tebrikler {}! Nusaybin'in tescilli Python savaşçısı oldun!")
             st.markdown(f"<div class='pito-notu'>💬 <b>Pito:</b> {raw_msg.format(u['ad_soyad'])}</div>", unsafe_allow_html=True)
 
-        # Siber Sertifika Alanı
+        # Siber Sertifika
         st.markdown(f"""
             <div class='cyber-card'>
                 <h2 style='color:#00E5FF; margin-top: 0;'>📜 BAŞARI SERTİFİKASI</h2>
@@ -64,14 +65,17 @@ def mezuniyet_ekrani(u, msgs, pito_goster, supabase, ranks_module):
                 st.session_state.in_review = True; st.rerun()
         
         with b2:
-            if st.button("🚪 Çıkış Yap", help="Ana sayfaya dön", use_container_width=True, key="exit_btn_master"):
+            if st.button("🚪 Çıkış Yap", help="Oturumu kapat ve başa dön", use_container_width=True, key="exit_btn_master"):
                 st.session_state.user = None
                 st.session_state.in_review = False; st.rerun()
                 
         with b3:
             # EĞİTİMİ TEKRAR AL (SIFIRLAMA) PROTOKOLÜ
             if st.button("🔄 Eğitimi Tekrar Al", type="secondary", help="Tüm ilerlemeni sıfırla ve 1. Modülden başla", use_container_width=True, key="reset_btn_master"):
-                # Veritabanı Güncelleme: Puanı sıfırla ve 1. Modüle gönder
+                # Balonları durdurmak için bayrağı çek
+                st.session_state.reset_proc = True
+                
+                # Veritabanı Güncelleme: Puanı ve Modülü Sıfırla
                 supabase.table("kullanicilar").update({
                     "toplam_puan": 0, 
                     "mevcut_egzersiz": "1.1", 
@@ -79,12 +83,13 @@ def mezuniyet_ekrani(u, msgs, pito_goster, supabase, ranks_module):
                     "rutbe": "🥚 Çömez"
                 }).eq("ogrenci_no", int(u['ogrenci_no'])).execute()
                 
-                # Geçmiş kayıtları temizle
+                # Tüm egzersiz geçmişini sil
                 supabase.table("egzersiz_kayitlari").delete().eq("ogrenci_no", int(u['ogrenci_no'])).execute()
                 
-                st.toast("Akademi başarıyla sıfırlandı! Siber-yolculuğun baştan başlıyor...", icon="🔄")
+                # Oturumu temizle ve başa dön
                 st.session_state.user = None
                 st.session_state.in_review = False
+                if "reset_proc" in st.session_state: del st.session_state.reset_proc
                 st.rerun()
 
     with cr:
@@ -92,7 +97,7 @@ def mezuniyet_ekrani(u, msgs, pito_goster, supabase, ranks_module):
 
 def inceleme_modu_paneli(u, mufredat, pito_goster, supabase):
     """Bitmiş görevleri siber-arşivde ideal çözümlerle gösterir."""
-    # p_akademi.py içindeki çağrıya (4 argüman) tam uyum sağlandı
+    # p_akademi.py'deki AttributeError hatasını önlemek için isim ve parametreler mühürlendi.
     st.markdown("<h2 style='text-align:center; color:#00E5FF;'>🔍 SİBER-ARŞİV: GEÇMİŞ ÇÖZÜMLER</h2>", unsafe_allow_html=True)
     
     is_graduated = int(u['mevcut_modul']) > len(mufredat)
@@ -121,6 +126,6 @@ def inceleme_modu_paneli(u, mufredat, pito_goster, supabase):
                             st.markdown(f"<div class='console-box'>{egz.get('beklenen_cikti', '...')}</div>", unsafe_allow_html=True)
                             st.divider()
         else:
-            st.info("Henüz tamamlanmış bir görevin bulunmuyor genç yazılımcı!")
+            st.info("Henüz tamamlanmış bir görevin bulunmuyor arkadaşım!")
     except Exception as e:
         st.error(f"Siber-arşiv hatası: {e}")
