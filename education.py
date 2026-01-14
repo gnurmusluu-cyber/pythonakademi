@@ -7,9 +7,10 @@ import pandas as pd
 def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fonksiyonu, normalize_fonksiyonu, supabase):
     # --- ANIMASYON VE DURUM KONTROLÜ ---
     e_count = st.session_state.get('error_count', 0)
+    # Hata animasyonu için toggle (A/B) - Her hatada sınıflar arası geçiş yaparak animasyonu tetikler
     err_anim_toggle = "A" if e_count % 2 == 0 else "B"
     
-    # --- 0. SİBER-GÖRSEL ZIRH (ÖZEL STATS KARTI EKLENDİ) ---
+    # --- 0. SİBER-GÖRSEL ZIRH ---
     st.markdown(f'''
         <style>
         header[data-testid="stHeader"], [data-testid="stDecoration"], footer {{ display: none !important; }}
@@ -24,7 +25,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             box-shadow: 0 10px 30px #000000 !important;
         }}
 
-        /* ÖĞRENCİ ÖZEL STATS KARTI (MODERN DASHBOARD STYLE) */
+        /* ÖĞRENCİ ÖZEL STATS KARTI */
         .my-stats-card {{
             background: rgba(0, 229, 255, 0.05);
             border: 1px solid rgba(0, 229, 255, 0.2);
@@ -48,10 +49,10 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         .my-stat-label {{ font-size: 0.65rem; color: #888; text-transform: uppercase; font-weight: bold; }}
         .my-stat-val {{ font-size: 1.1rem; color: #ADFF2F; font-weight: 950; font-family: monospace; }}
 
-        /* --- PULSE ANIMASYONLARI --- */
-        @keyframes cyberPulseErrA {{
+        /* --- PULSE ANIMASYONLARI (A VE B TAMAMLANDI) --- */
+        @keyframes cyberPulseErr {{
             0% {{ transform: scale(1); color: #00E5FF; }}
-            50% {{ transform: scale(1.7); color: #FF0000; text-shadow: 0 0 20px #FF0000; }}
+            50% {{ transform: scale(1.6); color: #FF0000; text-shadow: 0 0 20px #FF0000; }}
             100% {{ transform: scale(1); color: #00E5FF; }}
         }}
         @keyframes successPulse {{
@@ -60,7 +61,8 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             100% {{ transform: scale(1); color: #00E5FF; }}
         }}
 
-        .err-pulse-A {{ display: inline-block; animation: cyberPulseErrA 0.7s ease-in-out; font-weight: 950 !important; }}
+        /* Her iki class da aynı animasyonu çağırır, Streamlit class değiştiğini görünce animasyonu baştan oynatır */
+        .err-pulse-A, .err-pulse-B {{ display: inline-block; animation: cyberPulseErr 0.7s ease-in-out; font-weight: 950 !important; }}
         .success-pulse {{ display: inline-block; animation: successPulse 0.8s ease-in-out; font-weight: 950 !important; }}
 
         .hud-pito-gif img {{
@@ -75,17 +77,15 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         </style>
     ''', unsafe_allow_html=True)
 
-    # --- 1. SIRALAMA HESAPLAMA VE HUD VERİLERİ ---
+    # --- 1. SIRALAMA VE HUD VERİLERİ ---
     p_xp = max(0, 20 - (e_count * 5))
     p_mod = emotions_module.pito_durum_belirle(e_count, st.session_state.cevap_dogru)
     
-    # Kendi Sıralamasını Hesapla
     try:
         res = supabase.table("kullanicilar").select("*").execute()
         df_all = pd.DataFrame(res.data)
         df_okul = df_all.sort_values(by="toplam_puan", ascending=False).reset_index(drop=True)
         okul_sira = df_okul[df_okul['ogrenci_no'] == u['ogrenci_no']].index[0] + 1
-        
         df_sinif = df_okul[df_okul['sinif'] == u['sinif']].reset_index(drop=True)
         sinif_sira = df_sinif[df_sinif['ogrenci_no'] == u['ogrenci_no']].index[0] + 1
     except:
@@ -97,6 +97,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             return f"data:image/gif;base64,{base64.b64encode(open(path, 'rb').read()).decode()}"
         return ""
 
+    # Hata animasyonu class seçimi
     err_class = f"err-pulse-{err_anim_toggle}" if e_count > 0 else ""
     success_class = "success-pulse" if st.session_state.cevap_dogru else ""
     display_total = int(u['toplam_puan']) + p_xp if st.session_state.cevap_dogru else int(u['toplam_puan'])
@@ -158,6 +159,10 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             if e_count > 0:
                 lvl = f"level_{min(e_count, 4)}"
                 st.error(f"🚨 Pito: {random.choice(msgs['errors'][lvl]).format(ad_k)}")
+                
+                # --- İPUCU MANTIĞI MÜHÜRLENDİ ---
+                if e_count == 3:
+                    st.warning(f"💡 **Pito'nun İpucu:** {egz.get('ipucu', 'Bu görevde henüz bir ipucu tanımlanmamış.')}")
             
             if "reset_trigger" not in st.session_state: st.session_state.reset_trigger = 0
             user_code = st.text_area("Siber-Editor", value=egz['sablon'], height=180, key=f"ed_{egz['id']}_{st.session_state.reset_trigger}", label_visibility="collapsed")
@@ -178,7 +183,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             st.success(f"✅ Harika iş {ad_k}! (+{p_xp} XP)")
             if st.button("SIRADAKİ GÖREVE GEÇ ➡️", type="primary", use_container_width=True):
                 s_idx = modul['egzersizler'].index(egz) + 1
-                n_id, n_m = (modul['egzersizler'][s_idx]['id'], u['mevcut_modul']) if s_idx < len(modul['egzersizler']) else (f"{int(u['mevcut_modul'])+1}.1", int(u['mevcut_modul']) + 1)
+                n_id, n_m = (modul['egzersizler'][s_idx]['id'], u['mevcut_modul']) if s_idx < len(modul['egzersizler']) else (f"{int(u['mevcut_modul'])+1}.1\", int(u['mevcut_modul']) + 1)
                 ilerleme_fonksiyonu(p_xp, st.session_state.current_code, egz['id'], n_id, n_m)
 
         elif e_count >= 4:
@@ -186,11 +191,10 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             st.code(egz['cozum'], language="python")
             if st.button("DEVAM ET ➡️", type="primary", use_container_width=True):
                 s_idx = modul['egzersizler'].index(egz) + 1
-                n_id, n_m = (modul['egzersizler'][s_idx]['id'], u['mevcut_modul']) if s_idx < len(modul['egzersizler']) else (f"{int(u['mevcut_modul'])+1}.1", int(u['mevcut_modul']) + 1)
+                n_id, n_m = (modul['egzersizler'][s_idx]['id'], u['mevcut_modul']) if s_idx < len(modul['egzersizler']) else (f"{int(u['mevcut_modul'])+1}.1\", int(u['mevcut_modul']) + 1)
                 ilerleme_fonksiyonu(0, "Çözüm İncelendi", egz['id'], n_id, n_m)
 
     with cr:
-        # --- ÖĞRENCİ ÖZEL İSTATİSTİK KARTI (MODERN HUD) ---
         rn, rc = ranks_module.rütbe_ata(u['toplam_puan'])
         st.markdown(f'''
             <div class="my-stats-card">
@@ -210,6 +214,4 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
                 </div>
             </div>
         ''', unsafe_allow_html=True)
-        
-        # Liderlik Tablosu
         ranks_module.liderlik_tablosu_goster(supabase, current_user=u)
