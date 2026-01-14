@@ -5,12 +5,10 @@ import base64
 import pandas as pd
 
 def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fonksiyonu, normalize_fonksiyonu, supabase):
-    # --- ANIMASYON VE DURUM KONTROLÜ ---
+    # --- DURUM KONTROLÜ ---
     e_count = st.session_state.get('error_count', 0)
-    # Hata animasyonu için toggle (A/B)
-    err_anim_toggle = "A" if e_count % 2 == 0 else "B"
     
-    # --- 0. SİBER-GÖRSEL ZIRH ---
+    # --- 0. SİBER-GÖRSEL ZIRH VE ANİMASYON MÜHRÜ ---
     st.markdown(f'''
         <style>
         header[data-testid="stHeader"], [data-testid="stDecoration"], footer {{ display: none !important; }}
@@ -25,6 +23,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             box-shadow: 0 10px 30px #000000 !important;
         }}
 
+        /* ÖĞRENCİ ÖZEL STATS KARTI */
         .my-stats-card {{
             background: rgba(0, 229, 255, 0.05);
             border: 1px solid rgba(0, 229, 255, 0.2);
@@ -33,21 +32,12 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             margin-bottom: 15px;
             text-align: center;
         }}
-        .my-stats-grid {{
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-top: 8px;
-        }}
-        .my-stat-box {{
-            background: rgba(0, 0, 0, 0.3);
-            padding: 8px;
-            border-radius: 8px;
-            border: 1px solid rgba(0, 229, 255, 0.1);
-        }}
+        .my-stats-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }}
+        .my-stat-box {{ background: rgba(0, 0, 0, 0.3); padding: 8px; border-radius: 8px; border: 1px solid rgba(0, 229, 255, 0.1); }}
         .my-stat-label {{ font-size: 0.65rem; color: #888; text-transform: uppercase; font-weight: bold; }}
         .my-stat-val {{ font-size: 1.1rem; color: #ADFF2F; font-weight: 950; font-family: monospace; }}
 
+        /* --- SİBER-DARBE ANIMASYONLARI (HER HATAYA ÖZEL) --- */
         @keyframes cyberPulseErr {{
             0% {{ transform: scale(1); color: #00E5FF; }}
             50% {{ transform: scale(1.6); color: #FF0000; text-shadow: 0 0 20px #FF0000; }}
@@ -59,7 +49,8 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             100% {{ transform: scale(1); color: #00E5FF; }}
         }}
 
-        .err-pulse-A, .err-pulse-B {{ display: inline-block; animation: cyberPulseErr 0.7s ease-in-out; font-weight: 950 !important; }}
+        /* Sınıf isimlerini e_count ile dinamikleştirerek her hatada animasyonu zorluyoruz */
+        .err-p-1, .err-p-2, .err-p-3, .err-p-4 {{ display: inline-block; animation: cyberPulseErr 0.7s ease-in-out; font-weight: 950 !important; }}
         .success-pulse {{ display: inline-block; animation: successPulse 0.8s ease-in-out; font-weight: 950 !important; }}
 
         .hud-pito-gif img {{
@@ -94,7 +85,8 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             return f"data:image/gif;base64,{base64.b64encode(open(path, 'rb').read()).decode()}"
         return ""
 
-    err_class = f"err-pulse-{err_anim_toggle}" if e_count > 0 else ""
+    # Animasyon Sınıfı (Her hata sayısı için farklı bir sınıf adı üreterek animasyonu tetikler)
+    err_class = f"err-p-{e_count}" if e_count > 0 else ""
     success_class = "success-pulse" if st.session_state.cevap_dogru else ""
     display_total = int(u['toplam_puan']) + p_xp if st.session_state.cevap_dogru else int(u['toplam_puan'])
 
@@ -155,6 +147,8 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             if e_count > 0:
                 lvl = f"level_{min(e_count, 4)}"
                 st.error(f"🚨 Pito: {random.choice(msgs['errors'][lvl]).format(ad_k)}")
+                
+                # --- İPUCU MANTIĞI MÜHÜRLENDİ ---
                 if e_count == 3:
                     st.warning(f"💡 **Pito'nun İpucu:** {egz.get('ipucu', 'Bu görevde henüz bir ipucu tanımlanmamış.')}")
             
@@ -189,6 +183,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
                 ilerleme_fonksiyonu(0, "Çözüm İncelendi", egz['id'], n_id, n_m)
 
     with cr:
+        # --- ÖĞRENCİ ÖZEL İSTATİSTİK KARTI (MODERN HUD) ---
         rn, rc = ranks_module.rütbe_ata(u['toplam_puan'])
         st.markdown(f'''
             <div class="my-stats-card">
