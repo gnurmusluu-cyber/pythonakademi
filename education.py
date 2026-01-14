@@ -7,10 +7,10 @@ import pandas as pd
 def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fonksiyonu, normalize_fonksiyonu, supabase):
     # --- DURUM KONTROLÜ ---
     e_count = st.session_state.get('error_count', 0)
-    # Çift kanal toggle: Hata sayısı değiştikçe A ve B arasında geçiş yapar.
+    # Çift kanal toggle: Hata sayısı değiştikçe A ve B arasında geçiş yaparak animasyonu her seferinde zorlar.
     err_anim_toggle = "A" if e_count % 2 == 0 else "B"
     
-    # --- 0. SİBER-GÖRSEL ZIRH (ÇİFT KANAL RESETLEME) ---
+    # --- 0. SİBER-GÖRSEL ZIRH (NİHAİ ESTETİK MÜHRÜ) ---
     st.markdown(f'''
         <style>
         header[data-testid="stHeader"], [data-testid="stDecoration"], footer {{ display: none !important; }}
@@ -51,9 +51,9 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         }}
         .terminal-label {{ font-size: 0.7rem; color: #888; text-transform: uppercase; letter-spacing: 1px; }}
 
-        /* ÇİFT KANALLI PULSE - TARAYICIYI RESETLEMEYE ZORLAR */
-        @keyframes pulseErrA {{ 0%, 100% {{ transform: scale(1); }} 50% {{ transform: scale(1.5); color: #FF0000; }} }}
-        @keyframes pulseErrB {{ 0%, 100% {{ transform: scale(1); }} 50% {{ transform: scale(1.5); color: #FF0000; }} }}
+        /* ÇİFT KANALLI PULSE - ANİMASYON GARANTİSİ */
+        @keyframes pulseErrA {{ 0%, 100% {{ transform: scale(1); }} 50% {{ transform: scale(1.4); color: #FF0000; }} }}
+        @keyframes pulseErrB {{ 0%, 100% {{ transform: scale(1); }} 50% {{ transform: scale(1.4); color: #FF0000; }} }}
         @keyframes successPulse {{ 0%, 100% {{ transform: scale(1); }} 50% {{ transform: scale(1.6); color: #ADFF2F; }} }}
 
         .err-p-A {{ display: inline-block; animation: pulseErrA 0.7s ease-in-out; font-weight: 950 !important; }}
@@ -96,13 +96,13 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
     success_class = "success-pulse" if st.session_state.cevap_dogru else ""
     display_total = int(u['toplam_puan']) + (p_xp if st.session_state.cevap_dogru else 0)
 
-    # HUD HTML
+    # HUD RENDER (👤 SİMGESİ İLE)
     st.markdown(f'''
         <div class="cyber-hud">
             <div style="display: flex; align-items: center;">
                 <div class="hud-pito-gif"><img src="{get_gif_b64(p_mod)}"></div>
-                <div style="color: #E0E0E0; font-family: monospace; font-size: 1rem;">
-                    USER: <span style="color: #00E5FF; font-weight: bold;">{u['ad_soyad']}</span>
+                <div style="color: #E0E0E0; font-family: monospace; font-size: 1.1rem;">
+                    👤 <span style="color: #00E5FF; font-weight: bold;">{u['ad_soyad']}</span>
                 </div>
             </div>
             <div class="hud-stats-container">
@@ -113,7 +113,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         </div>
     ''', unsafe_allow_html=True)
 
-    # --- 2. ANA İÇERİK ---
+    # --- 2. ANA İÇERİK DÜZENİ ---
     st.markdown("<h1 style='text-align:center; color:#00E5FF; margin-bottom:30px;'>🎓 PİTO PYTHON AKADEMİ</h1>", unsafe_allow_html=True)
 
     m_idx = int(u['mevcut_modul']) - 1
@@ -123,6 +123,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
     cl, cr = st.columns([7.5, 2.5])
     
     with cl:
+        # NAVİGASYON VE MENÜ
         cn1, cn2, cn3 = st.columns([0.4, 0.4, 0.2])
         with cn1: st.markdown(f"💬 *{msgs['welcome'].format(u['ad_soyad'].split()[0])}*")
         with cn2: 
@@ -155,12 +156,10 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
                 if st.button("🔄 SIFIRLA", use_container_width=True): st.session_state.reset_trigger += 1; st.rerun()
 
         elif st.session_state.cevap_dogru:
-            st.success(f"✅ Harika iş! (+{p_xp} XP)")
-            
-            # --- TERMİNAL ÇIKTISI (JSON'DAN ÇEKİLEN) ---
+            st.success(f"✅ Harika iş {u['ad_soyad'].split()[0]}! (+{p_xp} XP)")
+            # SİBER-ÇIKTI (JSON'DAN)
             output = egz.get('beklenen_cikti', "")
-            final_output = output if output else "Bu kod çıktı vermez."
-            st.markdown(f'<div class="terminal-label">🖥️ SİBER-ÇIKTI</div><div class="cyber-terminal">{final_output}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="terminal-label">🖥️ SİBER-ÇIKTI</div><div class="cyber-terminal">{output if output else "Bu kod çıktı vermez."}</div>', unsafe_allow_html=True)
             
             if st.button("SIRADAKİ GÖREVE GEÇ ➡️", type="primary", use_container_width=True):
                 s_idx = modul['egzersizler'].index(egz) + 1
@@ -170,11 +169,9 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         elif e_count >= 4:
             st.warning("🚨 Çözümü incele ve devam et:")
             st.code(egz['cozum'], language="python")
-            
-            # --- TERMİNAL ÇIKTISI (JSON'DAN ÇÖZÜM İÇİN) ---
+            # SİBER-ÇIKTI (ÇÖZÜM İÇİN JSON'DAN)
             output = egz.get('beklenen_cikti', "")
-            final_output = output if output else "Bu kod çıktı vermez."
-            st.markdown(f'<div class="terminal-label">🖥️ SİBER-ÇIKTI (PİTO\'NUN ÇÖZÜMÜ)</div><div class="cyber-terminal">{final_output}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="terminal-label">🖥️ SİBER-ÇIKTI (ÇÖZÜM)</div><div class="cyber-terminal">{output if output else "Bu kod çıktı vermez."}</div>', unsafe_allow_html=True)
             
             if st.button("DEVAM ET ➡️", type="primary", use_container_width=True):
                 s_idx = modul['egzersizler'].index(egz) + 1
@@ -185,11 +182,12 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         # ÖĞRENCİ STATS KARTI
         st.markdown(f'''
             <div class="my-stats-card">
-                <div style="font-size:0.75rem; color:#00E5FF; font-weight:bold;">📊 DURUM RAPORUN</div>
+                <div style="font-size:0.75rem; color:#00E5FF; font-weight:bold; letter-spacing:1px;">📊 DURUM RAPORUN</div>
                 <div class="my-stats-grid">
                     <div class="my-stat-box"><div class="my-stat-label">SINIFIM</div><div class="my-stat-val">#{sinif_sira}</div></div>
                     <div class="my-stat-box"><div class="my-stat-label">OKULUM</div><div class="my-stat-val">#{okul_sira}</div></div>
                 </div>
             </div>
         ''', unsafe_allow_html=True)
+        # LİDERLİK TABLOSU
         ranks_module.liderlik_tablosu_goster(supabase, current_user=u)
