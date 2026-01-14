@@ -3,17 +3,18 @@ import pandas as pd
 import random
 
 def mezuniyet_ekrani(u, msgs, pito_goster, supabase, ranks_module):
-    """Mezuniyet töreni, onur kürsüsü ve okunabilir siber-butonlar."""
+    """Mezuniyet töreni, onur kürsüsü ve tam sistem sıfırlama seçeneği."""
     
     # --- 0. SİBER-GÖRSEL ZIRH (OKUNABİLİRLİK VE ÇERÇEVE İMHASI) ---
     st.markdown("""
         <style>
         /* 1. Mavi çerçeve imha edici (Pointer-Events Protokolü) */
-        [data-testid="stBalloons"], [data-testid="stSnow"], 
-        [data-testid="stBalloons"] *, [data-testid="stSnow"] * {
+        [data-testid='stBalloons'], [data-testid='stSnow'], 
+        [data-testid='stBalloons'] *, [data-testid='stSnow'] * {
             pointer-events: none !important;
             outline: none !important;
             box-shadow: none !important;
+            border: none !important;
         }
         
         /* 2. BUTON METİNLERİNİ SİYAH YAPMA (KESİN OKUNABİLİRLİK) */
@@ -52,12 +53,12 @@ def mezuniyet_ekrani(u, msgs, pito_goster, supabase, ranks_module):
     cl, cr = st.columns([7.5, 2.5])
     with cl:
         cp1, cp2 = st.columns([1, 2])
-        with cp1: pito_goster("mezun")
+        with cp1: pito_goster('mezun')
         with cp2:
             raw_msg = msgs.get('mezuniyet_mesaji', "Tebrikler {}! Nusaybin'in tescilli Python savaşçısı oldun!")
             st.markdown(f"<div class='pito-notu'>💬 <b>Pito:</b> {raw_msg.format(u['ad_soyad'])}</div>", unsafe_allow_html=True)
 
-        # Siber Sertifika
+        # Siber Sertifika Alanı
         st.markdown(f"""
             <div class='cyber-card'>
                 <h2 style='color:#00E5FF; margin-top: 0;'>📜 BAŞARI SERTİFİKASI</h2>
@@ -77,32 +78,30 @@ def mezuniyet_ekrani(u, msgs, pito_goster, supabase, ranks_module):
         b1, b2, b3 = st.columns(3)
         
         with b1:
-            if st.button("🔍 Geçmiş egzersizler", use_container_width=True, key="rev_btn_master"):
+            if st.button("🔍 Geçmiş egzersizler", use_container_width=True, key='rev_btn_master'):
                 st.session_state.in_review = True; st.rerun()
         
         with b2:
-            if st.button("🚪 Çıkış Yap", help="Oturumu kapat", use_container_width=True, key="exit_btn_master"):
+            if st.button("🚪 Çıkış Yap", help='Oturumu kapat', use_container_width=True, key='exit_btn_master'):
                 st.session_state.user = None
                 st.session_state.in_review = False; st.rerun()
                 
         with b3:
             # EĞİTİMİ TEKRAR AL (SIFIRLAMA) PROTOKOLÜ
-            if st.button("🔄 Eğitimi Tekrar Al", help="Puanları sil ve 1. Modülden başla", use_container_width=True, key="reset_btn_master"):
-                # Balonları durdurmak için bayrağı çek
-                st.session_state.reset_active = True
+            if st.button("🔄 Eğitimi Tekrar Al", help='Puanları sil ve 1. Modülden başla', use_container_width=True, key='reset_btn_master'):
+                st.session_state.reset_active = True # Balonları durdur
                 
                 # Supabase Güncelleme: 0 Puan, 1. Modül, 1.1 Egzersiz
-                supabase.table("kullanicilar").update({
-                    "toplam_puan": 0, 
-                    "mevcut_egzersiz": "1.1", 
-                    "mevcut_modul": 1, 
-                    "rutbe": "🥚 Çömez"
-                }).eq("ogrenci_no", int(u['ogrenci_no'])).execute()
+                supabase.table('kullanicilar').update({
+                    'toplam_puan': 0, 
+                    'mevcut_egzersiz': '1.1', 
+                    'mevcut_modul': 1, 
+                    'rutbe': '🥚 Çömez',
+                }).eq('ogrenci_no', int(u['ogrenci_no'])).execute()
                 
-                # Tüm çözüm geçmişini sil
-                supabase.table("egzersiz_kayitlari").delete().eq("ogrenci_no", int(u['ogrenci_no'])).execute()
+                # Tüm geçmiş egzersiz kayıtlarını sil
+                supabase.table('egzersiz_kayitlari').delete().eq('ogrenci_no', int(u['ogrenci_no'])).execute()
                 
-                # Oturumu temizle ve yönlendir
                 st.session_state.user = None
                 st.session_state.in_review = False
                 st.session_state.reset_active = False # Bir sonraki giriş için temizle
@@ -113,17 +112,17 @@ def mezuniyet_ekrani(u, msgs, pito_goster, supabase, ranks_module):
 
 def inceleme_modu_paneli(u, mufredat, pito_goster, supabase):
     """Bitmiş görevleri siber-arşivde siyah metinli butonlarla gösterir."""
-    st.markdown("""<style>div.stButton > button p { color: #000 !important; font-weight: 900 !important; }</style>""", unsafe_allow_html=True)
+    st.markdown("""<style>div.stButton > button p, div.stButton > button span { color: #000 !important; font-weight: 900 !important; }</style>""", unsafe_allow_html=True)
     st.markdown("<h2 style='text-align:center; color:#00E5FF;'>🔍 SİBER-ARŞİV: GEÇMİŞ ÇÖZÜMLER</h2>", unsafe_allow_html=True)
     
     is_graduated = int(u['mevcut_modul']) > len(mufredat)
     geri_metni = "⬅️ Mezuniyet Ekranına Dön" if is_graduated else "⬅️ Eğitime Dön"
     
-    if st.button(geri_metni, use_container_width=True, key="back_btn_archive"):
+    if st.button(geri_metni, use_container_width=True, key='back_btn_archive'):
         st.session_state.in_review = False; st.rerun()
 
     try:
-        res = supabase.table("egzersiz_kayitlari").select("egz_id").eq("ogrenci_no", int(u['ogrenci_no'])).execute()
+        res = supabase.table('egzersiz_kayitlari').select('egz_id').eq('ogrenci_no', int(u['ogrenci_no'])).execute()
         if res.data:
             biten_id_listesi = [str(item['egz_id']) for item in res.data]
             for m in mufredat:
@@ -133,7 +132,7 @@ def inceleme_modu_paneli(u, mufredat, pito_goster, supabase):
                         for egz in modulun_bitenleri:
                             st.markdown(f"📍 **Görev {egz['id']}:** {egz.get('yonerge')}")
                             st.markdown("🤖 **Pito'nun İdeal Çözümü:**")
-                            st.code(egz.get('cozum', '# Çözüm hazırlanıyor...'), language="python")
+                            st.code(egz.get('cozum', '# Çözüm hazırlanıyor...'), language='python')
                             st.markdown(f"<div class='console-box'>{egz.get('beklenen_cikti', '...')}</div>", unsafe_allow_html=True)
                             st.divider()
         else:
