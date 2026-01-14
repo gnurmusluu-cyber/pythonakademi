@@ -5,10 +5,10 @@ import random
 def mezuniyet_ekrani(u, msgs, pito_goster, supabase, ranks_module):
     """Mezuniyet töreni, onur kürsüsü ve tam sistem sıfırlama seçeneği."""
     
-    # --- 0. SİBER-ÇERÇEVE SİLİCİ (POINTER-EVENTS PROTOKOLÜ) ---
+    # --- 0. SİBER-GÖRSEL ZIRH VE BUTON STİLİ ---
     st.markdown("""
         <style>
-        /* Balon ve Kar Tanelerini etkileşimsiz yap (Mavi Çerçeve Kesin Çözüm) */
+        /* Mavi çerçeve imha edici (Pointer-Events Protokolü) */
         [data-testid="stBalloons"], [data-testid="stSnow"], 
         [data-testid="stBalloons"] *, [data-testid="stSnow"] * {
             pointer-events: none !important;
@@ -17,6 +17,13 @@ def mezuniyet_ekrani(u, msgs, pito_goster, supabase, ranks_module):
             border: none !important;
         }
         
+        /* Buton Metinlerini Siyah Yapma (Okunabilirlik Mührü) */
+        .stButton > button {
+            color: #000000 !important;
+            background-color: #00E5FF !important;
+            font-weight: 900 !important;
+        }
+
         .cyber-card {
             text-align:center; border: 2px solid #00E5FF; padding: 30px; 
             border-radius: 20px; background: rgba(0, 229, 255, 0.05);
@@ -70,23 +77,18 @@ def mezuniyet_ekrani(u, msgs, pito_goster, supabase, ranks_module):
                 st.session_state.in_review = False; st.rerun()
                 
         with b3:
-            # EĞİTİMİ TEKRAR AL (SIFIRLAMA) PROTOKOLÜ
-            if st.button("🔄 Eğitimi Tekrar Al", type="secondary", help="Tüm ilerlemeni sıfırla ve 1. Modülden başla", use_container_width=True, key="reset_btn_master"):
-                # Balonları durdurmak için bayrağı çek
-                st.session_state.reset_proc = True
+            # EĞİTİMİ TEKRAR AL (TAM SIFIRLAMA)
+            if st.button("🔄 Eğitimi Tekrar Al", type="secondary", help="1. Modülden baştan başla", use_container_width=True, key="reset_btn_master"):
+                st.session_state.reset_proc = True # Balonları durdur
                 
-                # Veritabanı Güncelleme: Puanı ve Modülü Sıfırla
+                # Supabase Sıfırlama
                 supabase.table("kullanicilar").update({
-                    "toplam_puan": 0, 
-                    "mevcut_egzersiz": "1.1", 
-                    "mevcut_modul": 1, 
-                    "rutbe": "🥚 Çömez"
+                    "toplam_puan": 0, "mevcut_egzersiz": "1.1", "mevcut_modul": 1, "rutbe": "🥚 Çömez"
                 }).eq("ogrenci_no", int(u['ogrenci_no'])).execute()
                 
-                # Tüm egzersiz geçmişini sil
                 supabase.table("egzersiz_kayitlari").delete().eq("ogrenci_no", int(u['ogrenci_no'])).execute()
                 
-                # Oturumu temizle ve başa dön
+                # Oturumu kapat ve temizle
                 st.session_state.user = None
                 st.session_state.in_review = False
                 if "reset_proc" in st.session_state: del st.session_state.reset_proc
@@ -96,8 +98,8 @@ def mezuniyet_ekrani(u, msgs, pito_goster, supabase, ranks_module):
         ranks_module.liderlik_tablosu_goster(supabase, current_user=u)
 
 def inceleme_modu_paneli(u, mufredat, pito_goster, supabase):
-    """Bitmiş görevleri siber-arşivde ideal çözümlerle gösterir."""
-    # p_akademi.py'deki AttributeError hatasını önlemek için isim ve parametreler mühürlendi.
+    """Bitmiş görevleri siber-arşivde siyah metinli butonlarla gösterir."""
+    st.markdown("""<style>.stButton > button { color: #000 !important; font-weight: 900 !important; }</style>""", unsafe_allow_html=True)
     st.markdown("<h2 style='text-align:center; color:#00E5FF;'>🔍 SİBER-ARŞİV: GEÇMİŞ ÇÖZÜMLER</h2>", unsafe_allow_html=True)
     
     is_graduated = int(u['mevcut_modul']) > len(mufredat)
@@ -108,21 +110,16 @@ def inceleme_modu_paneli(u, mufredat, pito_goster, supabase):
 
     try:
         res = supabase.table("egzersiz_kayitlari").select("egz_id").eq("ogrenci_no", int(u['ogrenci_no'])).execute()
-        
         if res.data:
             biten_id_listesi = [str(item['egz_id']) for item in res.data]
-            
             for m in mufredat:
                 modulun_bitenleri = [e for e in m['egzersizler'] if str(e['id']) in biten_id_listesi]
-                
                 if modulun_bitenleri:
                     with st.expander(f"📦 {m['modul_adi']}", expanded=False):
                         for egz in modulun_bitenleri:
                             st.markdown(f"📍 **Görev {egz['id']}:** {egz.get('yonerge')}")
                             st.markdown("🤖 **Pito'nun İdeal Çözümü:**")
                             st.code(egz.get('cozum', '# Çözüm hazırlanıyor...'), language="python")
-                            
-                            st.markdown("💻 **Beklenen Konsol Çıktısı:**")
                             st.markdown(f"<div class='console-box'>{egz.get('beklenen_cikti', '...')}</div>", unsafe_allow_html=True)
                             st.divider()
         else:
