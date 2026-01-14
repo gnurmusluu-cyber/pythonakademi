@@ -17,12 +17,12 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         try:
             exec(kod, {})
             sys.stdout = sys.__stdout__
-            return buffer.getvalue()
+            return buffer.getvalue().strip()
         except Exception as e:
             sys.stdout = sys.__stdout__
             return f"⚠️ SİSTEM HATASI: {str(e)}"
 
-    # --- 0. SİBER-GÖRSEL ZIRH (TERMINAL CSS EKLENDİ) ---
+    # --- 0. SİBER-GÖRSEL ZIRH (PITO 75PX VE TERMİNAL MÜHRÜ) ---
     st.markdown(f'''
         <style>
         header[data-testid="stHeader"], [data-testid="stDecoration"], footer {{ display: none !important; }}
@@ -37,21 +37,28 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             padding: 15px;
             border-radius: 8px;
             border: 1px solid #30363d;
-            margin: 15px 0;
+            margin: 10px 0;
             white-space: pre-wrap;
             box-shadow: inset 0 0 10px rgba(173, 255, 47, 0.2);
             font-size: 0.9rem;
+            min-height: 40px;
         }}
-        .terminal-label {{
-            font-size: 0.7rem; color: #888; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;
-        }}
+        .terminal-label {{ font-size: 0.7rem; color: #888; text-transform: uppercase; letter-spacing: 1px; }}
 
         .cyber-hud {{
             position: fixed; top: 0; left: 0; right: 0;
             height: 120px; background-color: #0e1117 !important;
             border-bottom: 3px solid #00E5FF; z-index: 99999 !important;
             padding: 0 30px; display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 0 10px 30px #000000 !important;
+        }}
+
+        /* PİTO 75PX - ANLAŞILDIĞI ÜZERE */
+        .hud-pito-gif img {{
+            width: 75px !important; 
+            height: 75px !important; 
+            border-radius: 50%; border: 3px solid #00E5FF;
+            object-fit: cover; background: #000; margin-right: 15px;
+            box-shadow: 0 0 15px #00E5FF;
         }}
 
         .my-stats-card {{
@@ -59,11 +66,8 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             border: 1px solid rgba(0, 229, 255, 0.2);
             border-radius: 12px; padding: 12px; margin-bottom: 15px; text-align: center;
         }}
-        .my-stats-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }}
-        .my-stat-box {{ background: rgba(0, 0, 0, 0.3); padding: 8px; border-radius: 8px; border: 1px solid rgba(0, 229, 255, 0.1); }}
-        .my-stat-label {{ font-size: 0.65rem; color: #888; text-transform: uppercase; font-weight: bold; }}
-        .my-stat-val {{ font-size: 1.1rem; color: #ADFF2F; font-weight: 950; font-family: monospace; }}
 
+        /* ANIMASYONLAR */
         @keyframes pulseChannel1 {{ 0% {{ transform: scale(1); }} 50% {{ transform: scale(1.6); color: #FF0000; }} 100% {{ transform: scale(1); }} }}
         @keyframes pulseChannel2 {{ 0% {{ transform: scale(1); }} 50% {{ transform: scale(1.6); color: #FF0000; }} 100% {{ transform: scale(1); }} }}
         .err-p-1, .err-p-3 {{ display: inline-block; animation: pulseChannel1 0.7s ease-in-out; }}
@@ -116,10 +120,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
     m_idx = int(u['mevcut_modul']) - 1
     modul = mufredat[m_idx]
     egz = next((e for e in modul['egzersizler'] if e['id'] == str(u['mevcut_egzersiz'])), modul['egzersizler'][0])
-    c_i = modul['egzersizler'].index(egz) + 1
     
-    st.progress(min((m_idx + (c_i/len(modul['egzersizler'])))/10, 1.0))
-
     cl, cr = st.columns([7.5, 2.5])
     
     with cl:
@@ -150,8 +151,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
                     st.session_state.current_code = user_code
                     if normalize_fonksiyonu(user_code) == normalize_fonksiyonu(egz['dogru_cevap_kodu']):
                         st.session_state.cevap_dogru = True; st.balloons(); st.rerun()
-                    else:
-                        st.session_state.error_count += 1; st.rerun()
+                    else: st.session_state.error_count += 1; st.rerun()
             with b2:
                 if st.button("🔄 SIFIRLA", use_container_width=True): st.session_state.reset_trigger += 1; st.rerun()
 
@@ -159,8 +159,9 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             st.success(f"✅ Harika iş! (+{p_xp} XP)")
             
             # --- TERMİNAL ÇIKTISI (DOĞRU CEVAP) ---
-            output = kod_calistir_cikti_al(st.session_state.current_code)
-            st.markdown(f'<div class="terminal-label">🖥️ SİBER-ÇIKTI (SENİN KODUN)</div><div class="cyber-terminal">{output if output else "> Kod çalıştı, çıktı yok."}</div>', unsafe_allow_html=True)
+            raw_output = kod_calistir_cikti_al(st.session_state.current_code)
+            final_output = raw_output if raw_output else "Bu kod çıktı vermez."
+            st.markdown(f'<div class="terminal-label">🖥️ SİBER-ÇIKTI</div><div class="cyber-terminal">{final_output}</div>', unsafe_allow_html=True)
             
             if st.button("SIRADAKİ GÖREVE GEÇ ➡️", type="primary", use_container_width=True):
                 s_idx = modul['egzersizler'].index(egz) + 1
@@ -172,8 +173,9 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             st.code(egz['cozum'], language="python")
             
             # --- TERMİNAL ÇIKTISI (ÇÖZÜM) ---
-            output = kod_calistir_cikti_al(egz['cozum'])
-            st.markdown(f'<div class="terminal-label">🖥️ SİBER-ÇIKTI (PİTO\'NUN ÇÖZÜMÜ)</div><div class="cyber-terminal">{output if output else "> Kod çalıştı, çıktı yok."}</div>', unsafe_allow_html=True)
+            raw_output = kod_calistir_cikti_al(egz['cozum'])
+            final_output = raw_output if raw_output else "Bu kod çıktı vermez."
+            st.markdown(f'<div class="terminal-label">🖥️ SİBER-ÇIKTI (PİTO\'NUN ÇÖZÜMÜ)</div><div class="cyber-terminal">{final_output}</div>', unsafe_allow_html=True)
             
             if st.button("DEVAM ET ➡️", type="primary", use_container_width=True):
                 s_idx = modul['egzersizler'].index(egz) + 1
