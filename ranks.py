@@ -9,146 +9,133 @@ def rütbe_ata(xp):
     return "🥚 Çömez", "badge-comez"
 
 def liderlik_tablosu_goster(supabase, current_user=None):
-    """Siber-Buz temalı, gelişmiş liderlik tablosu motoru."""
+    """Siber-Buz temalı, kompakt ve kaydırılabilir liderlik tablosu."""
     
-    # --- 0. SİBER-TABLO CSS (ONUR KÜRSÜSÜ ÖZEL) ---
+    # --- 0. SİBER-TABLO CSS (KOMPAKT MÜHÜR) ---
     st.markdown('''
         <style>
-        /* TAB TASARIMI */
-        .stTabs [data-baseweb="tab-list"] { gap: 10px; background-color: transparent; }
+        /* TAB TASARIMI (DAHA KÜÇÜK) */
+        .stTabs [data-baseweb="tab-list"] { gap: 5px; }
         .stTabs [data-baseweb="tab"] {
             background-color: rgba(0, 229, 255, 0.05) !important;
-            border: 1px solid rgba(0, 229, 255, 0.2) !important;
-            border-radius: 10px 10px 0 0 !important;
-            color: #888 !important;
-            padding: 10px 20px !important;
-        }
-        .stTabs [aria-selected="true"] {
-            background-color: rgba(0, 229, 255, 0.15) !important;
-            border-color: #00E5FF !important;
-            color: #00E5FF !important;
-            font-weight: bold !important;
+            border: 1px solid rgba(0, 229, 255, 0.1) !important;
+            border-radius: 8px 8px 0 0 !important;
+            padding: 6px 10px !important;
+            font-size: 0.8rem !important;
         }
 
-        /* LİDER KARTLARI (GLASSMORPHISM) */
+        /* LİDERLİK LİSTESİ KONTEYNERI (SCROLLABLE) */
+        .leaderboard-scroll {
+            max-height: 400px; /* Ekrana sığması için yükseklik sınırı */
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        .leaderboard-scroll::-webkit-scrollbar { width: 3px; }
+        .leaderboard-scroll::-webkit-scrollbar-thumb { background: #00E5FF; border-radius: 10px; }
+
+        /* LİDER KARTLARI (ULTRA KOMPAKT) */
         .leader-card {
-            background: rgba(22, 27, 34, 0.6) !important;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(0, 229, 255, 0.15);
-            border-radius: 12px;
-            padding: 12px 18px;
-            margin-bottom: 12px;
+            background: rgba(22, 27, 34, 0.7) !important;
+            border: 1px solid rgba(0, 229, 255, 0.1);
+            border-radius: 10px;
+            padding: 6px 12px;
+            margin-bottom: 6px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            transition: 0.3s ease;
-        }
-        .leader-card:hover {
-            border-color: #00E5FF;
-            box-shadow: 0 0 15px rgba(0, 229, 255, 0.2);
-            transform: translateX(5px);
         }
 
-        /* RÜTBE ROZETLERİ */
         .rank-badge {
             display: inline-block;
-            padding: 2px 10px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 900;
-            text-transform: uppercase;
-            margin-top: 4px;
+            padding: 1px 6px;
+            border-radius: 10px;
+            font-size: 0.65rem;
+            font-weight: 800;
         }
-        .badge-bilge { background: linear-gradient(90deg, #FFD700, #FFA500); color: #000; box-shadow: 0 0 10px #FFD700; }
-        .badge-savasci { background: linear-gradient(90deg, #FF4500, #FF0000); color: #fff; box-shadow: 0 0 10px #FF4500; }
-        .badge-pythonist { background: linear-gradient(90deg, #00E5FF, #008B8B); color: #000; box-shadow: 0 0 10px #00E5FF; }
+        .badge-bilge { background: #FFD700; color: #000; }
+        .badge-savasci { background: #FF4500; color: #fff; }
+        .badge-pythonist { background: #00E5FF; color: #000; }
         .badge-comez { background: #333; color: #aaa; }
 
-        /* XP DEĞERİ */
         .xp-val {
             font-family: 'Fira Code', monospace;
             color: #ADFF2F;
             font-weight: bold;
-            font-size: 1.1rem;
-            text-shadow: 0 0 8px rgba(173, 255, 47, 0.4);
+            font-size: 0.9rem;
         }
         
-        /* KULLANICI VURGUSU (ACTIVE) */
+        /* AKTİF KULLANICI VURGUSU */
         .me-highlight {
-            border: 2px solid #ADFF2F !important;
+            border: 1px solid #ADFF2F !important;
             background: rgba(173, 255, 47, 0.05) !important;
-            box-shadow: 0 0 20px rgba(173, 255, 47, 0.1) !important;
         }
         </style>
     ''', unsafe_allow_html=True)
 
-    st.markdown("<h3 style='text-align:center; color:#00E5FF; text-shadow: 0 0 15px #00E5FF; margin-bottom:20px;'>🏆 ONUR KÜRSÜSÜ</h3>", unsafe_allow_html=True)
-    t1, t2, t3 = st.tabs(["🌍 Okul Geneli", "📍 Sınıfım", "🏫 Şampiyon Sınıf"])
+    st.markdown("<h4 style='text-align:center; color:#00E5FF;'>🏆 ONUR KÜRSÜSÜ</h4>", unsafe_allow_html=True)
+    t1, t2, t3 = st.tabs(["🌍 Okul", "📍 Sınıf", "🏫 Şubeler"])
     
     try:
         res = supabase.table("kullanicilar").select("*").execute()
         if not res.data:
-            st.info("Henüz veri girişi yapılmamış arkadaşım.")
+            st.info("Veri girişi bekleniyor...")
             return
             
         df = pd.DataFrame(res.data)
 
-        # --- 🌍 TAB 1: OKUL GENELİ (TOP 10) ---
+        # --- 🌍 TAB 1: OKUL GENELİ ---
         with t1:
-            top_okul = df.sort_values(by="toplam_puan", ascending=False).head(10)
+            top_okul = df.sort_values(by="toplam_puan", ascending=False).head(20)
+            st.markdown('<div class="leaderboard-scroll">', unsafe_allow_html=True)
             for i, r in enumerate(top_okul.itertuples(), 1):
                 rn, rc = rütbe_ata(r.toplam_puan)
-                # İlk 3'e özel ikonlar
-                rank_icon = "🥇" if i == 1 else "🥈" if i == 2 else "🥉" if i == 3 else f"{i}."
+                rank_label = "🥇" if i == 1 else "🥈" if i == 2 else "🥉" if i == 3 else f"{i}."
                 st.markdown(f'''
                     <div class="leader-card">
                         <div>
-                            <span style="color:#00E5FF; font-weight:bold; margin-right:8px;">{rank_icon}</span>
-                            <b>{r.ad_soyad}</b> <br>
+                            <span style="color:#00E5FF; font-size:0.75rem;">{rank_label}</span>
+                            <b style="font-size:0.8rem;">{r.ad_soyad[:15]}</b><br>
                             <span class="rank-badge {rc}">{rn}</span>
                         </div>
-                        <div class="xp-val">{int(r.toplam_puan)} XP</div>
+                        <div class="xp-val">{int(r.toplam_puan)}</div>
                     </div>
                 ''', unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
 
         # --- 📍 TAB 2: SINIFIM ---
         with t2:
             if current_user:
                 df_sinif = df[df['sinif'] == current_user['sinif']].sort_values(by="toplam_puan", ascending=False)
+                st.markdown('<div class="leaderboard-scroll">', unsafe_allow_html=True)
                 for i, r in enumerate(df_sinif.itertuples(), 1):
                     rn, rc = rütbe_ata(r.toplam_puan)
                     is_me = "me-highlight" if r.ogrenci_no == current_user['ogrenci_no'] else ""
                     st.markdown(f'''
                         <div class="leader-card {is_me}">
                             <div>
-                                <span style="color:#aaa; font-size:0.8rem; margin-right:8px;">#{i}</span>
-                                <b>{r.ad_soyad}</b> <br>
+                                <span style="color:#aaa; font-size:0.7rem;">#{i}</span>
+                                <b style="font-size:0.8rem;">{r.ad_soyad[:15]}</b><br>
                                 <span class="rank-badge {rc}">{rn}</span>
                             </div>
-                            <div class="xp-val">{int(r.toplam_puan)} XP</div>
+                            <div class="xp-val">{int(r.toplam_puan)}</div>
                         </div>
                     ''', unsafe_allow_html=True)
+                st.markdown('</div>', unsafe_allow_html=True)
             else:
-                st.info("Sıralamanı görmek için giriş yapmalısın arkadaşım.")
+                st.info("Giriş yapmalısın.")
 
-        # --- 🏫 TAB 3: ŞAMPİYON SINIF (ORTALAMA) ---
+        # --- 🏫 TAB 3: ŞUBE SIRALAMASI ---
         with t3:
             class_stats = df.groupby('sinif')['toplam_puan'].mean().sort_values(ascending=False).reset_index()
-            if not class_stats.empty:
-                winner = class_stats.iloc[0]['sinif']
+            st.markdown('<div class="leaderboard-scroll">', unsafe_allow_html=True)
+            for i, r in enumerate(class_stats.itertuples(), 1):
                 st.markdown(f'''
-                    <div style="background:rgba(173, 255, 47, 0.1); padding:15px; border-radius:12px; border:1px solid #ADFF2F; text-align:center; margin-bottom:20px;">
-                        👑 Zirvedeki Sınıf: <b style="color:#ADFF2F; font-size:1.2rem;">{winner}</b>
+                    <div class="leader-card">
+                        <div style="font-size:0.8rem;"><b>{i}. {r.sinif}</b></div>
+                        <div class="xp-val" style="font-size:0.8rem;">{int(r.toplam_puan)} Ort</div>
                     </div>
                 ''', unsafe_allow_html=True)
-                
-                for i, r in enumerate(class_stats.itertuples(), 1):
-                    st.markdown(f'''
-                        <div class="leader-card">
-                            <div><b>{i}. {r.sinif} Şubesi</b></div>
-                            <div class="xp-val" style="font-size:0.9rem;">Ort: {int(r.toplam_puan)} XP</div>
-                        </div>
-                    ''', unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
 
     except Exception as e:
-        st.error(f"Liderlik tablosu yüklenirken bir sorun oluştu arkadaşım: {e}")
+        st.error(f"Sistem Hatası: {e}")
