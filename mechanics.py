@@ -3,24 +3,26 @@ import pandas as pd
 import random
 
 def mezuniyet_ekrani(u, msgs, pito_goster, supabase, ranks_module):
-    """Mezuniyet töreni ve animasyonlar için kesin görsel çözüm."""
+    """Mezuniyet töreni, onur kürsüsü ve sistem sıfırlama seçeneği."""
     
-    # --- NOKTA ATIŞI SİBER-KALKAN (HAYALET MODU) ---
+    # --- NOKTA ATIŞI SİBER-ÇERÇEVE SİLİCİ (BALON VE KAR İÇİN) ---
     st.markdown("""
         <style>
-        /* Balon ve Kar Tanelerini tamamen etkileşimsiz yap (Mavi Çerçeve İlacı) */
+        /* Balon ve Kar Tanelerini etkileşimsiz yap ve mavi çerçeveyi kökten sil */
         [data-testid="stBalloons"], [data-testid="stSnow"], 
         [data-testid="stBalloons"] *, [data-testid="stSnow"] * {
-            pointer-events: none !important; /* Tıklanmayı engelle */
-            outline: none !important;       /* Çerçeveyi yok et */
-            box-shadow: none !important;    /* Gölgeyi sil */
-            border: none !important;        /* Kenarlığı kaldır */
+            pointer-events: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            border: none !important;
         }
         
+        /* Siber Sertifika ve Kart Tasarımı */
         .cyber-card {
             text-align:center; border: 2px solid #00E5FF; padding: 30px; 
             border-radius: 20px; background: rgba(0, 229, 255, 0.05);
             box-shadow: 0 0 25px rgba(0, 229, 255, 0.2);
+            margin-bottom: 25px;
         }
         </style>
     """, unsafe_allow_html=True)
@@ -31,7 +33,7 @@ def mezuniyet_ekrani(u, msgs, pito_goster, supabase, ranks_module):
     
     st.markdown("<div class='academy-header'>🎓 PİTO PYTHON AKADEMİ MEZUNİYETİ</div>", unsafe_allow_html=True)
     
-    cl, cr = st.columns([7, 3])
+    cl, cr = st.columns([7.5, 2.5])
     with cl:
         cp1, cp2 = st.columns([1, 2])
         with cp1: pito_goster("mezun")
@@ -39,7 +41,7 @@ def mezuniyet_ekrani(u, msgs, pito_goster, supabase, ranks_module):
             raw_msg = msgs.get('mezuniyet_mesaji', "Tebrikler {}! Nusaybin'in tescilli Python savaşçısı oldun!")
             st.markdown(f"<div class='pito-notu'>💬 <b>Pito:</b> {raw_msg.format(u['ad_soyad'])}</div>", unsafe_allow_html=True)
 
-        # Siber Sertifika
+        # Siber Sertifika Alanı
         st.markdown(f"""
             <div class='cyber-card'>
                 <h2 style='color:#00E5FF; margin-top: 0;'>📜 BAŞARI SERTİFİKASI</h2>
@@ -54,21 +56,73 @@ def mezuniyet_ekrani(u, msgs, pito_goster, supabase, ranks_module):
             </div>
         """, unsafe_allow_html=True)
         
-        st.markdown("<br>", unsafe_allow_html=True)
+        # --- NAVİGASYON VE KONTROL PANELİ ---
+        st.markdown("### ⚙️ Kumanda Paneli")
+        b1, b2, b3 = st.columns(3)
         
-        # NAVİGASYON BUTONLARI
-        col_btn1, col_btn2 = st.columns(2)
-        with col_btn1:
-            if st.button("🔍 Geçmiş egzersizler", use_container_width=True, key="rev_btn_mezun"):
+        with b1:
+            if st.button("🔍 Geçmiş egzersizler", use_container_width=True, key="rev_btn_master"):
                 st.session_state.in_review = True; st.rerun()
-        with col_btn2:
-            if st.button("🚪 Çıkış Yap", help="Oturumu kapat ve başa dön", use_container_width=True, key="exit_btn_mezun"):
+        
+        with b2:
+            if st.button("🚪 Çıkış Yap", help="Ana sayfaya dön", use_container_width=True, key="exit_btn_master"):
                 st.session_state.user = None
                 st.session_state.in_review = False; st.rerun()
+                
+        with b3:
+            # EĞİTİMİ TEKRAR AL (SIFIRLAMA) PROTOKOLÜ
+            if st.button("🔄 Eğitimi Tekrar Al", type="secondary", help="Tüm ilerlemeni sıfırla ve baştan başla", use_container_width=True, key="reset_btn_master"):
+                # Supabase üzerinde temizlik
+                supabase.table("kullanicilar").update({
+                    "toplam_puan": 0, 
+                    "mevcut_egzersiz": "1.1", 
+                    "mevcut_modul": 1, 
+                    "rutbe": "🥚 Çömez"
+                }).eq("ogrenci_no", int(u['ogrenci_no'])).execute()
+                
+                # Egzersiz kayıtlarını sil
+                supabase.table("egzersiz_kayitlari").delete().eq("ogrenci_no", int(u['ogrenci_no'])).execute()
+                
+                st.toast("Siber-Hafıza sıfırlandı! Başa dönüyoruz...", icon="🔄")
+                st.session_state.user = None
+                st.session_state.in_review = False
+                st.rerun()
 
     with cr:
         ranks_module.liderlik_tablosu_goster(supabase, current_user=u)
 
 def inceleme_modu(u, mufredat, supabase):
-    # (Bu kısım aynı kalabilir, herhangi bir siber-hata yok)
-    ...
+    """Öğrencinin bitirdiği tüm görevleri ideal çözümler ve çıktılarla gösterir."""
+    st.markdown("<h2 style='text-align:center; color:#00E5FF;'>🔍 SİBER-ARŞİV: GEÇMİŞ ÇÖZÜMLER</h2>", unsafe_allow_html=True)
+    
+    # Navigasyon Mantığı
+    is_graduated = int(u['mevcut_modul']) > len(mufredat)
+    geri_metni = "⬅️ Mezuniyet Ekranına Dön" if is_graduated else "⬅️ Eğitime Dön"
+    
+    if st.button(geri_metni, use_container_width=True, key="back_btn_archive"):
+        st.session_state.in_review = False; st.rerun()
+
+    try:
+        # Tamamlanan egzersizleri çek
+        res = supabase.table("egzersiz_kayitlari").select("egz_id").eq("ogrenci_no", int(u['ogrenci_no'])).execute()
+        
+        if res.data:
+            biten_id_listesi = [str(item['egz_id']) for item in res.data]
+            
+            for m in mufredat:
+                modulun_bitenleri = [e for e in m['egzersizler'] if str(e['id']) in biten_id_listesi]
+                
+                if modulun_bitenleri:
+                    with st.expander(f"📦 {m['modul_adi']}", expanded=False):
+                        for egz in modulun_bitenleri:
+                            st.markdown(f"📍 **Görev {egz['id']}:** {egz.get('yonerge')}")
+                            st.markdown("🤖 **Pito'nun İdeal Çözümü:**")
+                            st.code(egz.get('cozum', '# Çözüm hazırlanıyor...'), language="python")
+                            
+                            st.markdown("💻 **Beklenen Konsol Çıktısı:**")
+                            st.markdown(f"<div class='console-box'>{egz.get('beklenen_cikti', 'Çıktı üretiliyor...')}</div>", unsafe_allow_html=True)
+                            st.divider()
+        else:
+            st.info("Henüz tamamlanmış bir görevin bulunmuyor arkadaşım. Biraz kod yazmaya ne dersin?")
+    except Exception as e:
+        st.error(f"Siber-arşiv verisi yüklenirken bir hata oluştu: {e}")
