@@ -8,7 +8,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
     # --- DURUM KONTROLÜ ---
     e_count = st.session_state.get('error_count', 0)
     
-    # --- 0. SİBER-GÖRSEL ZIRH VE ANİMASYON MÜHRÜ ---
+    # --- 0. SİBER-GÖRSEL ZIRH (ANİMASYON RESETLEME MÜHRÜ) ---
     st.markdown(f'''
         <style>
         header[data-testid="stHeader"], [data-testid="stDecoration"], footer {{ display: none !important; }}
@@ -23,22 +23,24 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             box-shadow: 0 10px 30px #000000 !important;
         }}
 
-        /* ÖĞRENCİ ÖZEL STATS KARTI */
+        /* İSTATİSTİK KARTI */
         .my-stats-card {{
             background: rgba(0, 229, 255, 0.05);
             border: 1px solid rgba(0, 229, 255, 0.2);
-            border-radius: 12px;
-            padding: 12px;
-            margin-bottom: 15px;
-            text-align: center;
+            border-radius: 12px; padding: 12px; margin-bottom: 15px; text-align: center;
         }}
         .my-stats-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }}
         .my-stat-box {{ background: rgba(0, 0, 0, 0.3); padding: 8px; border-radius: 8px; border: 1px solid rgba(0, 229, 255, 0.1); }}
         .my-stat-label {{ font-size: 0.65rem; color: #888; text-transform: uppercase; font-weight: bold; }}
         .my-stat-val {{ font-size: 1.1rem; color: #ADFF2F; font-weight: 950; font-family: monospace; }}
 
-        /* --- SİBER-DARBE ANIMASYONLARI (HER HATAYA ÖZEL) --- */
-        @keyframes cyberPulseErr {{
+        /* --- ÇİFT KANALLI ANIMASYON RESETLEME --- */
+        @keyframes pulseChannel1 {{
+            0% {{ transform: scale(1); color: #00E5FF; }}
+            50% {{ transform: scale(1.6); color: #FF0000; text-shadow: 0 0 20px #FF0000; }}
+            100% {{ transform: scale(1); color: #00E5FF; }}
+        }}
+        @keyframes pulseChannel2 {{
             0% {{ transform: scale(1); color: #00E5FF; }}
             50% {{ transform: scale(1.6); color: #FF0000; text-shadow: 0 0 20px #FF0000; }}
             100% {{ transform: scale(1); color: #00E5FF; }}
@@ -49,14 +51,14 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             100% {{ transform: scale(1); color: #00E5FF; }}
         }}
 
-        /* Sınıf isimlerini e_count ile dinamikleştirerek her hatada animasyonu zorluyoruz */
-        .err-p-1, .err-p-2, .err-p-3, .err-p-4 {{ display: inline-block; animation: cyberPulseErr 0.7s ease-in-out; font-weight: 950 !important; }}
+        /* Hataları çapraz kanallara dağıtarak tarayıcıyı her seferinde tetiklenmeye zorluyoruz */
+        .err-p-1, .err-p-3 {{ display: inline-block; animation: pulseChannel1 0.7s ease-in-out; font-weight: 950 !important; }}
+        .err-p-2, .err-p-4 {{ display: inline-block; animation: pulseChannel2 0.7s ease-in-out; font-weight: 950 !important; }}
         .success-pulse {{ display: inline-block; animation: successPulse 0.8s ease-in-out; font-weight: 950 !important; }}
 
         .hud-pito-gif img {{
             width: 75px; height: 75px; border-radius: 50%; border: 3px solid #00E5FF;
-            object-fit: cover; background: #000; margin-right: 15px;
-            box-shadow: 0 0 15px #00E5FF;
+            object-fit: cover; background: #000; margin-right: 15px; box-shadow: 0 0 15px #00E5FF;
         }}
 
         div.stButton > button {{ background-color: #00E5FF !important; border: none !important; color: #000 !important; font-weight: 900 !important; }}
@@ -85,7 +87,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             return f"data:image/gif;base64,{base64.b64encode(open(path, 'rb').read()).decode()}"
         return ""
 
-    # Animasyon Sınıfı (Her hata sayısı için farklı bir sınıf adı üreterek animasyonu tetikler)
+    # Animasyon Sınıfı Seçimi
     err_class = f"err-p-{e_count}" if e_count > 0 else ""
     success_class = "success-pulse" if st.session_state.cevap_dogru else ""
     display_total = int(u['toplam_puan']) + p_xp if st.session_state.cevap_dogru else int(u['toplam_puan'])
@@ -147,10 +149,8 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             if e_count > 0:
                 lvl = f"level_{min(e_count, 4)}"
                 st.error(f"🚨 Pito: {random.choice(msgs['errors'][lvl]).format(ad_k)}")
-                
-                # --- İPUCU MANTIĞI MÜHÜRLENDİ ---
                 if e_count == 3:
-                    st.warning(f"💡 **Pito'nun İpucu:** {egz.get('ipucu', 'Bu görevde henüz bir ipucu tanımlanmamış.')}")
+                    st.warning(f"💡 **Pito'nun İpucu:** {egz.get('ipucu', 'Kodu tekrar kontrol et!')}")
             
             if "reset_trigger" not in st.session_state: st.session_state.reset_trigger = 0
             user_code = st.text_area("Siber-Editor", value=egz['sablon'], height=180, key=f"ed_{egz['id']}_{st.session_state.reset_trigger}", label_visibility="collapsed")
@@ -183,24 +183,15 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
                 ilerleme_fonksiyonu(0, "Çözüm İncelendi", egz['id'], n_id, n_m)
 
     with cr:
-        # --- ÖĞRENCİ ÖZEL İSTATİSTİK KARTI (MODERN HUD) ---
         rn, rc = ranks_module.rütbe_ata(u['toplam_puan'])
         st.markdown(f'''
             <div class="my-stats-card">
                 <div style="font-size:0.75rem; color:#00E5FF; font-weight:bold; letter-spacing:1px;">📊 DURUM RAPORUN</div>
                 <div class="my-stats-grid">
-                    <div class="my-stat-box">
-                        <div class="my-stat-label">SINIFIM</div>
-                        <div class="my-stat-val">#{sinif_sira}</div>
-                    </div>
-                    <div class="my-stat-box">
-                        <div class="my-stat-label">OKULUM</div>
-                        <div class="my-stat-val">#{okul_sira}</div>
-                    </div>
+                    <div class="my-stat-box"><div class="my-stat-label">SINIFIM</div><div class="my-stat-val">#{sinif_sira}</div></div>
+                    <div class="my-stat-box"><div class="my-stat-label">OKULUM</div><div class="my-stat-val">#{okul_sira}</div></div>
                 </div>
-                <div style="margin-top:10px; font-size:0.85rem; color:#ADFF2F; font-weight:bold;">
-                    🎖️ {rn}
-                </div>
+                <div style="margin-top:10px; font-size:0.85rem; color:#ADFF2F; font-weight:bold;">🎖️ {rn}</div>
             </div>
         ''', unsafe_allow_html=True)
         ranks_module.liderlik_tablosu_goster(supabase, current_user=u)
