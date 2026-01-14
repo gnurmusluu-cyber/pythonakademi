@@ -7,12 +7,11 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
     # --- 0. SİBER-GÖRSEL ZIRH (ANIMASYON, MOBİL UYUM VE OKUNABİLİRLİK) ---
     st.markdown('''
         <style>
-        /* STREAMLIT STANDARTLARINI İMHA ET */
         header[data-testid="stHeader"], [data-testid="stDecoration"], footer { display: none !important; }
         .stApp { background-color: #0e1117 !important; }
 
-        /* BAŞLIK GÖRÜNÜRLÜK GARANTİSİ (HUD ALTINDA KALMAYI ÖNLER) */
-        [data-testid="stMainViewContainer"] { padding-top: 170px !important; }
+        /* ANA İÇERİK BOŞLUĞU (BAŞLIK GÖRÜNÜRLÜK GARANTİSİ) */
+        [data-testid="stMainViewContainer"] { padding-top: 180px !important; }
 
         /* SABİT ÜST HUD BAR */
         .cyber-hud {
@@ -20,36 +19,29 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             height: 110px; background-color: #0e1117 !important;
             border-bottom: 3px solid #00E5FF; z-index: 99999 !important;
             padding: 0 30px; display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 0 10px 30px #000000 !important;
+            box-shadow: 0 10px 40px #000000 !important;
         }
 
-        /* PİTO KOKPİT GÖRSELİ */
-        .hud-pito-gif img {
-            width: 80px; height: 80px; border-radius: 50%; border: 3px solid #00E5FF;
-            object-fit: cover; background: #000; margin-right: 15px;
-            box-shadow: 0 0 15px #00E5FF;
-        }
-
-        /* --- SİBER-VURGU (DOUBLE PULSE PROTOKOLÜ) --- */
+        /* --- SİBER-VURGU ANİMASYONU (DİNAMİK RE-TRIGGER) --- */
         @keyframes cyberPulse {
             0% { transform: scale(1); color: #00E5FF; text-shadow: none; }
             50% { transform: scale(1.8); color: #FF0000; text-shadow: 0 0 25px #FF0000, 0 0 50px #FF0000; }
             100% { transform: scale(1); color: #00E5FF; text-shadow: none; }
         }
 
-        /* Wildcard selector: pulse-err- veya pulse-xp- ile başlayan her şeyi canlandır */
-        [class^="pulse-err-"], [class^="pulse-xp-"] {
+        /* Her sayı değiştiğinde benzersiz class ile animasyonu zorla */
+        [class*="pulse-trigger-"] {
             display: inline-block;
-            animation: cyberPulse 0.7s ease-in-out;
+            animation: cyberPulse 0.7s ease-in-out forwards;
             font-weight: 950 !important;
         }
 
-        /* MOBİL DÜZENLEME */
+        /* MOBİL DÜZENLEME (HUD ESNETME) */
         @media (max-width: 768px) {
             .cyber-hud { height: 160px !important; flex-direction: column; justify-content: center; padding: 10px; }
             .hud-pito-gif img { width: 60px !important; height: 60px !important; margin-right: 0; margin-bottom: 5px; }
             .hud-item { font-size: 0.85rem !important; margin: 3px 5px !important; }
-            [data-testid="stMainViewContainer"] { padding-top: 240px !important; } 
+            [data-testid="stMainViewContainer"] { padding-top: 250px !important; } 
         }
 
         /* OKUNABİLİR BUTONLAR (SİYAH METİN) */
@@ -69,7 +61,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         </style>
     ''', unsafe_allow_html=True)
 
-    # --- 1. HUD VERİLERİ VE PİTO GIF HAZIRLIĞI ---
+    # --- 1. HUD VERİLERİ VE PİTO GIF ---
     p_xp = max(0, 20 - (st.session_state.error_count * 5))
     p_mod = emotions_module.pito_durum_belirle(st.session_state.error_count, st.session_state.cevap_dogru)
     
@@ -81,19 +73,17 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             return f"data:image/gif;base64,{encoded}"
         return ""
 
-    pito_gif_base64 = get_base64_gif(p_mod)
-
-    # DİNAMİK ANİMASYON TETİKLEYİCİSİ (Her seferinde benzersiz class basarak animasyonu zorlar)
+    # DİNAMİK ANİMASYON TETİKLEYİCİSİ (Her seferinde benzersiz ID ile animasyonu zorlar)
     e_count = st.session_state.error_count
-    r_id = random.randint(0, 9999) # Her interaction'da animasyonu tazelemek için
-    err_display = f'<span class="pulse-err-{e_count}-{r_id}">{e_count}</span>' if e_count > 0 else '0'
-    xp_display = f'<span class="pulse-xp-{e_count}-{r_id}">{p_xp}</span>' if e_count > 0 else f'{p_xp}'
+    pulse_id = f"{e_count}-{random.randint(100, 999)}" # Sınıfı her seferinde değiştirir
+    
+    err_display = f'<span class="pulse-trigger-{pulse_id}">{e_count}</span>' if e_count > 0 else '0'
+    xp_display = f'<span class="pulse-trigger-xp-{pulse_id}">{p_xp}</span>' if e_count > 0 else f'{p_xp}'
 
-    # HUD HTML
     st.markdown(f'''
         <div class="cyber-hud">
             <div style="display: flex; align-items: center; flex-direction: inherit;">
-                <div class="hud-pito-gif"><img src="{pito_gif_base64}"></div>
+                <div class="hud-pito-gif"><img src="{get_base64_gif(p_mod)}"></div>
                 <div class="hud-item">👤 <span class="hud-v">{u['ad_soyad']}</span></div>
             </div>
             <div style="display: flex; align-items: center; flex-wrap: wrap; justify-content: center;">
@@ -113,7 +103,6 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
     modul = mufredat[m_idx]
     egz = next((e for e in modul['egzersizler'] if e['id'] == str(u['mevcut_egzersiz'])), modul['egzersizler'][0])
 
-    # TEK İLERLEME ÇUBUĞU (10 MODÜL)
     c_i = modul['egzersizler'].index(egz) + 1
     overall_progress = (m_idx + (c_i / len(modul['egzersizler']))) / total_m
 
@@ -143,7 +132,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             st.markdown(f"### 🎯 GÖREV {egz['id']}")
             st.info(egz['yonerge'])
 
-        # --- 3. EDİTÖR VE HATA MANTIĞI ---
+        # --- 3. EDİTÖR ---
         if not st.session_state.cevap_dogru and st.session_state.error_count < 4:
             if st.session_state.error_count > 0:
                 lvl = f"level_{min(st.session_state.error_count, 4)}"
