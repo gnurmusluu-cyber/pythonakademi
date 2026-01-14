@@ -3,12 +3,12 @@ import pandas as pd
 import random
 
 def mezuniyet_ekrani(u, msgs, pito_goster, supabase, ranks_module):
-    """Mezuniyet töreni, onur kürsüsü ve sistem sıfırlama seçeneği."""
+    """Mezuniyet töreni ve sızdırmaz görsel ayarlar."""
     
-    # --- NOKTA ATIŞI SİBER-ÇERÇEVE SİLİCİ (BALON VE KAR İÇİN) ---
+    # --- NOKTA ATIŞI SİBER-ÇERÇEVE SİLİCİ (HAYALET MODU) ---
     st.markdown("""
         <style>
-        /* Balon ve Kar Tanelerini etkileşimsiz yap ve mavi çerçeveyi kökten sil */
+        /* Sadece balon ve kar tanesi animasyonlarını etkileşimsiz yap (Mavi Çerçeve İlacı) */
         [data-testid="stBalloons"], [data-testid="stSnow"], 
         [data-testid="stBalloons"] *, [data-testid="stSnow"] * {
             pointer-events: none !important;
@@ -17,7 +17,6 @@ def mezuniyet_ekrani(u, msgs, pito_goster, supabase, ranks_module):
             border: none !important;
         }
         
-        /* Siber Sertifika ve Kart Tasarımı */
         .cyber-card {
             text-align:center; border: 2px solid #00E5FF; padding: 30px; 
             border-radius: 20px; background: rgba(0, 229, 255, 0.05);
@@ -56,7 +55,7 @@ def mezuniyet_ekrani(u, msgs, pito_goster, supabase, ranks_module):
             </div>
         """, unsafe_allow_html=True)
         
-        # --- NAVİGASYON VE KONTROL PANELİ ---
+        # --- KUMANDA PANELİ ---
         st.markdown("### ⚙️ Kumanda Paneli")
         b1, b2, b3 = st.columns(3)
         
@@ -71,8 +70,8 @@ def mezuniyet_ekrani(u, msgs, pito_goster, supabase, ranks_module):
                 
         with b3:
             # EĞİTİMİ TEKRAR AL (SIFIRLAMA) PROTOKOLÜ
-            if st.button("🔄 Eğitimi Tekrar Al", type="secondary", help="Tüm ilerlemeni sıfırla ve baştan başla", use_container_width=True, key="reset_btn_master"):
-                # Supabase üzerinde temizlik
+            if st.button("🔄 Eğitimi Tekrar Al", type="secondary", help="Tüm ilerlemeni sıfırla ve 1. Modülden başla", use_container_width=True, key="reset_btn_master"):
+                # Veritabanı Güncelleme: Puanı sıfırla ve 1. Modüle gönder
                 supabase.table("kullanicilar").update({
                     "toplam_puan": 0, 
                     "mevcut_egzersiz": "1.1", 
@@ -80,10 +79,10 @@ def mezuniyet_ekrani(u, msgs, pito_goster, supabase, ranks_module):
                     "rutbe": "🥚 Çömez"
                 }).eq("ogrenci_no", int(u['ogrenci_no'])).execute()
                 
-                # Egzersiz kayıtlarını sil
+                # Geçmiş kayıtları temizle
                 supabase.table("egzersiz_kayitlari").delete().eq("ogrenci_no", int(u['ogrenci_no'])).execute()
                 
-                st.toast("Siber-Hafıza sıfırlandı! Başa dönüyoruz...", icon="🔄")
+                st.toast("Akademi başarıyla sıfırlandı! Siber-yolculuğun baştan başlıyor...", icon="🔄")
                 st.session_state.user = None
                 st.session_state.in_review = False
                 st.rerun()
@@ -91,11 +90,11 @@ def mezuniyet_ekrani(u, msgs, pito_goster, supabase, ranks_module):
     with cr:
         ranks_module.liderlik_tablosu_goster(supabase, current_user=u)
 
-def inceleme_modu(u, mufredat, supabase):
-    """Öğrencinin bitirdiği tüm görevleri ideal çözümler ve çıktılarla gösterir."""
+def inceleme_modu_paneli(u, mufredat, pito_goster, supabase):
+    """Bitmiş görevleri siber-arşivde ideal çözümlerle gösterir."""
+    # p_akademi.py içindeki çağrıya (4 argüman) tam uyum sağlandı
     st.markdown("<h2 style='text-align:center; color:#00E5FF;'>🔍 SİBER-ARŞİV: GEÇMİŞ ÇÖZÜMLER</h2>", unsafe_allow_html=True)
     
-    # Navigasyon Mantığı
     is_graduated = int(u['mevcut_modul']) > len(mufredat)
     geri_metni = "⬅️ Mezuniyet Ekranına Dön" if is_graduated else "⬅️ Eğitime Dön"
     
@@ -103,7 +102,6 @@ def inceleme_modu(u, mufredat, supabase):
         st.session_state.in_review = False; st.rerun()
 
     try:
-        # Tamamlanan egzersizleri çek
         res = supabase.table("egzersiz_kayitlari").select("egz_id").eq("ogrenci_no", int(u['ogrenci_no'])).execute()
         
         if res.data:
@@ -120,9 +118,9 @@ def inceleme_modu(u, mufredat, supabase):
                             st.code(egz.get('cozum', '# Çözüm hazırlanıyor...'), language="python")
                             
                             st.markdown("💻 **Beklenen Konsol Çıktısı:**")
-                            st.markdown(f"<div class='console-box'>{egz.get('beklenen_cikti', 'Çıktı üretiliyor...')}</div>", unsafe_allow_html=True)
+                            st.markdown(f"<div class='console-box'>{egz.get('beklenen_cikti', '...')}</div>", unsafe_allow_html=True)
                             st.divider()
         else:
-            st.info("Henüz tamamlanmış bir görevin bulunmuyor arkadaşım. Biraz kod yazmaya ne dersin?")
+            st.info("Henüz tamamlanmış bir görevin bulunmuyor genç yazılımcı!")
     except Exception as e:
-        st.error(f"Siber-arşiv verisi yüklenirken bir hata oluştu: {e}")
+        st.error(f"Siber-arşiv hatası: {e}")
