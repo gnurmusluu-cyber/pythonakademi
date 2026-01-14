@@ -4,14 +4,14 @@ import os
 import base64
 
 def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fonksiyonu, normalize_fonksiyonu, supabase):
-    # --- 0. SİBER-GÖRSEL ZIRH (ANIMASYON VE OKUNABİLİRLİK MÜHRÜ) ---
+    # --- 0. SİBER-GÖRSEL ZIRH (ANIMASYON, MOBİL UYUM VE OKUNABİLİRLİK) ---
     st.markdown('''
         <style>
         /* STREAMLIT STANDARTLARINI İMHA ET */
         header[data-testid="stHeader"], [data-testid="stDecoration"], footer { display: none !important; }
         .stApp { background-color: #0e1117 !important; }
 
-        /* ANA İÇERİK BOŞLUĞU */
+        /* ANA İÇERİK BOŞLUĞU (BAŞLIK GÖRÜNÜRLÜK GARANTİSİ) */
         [data-testid="stMainViewContainer"] { padding-top: 170px !important; }
 
         /* SABİT ÜST HUD BAR */
@@ -30,20 +30,21 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             box-shadow: 0 0 15px #00E5FF;
         }
 
-        /* --- HATA NUMARASI ANİMASYONU (PULSE PROTOKOLÜ) --- */
+        /* --- HATA NUMARASI ANİMASYONU (DİNAMİK PULSE PROTOKOLÜ) --- */
         @keyframes errorPulse {
             0% { transform: scale(1); color: #00E5FF; text-shadow: none; }
-            50% { transform: scale(1.6); color: #FF0000; text-shadow: 0 0 20px #FF0000, 0 0 40px #FF0000; }
+            50% { transform: scale(1.8); color: #FF0000; text-shadow: 0 0 20px #FF0000, 0 0 40px #FF0000; }
             100% { transform: scale(1); color: #00E5FF; text-shadow: none; }
         }
 
-        .error-val-animate {
+        /* Her sayı değiştiğinde animasyonu tetiklemek için wildcard selector kullanıyoruz */
+        [class^="error-val-anim-"] {
             display: inline-block;
-            animation: errorPulse 0.6s ease-in-out;
-            font-weight: 900;
+            animation: errorPulse 0.7s ease-in-out;
+            font-weight: 950 !important;
         }
 
-        /* MOBİL DÜZENLEME */
+        /* MOBİL DÜZENLEME (HUD ESNETME) */
         @media (max-width: 768px) {
             .cyber-hud { height: 160px !important; flex-direction: column; justify-content: center; padding: 10px; }
             .hud-pito-gif img { width: 60px !important; height: 60px !important; margin-right: 0; margin-bottom: 5px; }
@@ -82,8 +83,9 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
 
     pito_gif_base64 = get_base64_gif(p_mod)
 
-    # Hata sayısını animasyonlu span içine alıyoruz
-    err_display = f'<span class="error-val-animate">{st.session_state.error_count}</span>' if st.session_state.error_count > 0 else f'{st.session_state.error_count}'
+    # HATA SAYISI ANİMASYON MANTIĞI: Her sayı için farklı class basarak animasyonu tetikler
+    e_count = st.session_state.error_count
+    err_display = f'<span class="error-val-anim-{e_count}">{e_count}</span>' if e_count > 0 else '0'
 
     # HUD HTML
     st.markdown(f'''
@@ -109,6 +111,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
     modul = mufredat[m_idx]
     egz = next((e for e in modul['egzersizler'] if e['id'] == str(u['mevcut_egzersiz'])), modul['egzersizler'][0])
 
+    # TEK İLERLEME ÇUBUĞU (10 MODÜL)
     c_i = modul['egzersizler'].index(egz) + 1
     overall_progress = (m_idx + (c_i / len(modul['egzersizler']))) / total_m
 
@@ -169,6 +172,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
                 ilerleme_fonksiyonu(p_xp, st.session_state.current_code, egz['id'], n_id, n_m)
 
         elif st.session_state.error_count >= 4:
+            # --- 4. HATA: ÖZEL MESAJ MÜHRÜ ---
             st.warning("🚨 Bu egzersizden puan alamadın çözümü incele ve devam et")
             st.code(egz['cozum'], language="python")
             st.markdown(f"<div class='console-box'>{egz.get('beklenen_cikti', '...')}</div>", unsafe_allow_html=True)
