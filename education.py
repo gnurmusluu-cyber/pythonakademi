@@ -5,56 +5,62 @@ import base64
 
 def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fonksiyonu, normalize_fonksiyonu, supabase):
     # --- ANIMASYON TOGGLE PROTOKOLÜ (Sonsuz Pulse Re-trigger) ---
-    # Her hata değişiminde animasyon ismini A ve B arasında değiştirerek tarayıcıyı tetikleriz
+    # Tarayıcının animasyonu her seferinde tetiklemesi için A ve B sınıfları arasında geçiş yapılır.
     anim_toggle = "A" if st.session_state.get('error_count', 0) % 2 == 0 else "B"
     
-    # --- 0. SİBER-GÖRSEL ZIRH (ANIMASYON, MOBİL UYUM VE OKUNABİLİRLİK) ---
+    # --- 0. SİBER-GÖRSEL ZIRH (GÜNCEL ÖLÇEKLENDİRME) ---
     st.markdown(f'''
         <style>
         header[data-testid="stHeader"], [data-testid="stDecoration"], footer {{ display: none !important; }}
         .stApp {{ background-color: #0e1117 !important; }}
 
-        /* BAŞLIK GÖRÜNÜRLÜK GARANTİSİ */
+        /* ANA İÇERİK BOŞLUĞU */
         [data-testid="stMainViewContainer"] {{
-            padding-top: 170px !important; 
+            padding-top: 155px !important; 
         }}
 
         .cyber-hud {{
             position: fixed; top: 0; left: 0; right: 0;
-            height: 110px; background-color: #0e1117 !important;
+            height: 100px; background-color: #0e1117 !important;
             border-bottom: 3px solid #00E5FF; z-index: 99999 !important;
             padding: 0 30px; display: flex; justify-content: space-between; align-items: center;
             box-shadow: 0 10px 30px #000000 !important;
         }}
 
-        /* TWO IDENTICAL ANIMATIONS TO FORCE RESTART ON EVERY STATE CHANGE */
+        /* KARAKTER GÖRSELİ ÖLÇEKLENDİRME (60px) */
+        .hud-pito-gif img {{
+            width: 60px; height: 60px; border-radius: 50%; border: 2px solid #00E5FF;
+            object-fit: cover; background: #000; margin-right: 12px;
+            box-shadow: 0 0 10px #00E5FF;
+        }
+
+        /* SİBER-VURGU ANİMASYONU */
         @keyframes cyberPulseA {{
             0% {{ transform: scale(1); color: #00E5FF; text-shadow: none; }}
-            50% {{ transform: scale(1.8); color: #FF0000; text-shadow: 0 0 20px #FF0000, 0 0 40px #FF0000; }}
+            50% {{ transform: scale(1.6); color: #FF0000; text-shadow: 0 0 15px #FF0000; }}
             100% {{ transform: scale(1); color: #00E5FF; text-shadow: none; }}
         }}
         @keyframes cyberPulseB {{
             0% {{ transform: scale(1); color: #00E5FF; text-shadow: none; }}
-            50% {{ transform: scale(1.8); color: #FF0000; text-shadow: 0 0 20px #FF0000, 0 0 40px #FF0000; }}
+            50% {{ transform: scale(1.6); color: #FF0000; text-shadow: 0 0 15px #FF0000; }}
             100% {{ transform: scale(1); color: #00E5FF; text-shadow: none; }}
         }}
 
-        .pulse-active-A {{ display: inline-block; animation: cyberPulseA 0.7s ease-in-out; font-weight: 950 !important; }}
-        .pulse-active-B {{ display: inline-block; animation: cyberPulseB 0.7s ease-in-out; font-weight: 950 !important; }}
+        .pulse-active-A {{ display: inline-block; animation: cyberPulseA 0.6s ease-in-out; font-weight: 950 !important; }}
+        .pulse-active-B {{ display: inline-block; animation: cyberPulseB 0.6s ease-in-out; font-weight: 950 !important; }}
 
         @media (max-width: 768px) {{
-            .cyber-hud {{ height: 160px !important; flex-direction: column; justify-content: center; padding: 10px; }}
-            .hud-pito-gif img {{ width: 60px !important; height: 60px !important; margin-right: 0; margin-bottom: 5px; }}
-            .hud-item {{ font-size: 0.85rem !important; margin: 3px 5px !important; }}
-            [data-testid="stMainViewContainer"] {{ padding-top: 240px !important; }} 
+            .cyber-hud {{ height: 140px !important; flex-direction: column; justify-content: center; padding: 10px; }}
+            .hud-pito-gif img {{ width: 45px !important; height: 45px !important; margin-right: 0; margin-bottom: 5px; }}
+            .hud-item {{ font-size: 0.8rem !important; margin: 2px 5px !important; }}
+            [data-testid="stMainViewContainer"] {{ padding-top: 220px !important; }} 
         }}
 
-        /* OKUNABİLİR BUTONLAR (SİYAH METİN) */
         div.stButton > button {{ background-color: #00E5FF !important; border: none !important; transition: 0.3s; }}
         div.stButton > button p, div.stButton > button span {{ color: #000000 !important; font-weight: 900 !important; }}
         div.stButton > button:hover {{ background-color: #ADFF2F !important; }}
 
-        .hud-item {{ color: #E0E0E0; font-family: 'Fira Code', monospace; font-size: 0.95rem; margin: 0 12px; }}
+        .hud-item {{ color: #E0E0E0; font-family: 'Fira Code', monospace; font-size: 0.9rem; margin: 0 10px; }}
         .hud-v {{ color: #00E5FF; font-weight: bold; text-shadow: 0 0 8px #00E5FF; }}
 
         .console-box {{
@@ -66,7 +72,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         </style>
     ''', unsafe_allow_html=True)
 
-    # --- 1. HUD PREPARATION ---
+    # --- 1. HUD VERİLERİ ---
     e_count = st.session_state.error_count
     p_xp = max(0, 20 - (e_count * 5))
     p_mod = emotions_module.pito_durum_belirle(e_count, st.session_state.cevap_dogru)
@@ -79,7 +85,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             return f"data:image/gif;base64,{encoded}"
         return ""
 
-    # Pulse Logic: Her hata değişiminde benzersiz class (A veya B) atanır
+    # Pulse Sınıfı Seçimi
     pulse_class = f"pulse-active-{anim_toggle}" if e_count > 0 else ""
     err_display = f'<span class="{pulse_class}">{e_count}</span>'
     xp_display = f'<span class="{pulse_class}">{p_xp}</span>'
@@ -98,8 +104,8 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         </div>
     ''', unsafe_allow_html=True)
 
-    # --- 2. ANA BAŞLIK VE İLERLEME (10 Modül Ölçekli) ---
-    st.markdown(f"<h1 style='text-align:center; color:#00E5FF; text-shadow: 0 0 15px #00E5FF; margin-bottom:30px;'>🎓 PİTO PYTHON AKADEMİ</h1>", unsafe_allow_html=True)
+    # --- 2. ANA BAŞLIK VE İLERLEME ---
+    st.markdown(f"<h1 style='text-align:center; color:#00E5FF; text-shadow: 0 0 15px #00E5FF; margin-bottom:25px;'>🎓 PİTO PYTHON AKADEMİ</h1>", unsafe_allow_html=True)
 
     m_idx = int(u['mevcut_modul']) - 1
     total_m = 10 
@@ -107,6 +113,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
     modul = mufredat[m_idx]
     egz = next((e for e in modul['egzersizler'] if e['id'] == str(u['mevcut_egzersiz'])), modul['egzersizler'][0])
 
+    # Tek İlerleme Çubuğu Hesaplama
     c_i = modul['egzersizler'].index(egz) + 1
     overall_progress = (m_idx + (c_i / len(modul['egzersizler']))) / total_m
 
@@ -122,8 +129,6 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
     cl, cr = st.columns([7.5, 2.5])
     
     with cl:
-        # Navigasyon, expander ve editör mantığı (indeks ve fonksiyonlarla tam uyumlu)
-        # ... (Önceki Master kodun stabil yapısı korunmuştur)
         c_nav = st.columns([0.4, 0.4, 0.2])
         with c_nav[0]: st.markdown(f"💬 *{msgs['welcome'].format(ad_k)}*")
         with c_nav[1]:
@@ -138,11 +143,12 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             st.markdown(f"### 🎯 GÖREV {egz['id']}")
             st.info(egz['yonerge'])
 
+        # --- 3. EDİTÖR ---
         if not st.session_state.cevap_dogru and st.session_state.error_count < 4:
             if st.session_state.error_count > 0:
                 lvl = f"level_{min(st.session_state.error_count, 4)}"
-                st.error(f"🚨 **Pito:** {random.choice(msgs['errors'][lvl]).format(ad_k)}")
-                if st.session_state.error_count == 3: st.warning(f"💡 **İpucu:** {egz.get('ipucu', '... ')}")
+                st.error(f"🚨 Pito: {random.choice(msgs['errors'][lvl]).format(ad_k)}")
+                if st.session_state.error_count == 3: st.warning(f"💡 İpucu: {egz.get('ipucu', '... ')}")
 
             if "reset_trigger" not in st.session_state: st.session_state.reset_trigger = 0
             user_code = st.text_area("Siber-Editor", value=egz['sablon'], height=180, key=f"ed_{egz['id']}_{st.session_state.reset_trigger}", label_visibility="collapsed")
@@ -168,7 +174,6 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
                 ilerleme_fonksiyonu(p_xp, st.session_state.current_code, egz['id'], n_id, n_m)
 
         elif st.session_state.error_count >= 4:
-            # --- 4. HATA ÖZEL MESAJI ---
             st.warning("🚨 Bu egzersizden puan alamadın çözümü incele ve devam et")
             st.code(egz['cozum'], language="python")
             st.markdown(f"<div class='console-box'>{egz.get('beklenen_cikti', '...')}</div>", unsafe_allow_html=True)
