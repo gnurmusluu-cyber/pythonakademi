@@ -4,13 +4,11 @@ import os
 import base64
 
 def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fonksiyonu, normalize_fonksiyonu, supabase):
-    # --- 0. SİBER-BETON CSS (MOBİL UYUM & OKUNABİLİRLİK) ---
+    # --- 0. SİBER-BETON CSS (OKUNABİLİRLİK, MOBİL UYUM & BAŞLIK STİLİ) ---
     st.markdown('''
         <style>
         header[data-testid="stHeader"], [data-testid="stDecoration"], footer { display: none !important; }
         .stApp { background-color: #0e1117 !important; }
-
-        [data-testid="stMainViewContainer"] { padding-top: 110px !important; }
 
         /* HUD: SABİT ÜST PANEL */
         .cyber-hud {
@@ -33,9 +31,9 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         /* MOBİL DÜZENLEME (SIKIŞMAYI ÖNLEYEN MÜHÜR) */
         @media (max-width: 768px) {
             .cyber-hud { padding: 10px; flex-direction: column; justify-content: center; height: 150px !important; }
-            [data-testid="stMainViewContainer"] { padding-top: 165px !important; }
             .hud-pito-gif img { width: 65px !important; height: 65px !important; margin-right: 0; margin-bottom: 8px; }
             .hud-item { font-size: 0.85rem !important; margin: 2px 5px !important; }
+            .main-content { padding-top: 170px !important; }
         }
 
         /* OKUNABİLİR SİYAH BUTONLAR */
@@ -43,17 +41,21 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         div.stButton > button p, div.stButton > button span { color: #000000 !important; font-weight: 900 !important; }
         div.stButton > button:hover { background-color: #ADFF2F !important; }
 
+        .main-content { padding-top: 130px; }
         .console-box {
             background-color: #000 !important; color: #ADFF2F !important;
             border: 1px solid #333; border-radius: 8px;
             padding: 15px; font-family: 'Courier New', monospace; margin: 10px 0;
         }
+        
+        /* ÇERÇEVE İMHASI */
+        * :focus { outline: none !important; box-shadow: none !important; }
         </style>
     ''', unsafe_allow_html=True)
 
     # --- 1. HUD VE GIF HAZIRLIĞI ---
     p_xp = max(0, 20 - (st.session_state.error_count * 5))
-    p_mod = emotions_module.pito_dur_belirle(st.session_state.error_count, st.session_state.cevap_dogru) if hasattr(emotions_module, 'pito_dur_belirle') else emotions_module.pito_durum_belirle(st.session_state.error_count, st.session_state.cevap_dogru)
+    p_mod = emotions_module.pito_durum_belirle(st.session_state.error_count, st.session_state.cevap_dogru)
     
     def get_base64_gif(mod):
         path = os.path.join(os.path.dirname(__file__), "assets", f"pito_{mod}.gif")
@@ -80,17 +82,20 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
     ''', unsafe_allow_html=True)
 
     # --- 2. ANA İÇERİK ---
-    st.markdown('<div class="main-container">', unsafe_allow_html=True)
+    st.markdown('<div class="main-content">', unsafe_allow_html=True)
+    
+    # --- EKSİK BAŞLIK GERİ GELDİ ---
+    st.markdown(f"<h1 style='text-align:center; color:#00E5FF; text-shadow: 0 0 15px #00E5FF; margin-bottom:30px;'>🎓 PİTO PYTHON AKADEMİ</h1>", unsafe_allow_html=True)
+
     m_idx = int(u['mevcut_modul']) - 1
-    total_m = 10 # Toplam modül sayısı 10 olarak mühürlendi
+    total_m = 10 
     ad_k = u['ad_soyad'].split()[0]
     modul = mufredat[m_idx]
     egz = next((e for e in modul['egzersizler'] if e['id'] == str(u['mevcut_egzersiz'])), modul['egzersizler'][0])
 
-    # --- TEK İLERLEME ÇUBUĞU (10 MODÜL ÜZERİNDEN HASSAS HESAP) ---
+    # --- UNIFIED PROGRESS BAR (10 MODÜL ÜZERİNDEN) ---
     c_i = modul['egzersizler'].index(egz) + 1
     t_i = len(modul['egzersizler'])
-    # Global İlerleme: (Geçilen modül sayısı + mevcut modüldeki görev oranı) / 10
     overall_progress = (m_idx + (c_i / t_i)) / total_m
 
     st.markdown(f'''
@@ -124,19 +129,19 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             if st.session_state.error_count > 0:
                 lvl = f"level_{min(st.session_state.error_count, 4)}"
                 st.error(f"🚨 **Pito:** {random.choice(msgs['errors'][lvl]).format(ad_k)}")
-                if st.session_state.error_count == 3: st.warning(f"💡 **İpucu:** {egz.get('ipucu', 'Kodu tekrar incele!')}")
+                if st.session_state.error_count == 3: st.warning(f"💡 **İpucu:** {egz.get('ipucu', '... ')}")
 
             if "reset_trigger" not in st.session_state: st.session_state.reset_trigger = 0
             user_code = st.text_area("Siber-Editor", value=egz['sablon'], height=180, key=f"ed_{egz['id']}_{st.session_state.reset_trigger}", label_visibility="collapsed")
             
-            b_btns = st.columns([4, 1.2])
-            with b_btns[0]:
+            b1, b2 = st.columns([4, 1.2])
+            with b1:
                 if st.button("KODU KONTROL ET 🚀", type="primary", use_container_width=True):
                     st.session_state.current_code = user_code
                     if normalize_fonksiyonu(user_code) == normalize_fonksiyonu(egz['dogru_cevap_kodu']):
                         st.session_state.cevap_dogru = True; st.balloons(); st.rerun()
                     else: st.session_state.error_count += 1; st.rerun()
-            with b_btns[1]:
+            with b2:
                 if st.button("🔄 SIFIRLA", use_container_width=True):
                     st.session_state.reset_trigger += 1; st.rerun()
 
@@ -150,7 +155,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
                 ilerleme_fonksiyonu(p_xp, st.session_state.current_code, egz['id'], n_id, n_m)
 
         elif st.session_state.error_count >= 4:
-            st.warning("🚨 Çözümü incele ve devam et:")
+            st.warning("🚨 Çözümü incele:")
             st.code(egz['cozum'], language="python")
             st.markdown(f"<div class='console-box'>{egz.get('beklenen_cikti', '...')}</div>", unsafe_allow_html=True)
             if st.button("DEVAM ET ➡️", use_container_width=True):
