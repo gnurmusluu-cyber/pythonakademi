@@ -7,10 +7,10 @@ import pandas as pd
 def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fonksiyonu, normalize_fonksiyonu, supabase):
     # --- DURUM KONTROLÜ ---
     e_count = st.session_state.get('error_count', 0)
-    # Her hatada animasyonu tetiklemek için toggle (A/B)
+    # Çift kanal toggle: Hata sayısı değiştikçe A ve B arasında geçiş yapar.
     err_anim_toggle = "A" if e_count % 2 == 0 else "B"
     
-    # --- 0. SİBER-GÖRSEL ZIRH (75PX PITO VE HUD ONARIMI) ---
+    # --- 0. SİBER-GÖRSEL ZIRH (ÇİFT KANAL RESETLEME) ---
     st.markdown(f'''
         <style>
         header[data-testid="stHeader"], [data-testid="stDecoration"], footer {{ display: none !important; }}
@@ -51,6 +51,15 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         }}
         .terminal-label {{ font-size: 0.7rem; color: #888; text-transform: uppercase; letter-spacing: 1px; }}
 
+        /* ÇİFT KANALLI PULSE - TARAYICIYI RESETLEMEYE ZORLAR */
+        @keyframes pulseErrA {{ 0%, 100% {{ transform: scale(1); }} 50% {{ transform: scale(1.5); color: #FF0000; }} }}
+        @keyframes pulseErrB {{ 0%, 100% {{ transform: scale(1); }} 50% {{ transform: scale(1.5); color: #FF0000; }} }}
+        @keyframes successPulse {{ 0%, 100% {{ transform: scale(1); }} 50% {{ transform: scale(1.6); color: #ADFF2F; }} }}
+
+        .err-p-A {{ display: inline-block; animation: pulseErrA 0.7s ease-in-out; font-weight: 950 !important; }}
+        .err-p-B {{ display: inline-block; animation: pulseErrB 0.7s ease-in-out; font-weight: 950 !important; }}
+        .success-pulse {{ display: inline-block; animation: successPulse 0.8s ease-in-out; font-weight: 950 !important; }}
+
         /* ÖĞRENCİ STATS KARTI */
         .my-stats-card {{
             background: rgba(0, 229, 255, 0.05); border: 1px solid rgba(0, 229, 255, 0.2);
@@ -60,12 +69,6 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         .my-stat-box {{ background: rgba(0, 0, 0, 0.3); padding: 8px; border-radius: 8px; border: 1px solid rgba(0, 229, 255, 0.1); }}
         .my-stat-label {{ font-size: 0.65rem; color: #888; text-transform: uppercase; font-weight: bold; }}
         .my-stat-val {{ font-size: 1.1rem; color: #ADFF2F; font-weight: 950; font-family: monospace; }}
-
-        /* ANİMASYONLAR */
-        @keyframes pulseErr {{ 0%, 100% {{ transform: scale(1); }} 50% {{ transform: scale(1.4); color: #FF0000; }} }}
-        @keyframes successPulse {{ 0%, 100% {{ transform: scale(1); }} 50% {{ transform: scale(1.6); color: #ADFF2F; }} }}
-        .err-p-A, .err-p-B {{ display: inline-block; animation: pulseErr 0.7s ease-in-out; font-weight: 950 !important; }}
-        .success-pulse {{ display: inline-block; animation: successPulse 0.8s ease-in-out; font-weight: 950 !important; }}
         </style>
     ''', unsafe_allow_html=True)
 
@@ -120,7 +123,6 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
     cl, cr = st.columns([7.5, 2.5])
     
     with cl:
-        # Menü Alanı
         cn1, cn2, cn3 = st.columns([0.4, 0.4, 0.2])
         with cn1: st.markdown(f"💬 *{msgs['welcome'].format(u['ad_soyad'].split()[0])}*")
         with cn2: 
