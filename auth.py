@@ -4,14 +4,14 @@ import os
 import base64
 
 def login_ekrani(supabase, msgs, load_pito, liderlik_tablosu_fonksiyonu):
-    # --- 0. SİBER-KONUŞMA BALONU VE TEMİZLİK CSS ---
+    # --- 0. SİBER-GÖRSEL TASARIM (120PX PİTO & TEMİZ HUD) ---
     st.markdown('''
         <style>
         /* STANDARTLARI İMHA ET */
         header[data-testid="stHeader"], [data-testid="stDecoration"], footer { display: none !important; }
         .stApp { background-color: #0e1117 !important; }
 
-        /* ANA KONTEYNER (SADE VE FERAH) */
+        /* ANA KONTEYNER */
         [data-testid="stMainViewContainer"] {
             padding-top: 60px !important; 
         }
@@ -26,60 +26,66 @@ def login_ekrani(supabase, msgs, load_pito, liderlik_tablosu_fonksiyonu):
             margin-bottom: 5px;
         }
 
-        /* --- SİBER KONUŞMA BALONU (KUYRUKLU) --- */
+        /* --- GÖRKEMLİ SİBER KONUŞMA BALONU --- */
         .pito-bubble {
             position: relative;
             background: #161b22;
-            color: #ADFF2F; /* Siber-Yeşil yazı */
-            border: 1px solid #00E5FF;
-            padding: 18px;
-            border-radius: 15px;
-            margin-left: 20px;
+            color: #ADFF2F;
+            border: 2px solid #00E5FF;
+            padding: 20px;
+            border-radius: 20px;
+            margin-left: 25px;
             font-family: 'Fira Code', monospace;
-            font-size: 1.05rem;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            font-size: 1.1rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        /* Konuşma Balonu Kuyruğu */
+        /* Konuşma Balonu Kuyruğu (120px'e göre hizalı) */
         .pito-bubble:after {
             content: '';
             position: absolute;
-            left: -15px;
-            top: 25px;
+            left: -20px;
+            top: 45px; /* 120px'lik kafa için orta hizalama */
             width: 0;
             height: 0;
-            border-top: 10px solid transparent;
-            border-right: 15px solid #00E5FF;
-            border-bottom: 10px solid transparent;
+            border-top: 15px solid transparent;
+            border-right: 20px solid #00E5FF;
+            border-bottom: 15px solid transparent;
         }
 
-        /* 75PX PİTO MÜHRÜ */
+        /* 120PX GÖRKEMLİ PİTO */
         .pito-login-img img {
-            width: 75px !important;
-            height: 75px !important;
+            width: 120px !important;
+            height: 120px !important;
             border-radius: 50%;
-            border: 2px solid #00E5FF;
-            box-shadow: 0 0 15px rgba(0, 229, 255, 0.4);
+            border: 3px solid #00E5FF;
+            box-shadow: 0 0 25px rgba(0, 229, 255, 0.5);
+            transition: 0.3s ease-in-out;
+        }
+        
+        .pito-login-img img:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 40px rgba(0, 229, 255, 0.8);
         }
 
-        /* OKUNABİLİR BUTONLAR (SİYAH METİN) */
+        /* BUTONLAR (SİYAH METİN) */
         div.stButton > button { background-color: #00E5FF !important; border: none !important; transition: 0.3s; width: 100%; }
         div.stButton > button p, div.stButton > button span { color: #000000 !important; font-weight: 900 !important; }
         div.stButton > button:hover { background-color: #ADFF2F !important; box-shadow: 0 0 20px #ADFF2F; }
 
-        /* MOBİL DÜZENLEME (YAN YANA MÜHRÜ) */
+        /* MOBİL DÜZENLEME */
         @media (max-width: 768px) {
             .academy-title { font-size: 1.7rem !important; }
             .pito-login-header { 
                 flex-direction: row !important; 
                 display: flex !important; 
                 align-items: center !important; 
-                gap: 10px !important;
-                margin-bottom: 20px !important;
+                gap: 12px !important;
+                margin-bottom: 25px !important;
             }
-            .pito-bubble { font-size: 0.9rem !important; padding: 12px !important; margin-left: 10px !important; }
-            .pito-bubble:after { top: 15px !important; }
-            .pito-login-img img { width: 65px !important; height: 65px !important; }
+            .pito-bubble { font-size: 0.9rem !important; padding: 15px !important; margin-left: 10px !important; }
+            .pito-bubble:after { top: 25px !important; left: -15px !important; border-right-width: 15px !important; }
+            .pito-login-img img { width: 85px !important; height: 85px !important; }
             [data-testid="stMainViewContainer"] { padding-top: 30px !important; }
         }
         </style>
@@ -90,19 +96,19 @@ def login_ekrani(supabase, msgs, load_pito, liderlik_tablosu_fonksiyonu):
     
     with col_in:
         st.markdown('<div class="academy-title">🎓 PİTO PYTHON AKADEMİ</div>', unsafe_allow_html=True)
-        st.markdown('<p style="text-align:center; color:#555; margin-bottom:30px;">Nusaybin Süleyman Bölünmez Anadolu Lisesi</p>', unsafe_allow_html=True)
+        st.markdown('<p style="text-align:center; color:#555; margin-bottom:40px;">Nusaybin Süleyman Bölünmez Anadolu Lisesi</p>', unsafe_allow_html=True)
         
         # --- A. GİRİŞ VE SORGULAMA ---
         if not st.session_state.show_reg and st.session_state.temp_user is None:
             st.markdown('<div class="pito-login-header">', unsafe_allow_html=True)
-            c1, c2 = st.columns([1, 4])
+            # Görselin büyüklüğü için sütun oranını 1:3 yaptık
+            c1, c2 = st.columns([1.2, 3])
             with c1:
                 st.markdown('<div class="pito-login-img">', unsafe_allow_html=True)
                 load_pito("merhaba")
                 st.markdown('</div>', unsafe_allow_html=True)
             with c2:
                 msg = random.choice(msgs['login_welcome'])
-                # Kullanıcının istediği o özel vurguyu yapıyoruz
                 st.markdown(f"<div class='pito-bubble'>💬 <b>Pito:</b> {msg}</div>", unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
             
@@ -132,7 +138,7 @@ def login_ekrani(supabase, msgs, load_pito, liderlik_tablosu_fonksiyonu):
                     supabase.table("kullanicilar").insert(nu).execute()
                     st.session_state.user = nu; st.session_state.show_reg = False; st.rerun()
                 else: st.error("Lütfen tam adını yaz arkadaşım!")
-            if c_r2.button("⬅️ VAZGEÇ"):
+            if c_reg2.button("⬅️ VAZGEÇ"):
                 st.session_state.show_reg = False; st.rerun()
 
         # --- C. ONAY DÖNGÜSÜ ---
@@ -147,5 +153,5 @@ def login_ekrani(supabase, msgs, load_pito, liderlik_tablosu_fonksiyonu):
                 st.session_state.temp_user = None; st.rerun()
 
     with col_tab:
-        # Ranks.py zaten kendi başlığını (Onur Kürsüsü) basıyor, biz sadece çağırıyoruz.
+        # Ranks.py zaten kendi başlığını (Onur Kürsüsü) basıyor.
         liderlik_tablosu_fonksiyonu()
