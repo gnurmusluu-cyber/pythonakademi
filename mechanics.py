@@ -5,22 +5,33 @@ import random
 def mezuniyet_ekrani(u, msgs, pito_goster, supabase, ranks_module):
     """Mezuniyet töreni, onur kürsüsü ve sıfırlama seçeneği."""
     
-    # --- SİBER-ÇERÇEVE SİLİCİ CSS ---
-    # Kartaneleri ve balonların etrafındaki mavi çerçeveyi (outline) yok eder.
+    # --- AGRESİF SİBER-ÇERÇEVE SİLİCİ CSS ---
+    # Sayfadaki her şeyin (butonlar, yazılar, animasyonlar) mavi çerçevesini kökten keser.
     st.markdown("""
         <style>
-        .stMarkdown span:focus {
+        /* Tüm tarayıcı odak çerçevelerini (focus ring) yok et */
+        * :focus {
             outline: none !important;
             box-shadow: none !important;
         }
-        span:focus-visible {
+        * :focus-visible {
             outline: none !important;
+        }
+        /* Streamlit özel buton ve yazı odaklarını temizle */
+        div[data-testid="stMarkdownContainer"] :focus {
+            outline: none !important;
+        }
+        button:focus {
+            outline: none !important;
+            box-shadow: none !important;
         }
         </style>
     """, unsafe_allow_html=True)
 
+    # Kutlama efektleri
     st.balloons()
     st.snow()
+    
     st.markdown("<div class='academy-header'>🎓 PİTO PYTHON AKADEMİ MEZUNİYETİ</div>", unsafe_allow_html=True)
     
     cl, cr = st.columns([7, 3])
@@ -51,16 +62,12 @@ def mezuniyet_ekrani(u, msgs, pito_goster, supabase, ranks_module):
         # Sıfırlama ve İnceleme Seçenekleri
         col_b1, col_b2 = st.columns(2)
         with col_b1:
-            if st.button("🔍 Geçmiş Egzersizleri İncele", use_container_width=True):
+            if st.button("🔍 Geçmiş egzersizler", use_container_width=True, key="rev_btn_mezun"):
                 st.session_state.in_review = True; st.rerun()
         with col_b2:
-            st.warning("⚠️ Dikkat: Sıfırlama işlemi geri alınamaz!")
-            if st.button("🔄 Akademiyi Sıfırla", use_container_width=True):
-                supabase.table("kullanicilar").update({
-                    "toplam_puan": 0, "mevcut_egzersiz": "1.1", "mevcut_modul": 1, "rutbe": "🥚 Çömez"
-                }).eq("ogrenci_no", int(u['ogrenci_no'])).execute()
-                supabase.table("egzersiz_kayitlari").delete().eq("ogrenci_no", int(u['ogrenci_no'])).execute()
-                st.session_state.user = None; st.rerun()
+            if st.button("🚪 Çıkış", help="Ana sayfaya dön", use_container_width=True, key="exit_btn_mezun"):
+                st.session_state.user = None
+                st.session_state.in_review = False; st.rerun()
 
     with cr:
         ranks_module.liderlik_tablosu_goster(supabase, current_user=u)
@@ -72,7 +79,7 @@ def inceleme_modu(u, mufredat, supabase):
     graduated = u.get('mevcut_modul') == 11
     geri_metni = "⬅️ Ana Sayfaya Dön" if graduated else "⬅️ Eğitime Dön"
     
-    if st.button(geri_metni, use_container_width=True):
+    if st.button(geri_metni, use_container_width=True, key="back_to_edu"):
         st.session_state.in_review = False; st.rerun()
 
     try:
