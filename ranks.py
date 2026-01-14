@@ -8,78 +8,83 @@ def rütbe_ata(xp):
     return "🥚 Çömez", "badge-comez"
 
 def liderlik_tablosu_goster(supabase, current_user=None):
-    # --- 0. OKUNABİLİRLİK VE KONTRAST MÜHRÜ ---
+    # --- 0. MAKSİMUM OKUNABİLİRLİK VE KONTRAST MÜHRÜ ---
     st.markdown('''
         <style>
-        /* ANA BAŞLIK: NET VE GÜÇLÜ */
-        .cyber-title {
-            color: #FFFFFF;
+        /* SİBER-KOMUTA ANA BAŞLIĞI */
+        .cyber-header-v2 {
+            border-left: 5px solid #00E5FF;
+            padding-left: 15px;
+            margin-bottom: 25px;
+            background: linear-gradient(90deg, rgba(0, 229, 255, 0.05), transparent);
+        }
+        .cyber-header-v2 h3 {
+            color: #FFFFFF !important;
             font-family: 'Fira Code', monospace;
-            font-size: 1.2rem;
-            font-weight: 900;
-            text-align: center;
+            font-size: 1.3rem !important;
+            font-weight: 900 !important;
+            margin: 0;
+            text-transform: uppercase;
             letter-spacing: 2px;
-            margin-bottom: 20px;
-            text-shadow: 0 0 10px rgba(0, 229, 255, 0.8);
         }
 
-        /* TAB TASARIMI (OKUNABİLİRLİK ODAKLI) */
-        .stTabs [data-baseweb="tab-list"] { 
-            gap: 10px; 
-            border-bottom: 1px solid rgba(0, 229, 255, 0.2);
+        /* TAB TASARIMI: FİZİKSEL PANEL TUŞLARI (EN YÜKSEK KONTRAST) */
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 12px;
+            background-color: #0e1117;
+            padding: 8px;
+            border-radius: 10px;
         }
         
         .stTabs [data-baseweb="tab"] {
-            background-color: transparent !important;
-            color: #888888 !important; /* Pasifken gri, göz yormaz */
-            font-size: 0.9rem !important;
-            font-weight: 600 !important;
-            padding: 10px 15px !important;
-            transition: 0.3s;
+            background-color: #1c2128 !important; /* Koyu ve Net Arka Plan */
+            color: #AAAAAA !important; 
+            border: 1px solid #30363d !important;
+            border-radius: 6px !important;
+            padding: 12px 25px !important;
+            font-weight: 800 !important;
+            font-size: 1rem !important;
+            transition: 0.2s;
         }
 
-        /* TIKLANDIĞINDA (AKTİF DURUM) */
+        /* AKTİF TUŞ: SİYAH ÜZERİNE PARLAK CYAN (OKUNABİLİRLİK ZİRVESİ) */
         .stTabs [aria-selected="true"] {
-            color: #00E5FF !important; /* Parlak Cyan metin */
-            background-color: rgba(0, 229, 255, 0.1) !important;
-            border-bottom: 3px solid #00E5FF !important;
-            text-shadow: 0 0 8px rgba(0, 229, 255, 0.5);
+            background-color: #00E5FF !important; 
+            color: #000000 !important; /* Siyah Metin, Beyazdan daha iyi okunur */
+            border: 1px solid #FFFFFF !important;
+            box-shadow: 0 0 15px rgba(0, 229, 255, 0.5);
         }
 
-        /* ŞAMPİYON PANO (ZARİF & NET) */
-        .champion-glass-pano {
-            background: rgba(0, 229, 255, 0.08);
-            border: 1px solid #00E5FF;
+        /* ŞAMPİYON PANO: KOMUTA EKRANI */
+        .champion-command-box {
+            background-color: #000000;
+            border: 2px solid #ADFF2F;
             border-radius: 12px;
-            padding: 15px;
+            padding: 20px;
             text-align: center;
-            margin-bottom: 25px;
+            margin-bottom: 30px;
         }
-        .pano-sub { color: #ADFF2F; font-size: 0.75rem; font-weight: 800; letter-spacing: 2px; }
-        .pano-main { color: #FFFFFF; font-size: 1.7rem; font-weight: 950; margin: 5px 0; }
+        .cmd-title { color: #ADFF2F; font-size: 0.85rem; font-weight: 900; letter-spacing: 2px; }
+        .cmd-value { color: #FFFFFF; font-size: 1.9rem; font-weight: 950; margin-top: 5px; text-shadow: 0 0 10px rgba(255,255,255,0.3); }
 
-        /* LİSTE TASARIMI */
-        .rank-scroll-box { max-height: 400px; overflow-y: auto; padding-right: 5px; }
-        .rank-scroll-box::-webkit-scrollbar { width: 3px; }
-        .rank-scroll-area::-webkit-scrollbar-thumb { background: #00E5FF; }
+        /* VERİ LİSTESİ */
+        .rank-scroll-v3 { max-height: 420px; overflow-y: auto; padding-right: 10px; }
+        .rank-scroll-v3::-webkit-scrollbar { width: 5px; }
+        .rank-scroll-v3::-webkit-scrollbar-thumb { background: #00E5FF; border-radius: 10px; }
 
-        .rank-item {
+        .data-row {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 12px 10px;
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 8px;
-            margin-bottom: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 10px;
+            padding: 14px 18px;
+            margin-bottom: 10px;
         }
-        
-        .is-me-item { 
-            border: 1px solid #ADFF2F !important; 
-            background: rgba(173, 255, 47, 0.05) !important; 
-        }
+        .is-me-highlight { border: 2px solid #ADFF2F !important; background: #0d1117 !important; }
 
-        .item-rank-num { color: #00E5FF; font-family: 'Fira Code', monospace; font-weight: bold; width: 30px; }
-        .item-name { color: #FFFFFF; font-size: 0.95rem; font-weight: 600; }
-        .item-xp { color: #ADFF2F; font-weight: bold; font-family: 'Fira Code', monospace; font-size: 1rem; }
+        .row-rank { color: #00E5FF; font-weight: 950; font-size: 1.2rem; width: 40px; }
+        .row-name { color: #FFFFFF; font-weight: 700; font-size: 1.05rem; }
+        .row-xp { color: #ADFF2F; font-family: 'Fira Code', monospace; font-weight: 900; font-size: 1.15rem; }
         </style>
     ''', unsafe_allow_html=True)
 
@@ -87,41 +92,41 @@ def liderlik_tablosu_goster(supabase, current_user=None):
         res = supabase.table("kullanicilar").select("*").execute()
         df = pd.DataFrame(res.data) if res.data else pd.DataFrame()
 
-        # --- 1. ŞAMPİYON PANO (BAĞIMSIZ ÜST PANEL) ---
+        # --- 1. KOMUTA PANOSU (ŞAMPİYON) ---
         if not df.empty:
             class_stats = df.groupby('sinif')['toplam_puan'].mean().sort_values(ascending=False).reset_index()
             winner = class_stats.iloc[0]
             st.markdown(f'''
-                <div class="champion-glass-pano">
-                    <div class="pano-sub">👑 SİBER LİDER ŞUBE</div>
-                    <div class="pano-main">{winner['sinif']}</div>
-                    <div style="color:#00E5FF; font-size:0.8rem; font-family:monospace; font-weight:bold;">PUAN ORTALAMASI: {int(winner['toplam_puan'])} XP</div>
+                <div class="champion-command-box">
+                    <div class="cmd-title">🛰️ ZİRVEDEKİ ŞUBE KOMUTANLIĞI</div>
+                    <div class="cmd-value">{winner['sinif']}</div>
+                    <div style="color:#ADFF2F; font-size:0.95rem; font-weight:bold; font-family:monospace; margin-top:5px;">AVG_SCORE: {int(winner['toplam_puan'])} XP</div>
                 </div>
             ''', unsafe_allow_html=True)
 
         # --- 2. ANA BAŞLIK ---
-        st.markdown('<div class="cyber-title">ONUR KÜRSÜSÜ</div>', unsafe_allow_html=True)
+        st.markdown('<div class="cyber-header-v2"><h3>Onur Kürsüsü</h3></div>', unsafe_allow_html=True)
 
-        # --- 3. YÜKSEK KONTRASTLI TABLAR ---
-        t1, t2 = st.tabs(["🌎 Okul Geneli", "📍 Sınıf Sıralamam"])
+        # --- 3. YÜKSEK KONTRASTLI PANEL TUŞLARI ---
+        t1, t2 = st.tabs(["🌍 OKUL LİDERLERİ", "📍 SINIF SIRALAMAM"])
         
         with t1:
             if not df.empty:
                 top_okul = df.sort_values(by="toplam_puan", ascending=False).head(20)
-                st.markdown('<div class="rank-scroll-box">', unsafe_allow_html=True)
+                st.markdown('<div class="rank-scroll-v3">', unsafe_allow_html=True)
                 for i, r in enumerate(top_okul.itertuples(), 1):
                     rn, rc = rütbe_ata(r.toplam_puan)
                     icon = "🥇" if i == 1 else "🥈" if i == 2 else "🥉" if i == 3 else f"{i:02d}"
                     st.markdown(f'''
-                        <div class="rank-item">
-                            <div style="display:flex; align-items:center; gap:12px;">
-                                <span class="item-rank-num">{icon}</span>
+                        <div class="data-row">
+                            <div style="display:flex; align-items:center; gap:15px;">
+                                <span class="row-rank">{icon}</span>
                                 <div>
-                                    <div class="item-name">{r.ad_soyad[:20]}</div>
-                                    <span class="badge-mini {rc}" style="font-size:0.65rem; padding:2px 6px; border-radius:4px; font-weight:800; text-transform:uppercase;">{rn}</span>
+                                    <div class="row-name">{r.ad_soyad[:20]}</div>
+                                    <span class="badge-v3 {rc}" style="font-size:0.65rem; padding:2px 8px; border-radius:4px; font-weight:900; text-transform:uppercase;">{rn}</span>
                                 </div>
                             </div>
-                            <div class="item-xp">{int(r.toplam_puan)}</div>
+                            <div class="row-xp">{int(r.toplam_puan)} XP</div>
                         </div>
                     ''', unsafe_allow_html=True)
                 st.markdown('</div>', unsafe_allow_html=True)
@@ -129,23 +134,23 @@ def liderlik_tablosu_goster(supabase, current_user=None):
         with t2:
             if current_user and not df.empty:
                 df_sinif = df[df['sinif'] == current_user['sinif']].sort_values(by="toplam_puan", ascending=False)
-                st.markdown('<div class="rank-scroll-box">', unsafe_allow_html=True)
+                st.markdown('<div class="rank-scroll-v3">', unsafe_allow_html=True)
                 for i, r in enumerate(df_sinif.itertuples(), 1):
                     rn, rc = rütbe_ata(r.toplam_puan)
-                    is_me = "is-me-item" if r.ogrenci_no == current_user['ogrenci_no'] else ""
+                    is_me = "is-me-highlight" if r.ogrenci_no == current_user['ogrenci_no'] else ""
                     st.markdown(f'''
-                        <div class="rank-item {is_me}">
-                            <div style="display:flex; align-items:center; gap:12px;">
-                                <span class="item-rank-num">#{i:02d}</span>
+                        <div class="data-row {is_me}">
+                            <div style="display:flex; align-items:center; gap:15px;">
+                                <span class="row-rank">#{i:02d}</span>
                                 <div>
-                                    <div class="item-name">{r.ad_soyad[:20]}</div>
-                                    <span class="badge-mini {rc}" style="font-size:0.65rem; padding:2px 6px; border-radius:4px; font-weight:800; text-transform:uppercase;">{rn}</span>
+                                    <div class="row-name">{r.ad_soyad[:20]}</div>
+                                    <span class="badge-v3 {rc}" style="font-size:0.65rem; padding:2px 8px; border-radius:4px; font-weight:900; text-transform:uppercase;">{rn}</span>
                                 </div>
                             </div>
-                            <div class="item-xp">{int(r.toplam_puan)}</div>
+                            <div class="row-xp">{int(r.toplam_puan)} XP</div>
                         </div>
                     ''', unsafe_allow_html=True)
                 st.markdown('</div>', unsafe_allow_html=True)
 
     except Exception as e:
-        st.error(f"VERİ HATASI: {e}")
+        st.error(f"RANK_DATA_SYNC_ERR: {e}")
