@@ -4,7 +4,7 @@ import os
 import base64
 
 def login_ekrani(supabase, msgs, load_pito, liderlik_tablosu_fonksiyonu):
-    # --- 0. SİBER-GÖRSEL TASARIM (75PX & MOBİL YAN YANA MÜHRÜ) ---
+    # --- 0. SİBER-ESTETİK CSS (GİRİŞ ÖZEL) ---
     st.markdown('''
         <style>
         /* STANDARTLARI GİZLE */
@@ -13,7 +13,7 @@ def login_ekrani(supabase, msgs, load_pito, liderlik_tablosu_fonksiyonu):
 
         /* ANA KONTEYNER BOŞLUĞU */
         [data-testid="stMainViewContainer"] {
-            padding-top: 100px !important; 
+            padding-top: 80px !important; 
         }
 
         .auth-card {
@@ -60,7 +60,7 @@ def login_ekrani(supabase, msgs, load_pito, liderlik_tablosu_fonksiyonu):
         div.stButton > button p, div.stButton > button span { color: #000000 !important; font-weight: 900 !important; }
         div.stButton > button:hover { background-color: #ADFF2F !important; box-shadow: 0 0 15px #ADFF2F; }
 
-        /* MOBİL DÜZENLEME (PİTO VE İSİM YAN YANA) */
+        /* MOBİL DÜZENLEME (YAN YANA GÖRÜNÜM) */
         @media (max-width: 768px) {
             .academy-title { font-size: 1.6rem !important; }
             .pito-login-header { 
@@ -71,10 +71,10 @@ def login_ekrani(supabase, msgs, load_pito, liderlik_tablosu_fonksiyonu):
                 margin-bottom: 15px !important;
             }
             .pito-login-img img {
-                width: 60px !important;
-                height: 60px !important;
+                width: 65px !important;
+                height: 65px !important;
             }
-            [data-testid="stMainViewContainer"] { padding-top: 50px !important; }
+            [data-testid="stMainViewContainer"] { padding-top: 40px !important; }
         }
         </style>
     ''', unsafe_allow_html=True)
@@ -90,7 +90,7 @@ def login_ekrani(supabase, msgs, load_pito, liderlik_tablosu_fonksiyonu):
         
         # --- A. GİRİŞ VE SORGULAMA ---
         if not st.session_state.show_reg and st.session_state.temp_user is None:
-            # Mobilde yan yana görünüm için özel wrapper class (pito-login-header)
+            # Mobilde yan yana görünüm wrapper'ı
             st.markdown('<div class="pito-login-header">', unsafe_allow_html=True)
             c1, c2 = st.columns([1, 3])
             with c1:
@@ -117,14 +117,14 @@ def login_ekrani(supabase, msgs, load_pito, liderlik_tablosu_fonksiyonu):
                 else:
                     st.warning("Numaranı yazmadan siber-geçit açılmaz!")
 
-        # --- B. KAYIT VE ONAY AKIŞLARI (Aynı Görsel Standartla) ---
+        # --- B. KAYIT DÖNGÜSÜ ---
         elif st.session_state.show_reg:
-            st.markdown(f"<div class='pito-bubble'>✨ <b>Yeni yetenek!</b> <br> {st.session_state.user_num} numarasını ilk kez görüyorum. Kaydını yapalım!</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='pito-bubble'>✨ <b>Yeni bir yetenek!</b> <br> {st.session_state.user_num} numarasını ilk kez görüyorum. Hadi seni kaydedelim!</div>", unsafe_allow_html=True)
             name = st.text_input("Adın ve Soyadın:", placeholder="Örn: Ali Yılmaz")
             sinif = st.selectbox("Sınıfın:", ["9-A", "9-B", "10-A", "10-B", "11-A", "11-B", "12-A", "12-B"])
             
-            c_r1, c_r2 = st.columns(2)
-            with c_r1:
+            c_reg1, c_reg2 = st.columns(2)
+            with c_reg1:
                 if st.button("✨ KAYDI TAMAMLA"):
                     if name and len(name.split()) >= 2:
                         nu = {"ogrenci_no": st.session_state.user_num, "ad_soyad": name, "sinif": sinif, "toplam_puan": 0, "mevcut_egzersiz": "1.1", "mevcut_modul": 1, "rutbe": "🥚 Çömez"}
@@ -133,20 +133,21 @@ def login_ekrani(supabase, msgs, load_pito, liderlik_tablosu_fonksiyonu):
                         st.session_state.show_reg = False
                         st.rerun()
                     else:
-                        st.error("Lütfen tam adını yaz arkadaşım!")
-            with c_r2:
+                        st.error("Lütfen tam adını ve soyadını yaz arkadaşım!")
+            with c_reg2:
                 if st.button("⬅️ VAZGEÇ"):
                     st.session_state.show_reg = False; st.rerun()
 
+        # --- C. ONAY DÖNGÜSÜ ---
         elif st.session_state.temp_user:
             ad_k = st.session_state.temp_user['ad_soyad'].split()[0]
             st.markdown(f"<div class='pito-bubble'>👋 <b>Selam {ad_k}!</b> <br> Siber-hafızamda bu numara sana ait görünüyor. Bu sen misin?</div>", unsafe_allow_html=True)
-            c_o1, c_o2 = st.columns(2)
-            with c_o1:
+            c_on1, c_on2 = st.columns(2)
+            with c_on1:
                 if st.button("✅ EVET, BENİM!"):
                     st.session_state.user = st.session_state.temp_user
                     st.session_state.temp_user = None; st.rerun()
-            with c_o2:
+            with c_on2:
                 if st.button("❌ HAYIR, DEĞİLİM"):
                     st.session_state.temp_user = None; st.rerun()
 
@@ -154,5 +155,5 @@ def login_ekrani(supabase, msgs, load_pito, liderlik_tablosu_fonksiyonu):
 
     with col_tab:
         st.markdown('<h3 style="text-align:center; color:#00E5FF;">🏆 EN İYİLER</h3>', unsafe_allow_html=True)
-        # Ranks.py içerisindeki fonksiyonu doğru parametreyle çağırıyoruz
-        liderlik_tablosu_fonksiyonu(supabase)
+        # --- HATA ÇÖZÜMÜ: Buradaki supabase'i siliyoruz çünkü ana dosya zaten bunu lambda ile hallediyor ---
+        liderlik_tablosu_fonksiyonu()
