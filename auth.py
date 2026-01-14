@@ -4,24 +4,20 @@ import os
 import base64
 
 def login_ekrani(supabase, msgs, load_pito, liderlik_tablosu_fonksiyonu):
-    # --- 0. SİBER-ESTETİK CSS (GİRİŞ ÖZEL) ---
+    # --- 0. SİBER-ESTETİK CSS (TEMİZLİK MÜHRÜ) ---
     st.markdown('''
         <style>
         /* STANDARTLARI GİZLE */
         header[data-testid="stHeader"], [data-testid="stDecoration"], footer { display: none !important; }
         .stApp { background-color: #0e1117 !important; }
 
-        /* ANA KONTEYNER BOŞLUĞU */
+        /* ANA KONTEYNER (KENARLIK VE DOLGU KALDIRILDI) */
         [data-testid="stMainViewContainer"] {
             padding-top: 80px !important; 
         }
 
-        .auth-card {
-            background: rgba(0, 229, 255, 0.03);
-            border: 2px solid #00E5FF;
-            border-radius: 20px;
-            padding: 25px;
-            box-shadow: 0 0 30px rgba(0, 229, 255, 0.1);
+        .auth-content {
+            padding: 10px;
         }
 
         .academy-title {
@@ -39,10 +35,10 @@ def login_ekrani(supabase, msgs, load_pito, liderlik_tablosu_fonksiyonu):
             background: #161b22;
             color: #E0E0E0;
             border-left: 5px solid #00E5FF;
-            padding: 12px;
+            padding: 15px;
             border-radius: 10px;
-            margin-bottom: 15px;
-            font-size: 0.95rem;
+            margin-bottom: 20px;
+            font-size: 1rem;
             font-style: italic;
         }
 
@@ -55,7 +51,7 @@ def login_ekrani(supabase, msgs, load_pito, liderlik_tablosu_fonksiyonu):
             box-shadow: 0 0 10px #00E5FF;
         }
 
-        /* BUTON STANDARTLARI (SİYAH METİN) */
+        /* BUTON TASARIMI (SİYAH METİN) */
         div.stButton > button { background-color: #00E5FF !important; border: none !important; transition: 0.3s; width: 100%; }
         div.stButton > button p, div.stButton > button span { color: #000000 !important; font-weight: 900 !important; }
         div.stButton > button:hover { background-color: #ADFF2F !important; box-shadow: 0 0 15px #ADFF2F; }
@@ -86,11 +82,10 @@ def login_ekrani(supabase, msgs, load_pito, liderlik_tablosu_fonksiyonu):
         st.markdown('<div class="academy-title">🎓 PİTO PYTHON AKADEMİ</div>', unsafe_allow_html=True)
         st.markdown('<p style="text-align:center; color:#555; margin-bottom:20px;">Nusaybin Süleyman Bölünmez Anadolu Lisesi</p>', unsafe_allow_html=True)
         
-        st.markdown('<div class="auth-card">', unsafe_allow_html=True)
+        st.markdown('<div class="auth-content">', unsafe_allow_html=True)
         
         # --- A. GİRİŞ VE SORGULAMA ---
         if not st.session_state.show_reg and st.session_state.temp_user is None:
-            # Mobilde yan yana görünüm wrapper'ı
             st.markdown('<div class="pito-login-header">', unsafe_allow_html=True)
             c1, c2 = st.columns([1, 3])
             with c1:
@@ -119,7 +114,7 @@ def login_ekrani(supabase, msgs, load_pito, liderlik_tablosu_fonksiyonu):
 
         # --- B. KAYIT DÖNGÜSÜ ---
         elif st.session_state.show_reg:
-            st.markdown(f"<div class='pito-bubble'>✨ <b>Yeni bir yetenek!</b> <br> {st.session_state.user_num} numarasını ilk kez görüyorum. Hadi seni kaydedelim!</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='pito-bubble'>✨ <b>Yeni bir yetenek!</b> <br> {st.session_state.user_num} numarasını ilk kez görüyorum. Kaydını yapalım!</div>", unsafe_allow_html=True)
             name = st.text_input("Adın ve Soyadın:", placeholder="Örn: Ali Yılmaz")
             sinif = st.selectbox("Sınıfın:", ["9-A", "9-B", "10-A", "10-B", "11-A", "11-B", "12-A", "12-B"])
             
@@ -132,8 +127,7 @@ def login_ekrani(supabase, msgs, load_pito, liderlik_tablosu_fonksiyonu):
                         st.session_state.user = nu
                         st.session_state.show_reg = False
                         st.rerun()
-                    else:
-                        st.error("Lütfen tam adını ve soyadını yaz arkadaşım!")
+                    else: st.error("Lütfen tam adını ve soyadını yaz arkadaşım!")
             with c_reg2:
                 if st.button("⬅️ VAZGEÇ"):
                     st.session_state.show_reg = False; st.rerun()
@@ -154,6 +148,5 @@ def login_ekrani(supabase, msgs, load_pito, liderlik_tablosu_fonksiyonu):
         st.markdown('</div>', unsafe_allow_html=True)
 
     with col_tab:
-        st.markdown('<h3 style="text-align:center; color:#00E5FF;">🏆 EN İYİLER</h3>', unsafe_allow_html=True)
-        # --- HATA ÇÖZÜMÜ: Buradaki supabase'i siliyoruz çünkü ana dosya zaten bunu lambda ile hallediyor ---
+        # Kupa ve "En İyiler" yazısı silindi; ranks.py başlığı buraya gelecek.
         liderlik_tablosu_fonksiyonu()
