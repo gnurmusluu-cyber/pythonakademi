@@ -4,7 +4,7 @@ import os
 import base64
 
 def login_ekrani(supabase, msgs, load_pito, liderlik_tablosu_fonksiyonu):
-    # --- 0. SİBER-GÖRSEL TASARIM (120PX PİTO & SPACING MÜHRÜ) ---
+    # --- 0. SİBER-GÖRSEL TASARIM (120PX PİTO & UX MÜHRÜ) ---
     st.markdown('''
         <style>
         header[data-testid="stHeader"], [data-testid="stDecoration"], footer { display: none !important; }
@@ -33,7 +33,7 @@ def login_ekrani(supabase, msgs, load_pito, liderlik_tablosu_fonksiyonu):
             padding: 20px;
             border-radius: 20px;
             margin-left: 25px;
-            margin-bottom: 30px !important; /* Altındaki bileşenlerle mesafe */
+            margin-bottom: 30px !important; 
             font-family: 'Fira Code', monospace;
             font-size: 1.1rem;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
@@ -60,10 +60,8 @@ def login_ekrani(supabase, msgs, load_pito, liderlik_tablosu_fonksiyonu):
             box-shadow: 0 0 25px rgba(0, 229, 255, 0.5);
         }
 
-        /* INPUT VE BUTON ARALARI */
-        .auth-spacer {
-            margin-bottom: 25px;
-        }
+        /* BOŞLUK VE INPUT UX */
+        .auth-spacer { margin-bottom: 25px; }
 
         div[data-testid="stTextInput"] input {
             background-color: #000 !important;
@@ -150,16 +148,16 @@ def login_ekrani(supabase, msgs, load_pito, liderlik_tablosu_fonksiyonu):
             if c_reg2.button("⬅️ VAZGEÇ"):
                 st.session_state.show_reg = False; st.rerun()
 
-        # --- C. ONAY DÖNGÜSÜ ---
+        # --- C. ONAY DÖNGÜSÜ (PİTO DÜŞÜNÜYOR MODU) ---
         elif st.session_state.temp_user:
             ad_k = st.session_state.temp_user['ad_soyad'].split()[0]
             st.markdown('<div class="pito-login-header">', unsafe_allow_html=True)
             c1, c2 = st.columns([1.2, 3])
-            with c1: load_pito("basari")
-            with c2: st.markdown(f"<div class='pito-bubble'>👋 <b>Selam {ad_k}!</b> <br> Hafızam seni tanıdı. Bu sen misin?</div>", unsafe_allow_html=True)
+            # BURADA DEĞİŞİKLİK YAPILDI: Artık basari yerine dusunuyor geliyor
+            with c1: load_pito("dusunuyor") 
+            with c2: st.markdown(f"<div class='pito-bubble'>👋 <b>Selam {ad_k}!</b> <br> Hafızam seni tanıdı. Bu siber-kimlik senin mi?</div>", unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
             
-            # Balon ile butonlar arasına boşluk mühürlendi
             st.markdown('<div class="auth-spacer"></div>', unsafe_allow_html=True)
             c_on1, c_on2 = st.columns(2)
             if c_on1.button("✅ EVET, BENİM!"):
