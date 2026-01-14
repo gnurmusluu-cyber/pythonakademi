@@ -3,25 +3,34 @@ import pandas as pd
 import random
 
 def mezuniyet_ekrani(u, msgs, pito_goster, supabase, ranks_module):
-    """Mezuniyet töreni, onur kürsüsü ve tam sistem sıfırlama seçeneği."""
+    """Mezuniyet töreni, onur kürsüsü ve okunabilir siber-butonlar."""
     
-    # --- 0. SİBER-GÖRSEL ZIRH VE BUTON STİLİ ---
+    # --- 0. SİBER-GÖRSEL ZIRH (OKUNABİLİRLİK VE ÇERÇEVE İMHASI) ---
     st.markdown("""
         <style>
-        /* Mavi çerçeve imha edici (Pointer-Events Protokolü) */
+        /* 1. Mavi çerçeve imha edici (Pointer-Events Protokolü) */
         [data-testid="stBalloons"], [data-testid="stSnow"], 
         [data-testid="stBalloons"] *, [data-testid="stSnow"] * {
             pointer-events: none !important;
             outline: none !important;
             box-shadow: none !important;
-            border: none !important;
         }
         
-        /* Buton Metinlerini Siyah Yapma (Okunabilirlik Mührü) */
-        .stButton > button {
-            color: #000000 !important;
+        /* 2. BUTON METİNLERİNİ SİYAH YAPMA (KESİN OKUNABİLİRLİK) */
+        div.stButton > button {
             background-color: #00E5FF !important;
+            border: 2px solid #00E5FF !important;
+            transition: 0.3s !important;
+        }
+        /* Butonun içindeki metni (p etiketi dahil) siyaha zorla */
+        div.stButton > button p, div.stButton > button span {
+            color: #000000 !important;
             font-weight: 900 !important;
+            font-size: 1rem !important;
+        }
+        div.stButton > button:hover {
+            background-color: #ADFF2F !important;
+            border-color: #ADFF2F !important;
         }
 
         .cyber-card {
@@ -33,8 +42,8 @@ def mezuniyet_ekrani(u, msgs, pito_goster, supabase, ranks_module):
         </style>
     """, unsafe_allow_html=True)
 
-    # --- 1. EFEKT KONTROLÜ (SIFIRLAMA ANINDA ÇIKMAMASI İÇİN) ---
-    if "reset_proc" not in st.session_state:
+    # --- 1. EFEKT KONTROLÜ (SIFIRLAMA ANINDA BALONLARI SUSTUR) ---
+    if not st.session_state.get('reset_active', False):
         st.balloons()
         st.snow()
     
@@ -63,7 +72,7 @@ def mezuniyet_ekrani(u, msgs, pito_goster, supabase, ranks_module):
             </div>
         """, unsafe_allow_html=True)
         
-        # --- KUMANDA PANELİ ---
+        # --- KUMANDA PANELİ (OKUNAKLI BUTONLAR) ---
         st.markdown("### ⚙️ Kumanda Paneli")
         b1, b2, b3 = st.columns(3)
         
@@ -72,26 +81,31 @@ def mezuniyet_ekrani(u, msgs, pito_goster, supabase, ranks_module):
                 st.session_state.in_review = True; st.rerun()
         
         with b2:
-            if st.button("🚪 Çıkış Yap", help="Oturumu kapat ve başa dön", use_container_width=True, key="exit_btn_master"):
+            if st.button("🚪 Çıkış Yap", help="Oturumu kapat", use_container_width=True, key="exit_btn_master"):
                 st.session_state.user = None
                 st.session_state.in_review = False; st.rerun()
                 
         with b3:
-            # EĞİTİMİ TEKRAR AL (TAM SIFIRLAMA)
-            if st.button("🔄 Eğitimi Tekrar Al", type="secondary", help="1. Modülden baştan başla", use_container_width=True, key="reset_btn_master"):
-                st.session_state.reset_proc = True # Balonları durdur
+            # EĞİTİMİ TEKRAR AL (SIFIRLAMA) PROTOKOLÜ
+            if st.button("🔄 Eğitimi Tekrar Al", help="Puanları sil ve 1. Modülden başla", use_container_width=True, key="reset_btn_master"):
+                # Balonları durdurmak için bayrağı çek
+                st.session_state.reset_active = True
                 
-                # Supabase Sıfırlama
+                # Supabase Güncelleme: 0 Puan, 1. Modül, 1.1 Egzersiz
                 supabase.table("kullanicilar").update({
-                    "toplam_puan": 0, "mevcut_egzersiz": "1.1", "mevcut_modul": 1, "rutbe": "🥚 Çömez"
+                    "toplam_puan": 0, 
+                    "mevcut_egzersiz": "1.1", 
+                    "mevcut_modul": 1, 
+                    "rutbe": "🥚 Çömez"
                 }).eq("ogrenci_no", int(u['ogrenci_no'])).execute()
                 
+                # Tüm çözüm geçmişini sil
                 supabase.table("egzersiz_kayitlari").delete().eq("ogrenci_no", int(u['ogrenci_no'])).execute()
                 
-                # Oturumu kapat ve temizle
+                # Oturumu temizle ve yönlendir
                 st.session_state.user = None
                 st.session_state.in_review = False
-                if "reset_proc" in st.session_state: del st.session_state.reset_proc
+                st.session_state.reset_active = False # Bir sonraki giriş için temizle
                 st.rerun()
 
     with cr:
@@ -99,7 +113,7 @@ def mezuniyet_ekrani(u, msgs, pito_goster, supabase, ranks_module):
 
 def inceleme_modu_paneli(u, mufredat, pito_goster, supabase):
     """Bitmiş görevleri siber-arşivde siyah metinli butonlarla gösterir."""
-    st.markdown("""<style>.stButton > button { color: #000 !important; font-weight: 900 !important; }</style>""", unsafe_allow_html=True)
+    st.markdown("""<style>div.stButton > button p { color: #000 !important; font-weight: 900 !important; }</style>""", unsafe_allow_html=True)
     st.markdown("<h2 style='text-align:center; color:#00E5FF;'>🔍 SİBER-ARŞİV: GEÇMİŞ ÇÖZÜMLER</h2>", unsafe_allow_html=True)
     
     is_graduated = int(u['mevcut_modul']) > len(mufredat)
@@ -123,6 +137,6 @@ def inceleme_modu_paneli(u, mufredat, pito_goster, supabase):
                             st.markdown(f"<div class='console-box'>{egz.get('beklenen_cikti', '...')}</div>", unsafe_allow_html=True)
                             st.divider()
         else:
-            st.info("Henüz tamamlanmış bir görevin bulunmuyor arkadaşım!")
+            st.info("Henüz tamamlanmış bir görevin bulunmuyor genç yazılımcı!")
     except Exception as e:
         st.error(f"Siber-arşiv hatası: {e}")
