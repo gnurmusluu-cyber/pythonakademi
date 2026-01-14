@@ -22,57 +22,62 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             sys.stdout = sys.__stdout__
             return f"⚠️ SİSTEM HATASI: {str(e)}"
 
-    # --- 0. SİBER-GÖRSEL ZIRH (PITO 75PX VE TERMİNAL MÜHRÜ) ---
+    # --- 0. SİBER-HUD GÖRSEL ONARIMI ---
     st.markdown(f'''
         <style>
         header[data-testid="stHeader"], [data-testid="stDecoration"], footer {{ display: none !important; }}
         .stApp {{ background-color: #0e1117 !important; }}
         [data-testid="stMainViewContainer"] {{ padding-top: 185px !important; }}
 
-        /* SİBER TERMİNAL TASARIMI */
-        .cyber-terminal {{
-            background-color: #000000;
-            color: #ADFF2F;
-            font-family: 'Courier New', monospace;
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid #30363d;
-            margin: 10px 0;
-            white-space: pre-wrap;
-            box-shadow: inset 0 0 10px rgba(173, 255, 47, 0.2);
-            font-size: 0.9rem;
-            min-height: 40px;
-        }}
-        .terminal-label {{ font-size: 0.7rem; color: #888; text-transform: uppercase; letter-spacing: 1px; }}
-
+        /* HUD ANA PANEL */
         .cyber-hud {{
             position: fixed; top: 0; left: 0; right: 0;
             height: 120px; background-color: #0e1117 !important;
             border-bottom: 3px solid #00E5FF; z-index: 99999 !important;
-            padding: 0 30px; display: flex; justify-content: space-between; align-items: center;
+            padding: 0 40px; display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
         }}
 
-        /* PİTO 75PX - ANLAŞILDIĞI ÜZERE */
+        /* PİTO 75PX MÜHRÜ */
         .hud-pito-gif img {{
-            width: 75px !important; 
-            height: 75px !important; 
+            width: 75px !important; height: 75px !important;
             border-radius: 50%; border: 3px solid #00E5FF;
-            object-fit: cover; background: #000; margin-right: 15px;
-            box-shadow: 0 0 15px #00E5FF;
+            object-fit: cover; background: #000; margin-right: 20px;
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.4);
         }}
 
-        .my-stats-card {{
-            background: rgba(0, 229, 255, 0.05);
-            border: 1px solid rgba(0, 229, 255, 0.2);
-            border-radius: 12px; padding: 12px; margin-bottom: 15px; text-align: center;
+        /* İSTATİSTİK KAPSÜLLERİ (GÖRSEL ONARIM) */
+        .hud-stats-container {{
+            display: flex; gap: 15px; align-items: center;
+        }}
+        .hud-capsule {{
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(0, 229, 255, 0.3);
+            padding: 8px 16px;
+            border-radius: 50px;
+            display: flex; align-items: center; gap: 10px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            color: #E0E0E0;
+            white-space: nowrap;
+        }}
+        .hud-label {{ color: #888; font-size: 0.75rem; text-transform: uppercase; }}
+        .hud-v-glow {{ color: #00E5FF; font-weight: 900; }}
+
+        /* TERMİNAL VE DİĞERLERİ */
+        .cyber-terminal {{
+            background-color: #000000; color: #ADFF2F; font-family: 'Courier New', monospace;
+            padding: 15px; border-radius: 8px; border: 1px solid #30363d; margin: 10px 0;
+            box-shadow: inset 0 0 10px rgba(173, 255, 47, 0.2); min-height: 40px;
         }}
 
-        /* ANIMASYONLAR */
-        @keyframes pulseChannel1 {{ 0% {{ transform: scale(1); }} 50% {{ transform: scale(1.6); color: #FF0000; }} 100% {{ transform: scale(1); }} }}
-        @keyframes pulseChannel2 {{ 0% {{ transform: scale(1); }} 50% {{ transform: scale(1.6); color: #FF0000; }} 100% {{ transform: scale(1); }} }}
-        .err-p-1, .err-p-3 {{ display: inline-block; animation: pulseChannel1 0.7s ease-in-out; }}
-        .err-p-2, .err-p-4 {{ display: inline-block; animation: pulseChannel2 0.7s ease-in-out; }}
-        .success-pulse {{ display: inline-block; animation: successPulse 0.8s ease-in-out; font-weight: 950 !important; }}
+        /* ANİMASYON KANALLARI */
+        @keyframes pulse1 {{ 0%, 100% {{ transform: scale(1); }} 50% {{ transform: scale(1.4); color: #FF0000; }} }}
+        @keyframes pulse2 {{ 0%, 100% {{ transform: scale(1); }} 50% {{ transform: scale(1.4); color: #FF0000; }} }}
+        @keyframes succPulse {{ 0%, 100% {{ transform: scale(1); }} 50% {{ transform: scale(1.5); color: #ADFF2F; }} }}
+        .err-p-1, .err-p-3 {{ animation: pulse1 0.7s ease-in-out; display: inline-block; }}
+        .err-p-2, .err-p-4 {{ animation: pulse2 0.7s ease-in-out; display: inline-block; }}
+        .success-pulse {{ animation: succPulse 0.8s ease-in-out; display: inline-block; color: #ADFF2F !important; }}
         </style>
     ''', unsafe_allow_html=True)
 
@@ -98,18 +103,30 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
 
     err_class = f"err-p-{e_count}" if e_count > 0 else ""
     success_class = "success-pulse" if st.session_state.cevap_dogru else ""
-    display_total = int(u['toplam_puan']) + p_xp if st.session_state.cevap_dogru else int(u['toplam_puan'])
+    display_total = int(u['toplam_puan']) + (p_xp if st.session_state.cevap_dogru else 0)
 
+    # HUD HTML (YENİLENMİŞ KAPSÜL SİSTEMİ)
     st.markdown(f'''
         <div class="cyber-hud">
-            <div class="hud-user-info" style="display: flex; align-items: center;">
+            <div style="display: flex; align-items: center;">
                 <div class="hud-pito-gif"><img src="{get_gif_b64(p_mod)}"></div>
-                <div class="hud-item">👤 <span class="hud-v">{u['ad_soyad']}</span></div>
+                <div style="color: #E0E0E0; font-family: monospace; font-size: 1rem;">
+                    USER_ID: <span style="color: #00E5FF; font-weight: bold;">{u['ad_soyad']}</span>
+                </div>
             </div>
-            <div class="hud-stats" style="display: flex; align-items: center;">
-                <div class="hud-item">💎 Potansiyel: <span class="hud-v"><span class="{err_class}">{p_xp}</span> XP</span></div>
-                <div class="hud-item">⚠️ Hata: <span class="hud-v"><span class="{err_class}">{e_count}</span>/4</span></div>
-                <div class="hud-item">🏆 Toplam: <span class="hud-v"><span class="{success_class}">{display_total}</span> XP</span></div>
+            <div class="hud-stats-container">
+                <div class="hud-capsule">
+                    <span>💎</span> <span class="hud-label">Potansiyel:</span>
+                    <span class="hud-v-glow {err_class}">{p_xp} XP</span>
+                </div>
+                <div class="hud-capsule">
+                    <span>⚠️</span> <span class="hud-label">Hata:</span>
+                    <span class="hud-v-glow {err_class}">{e_count}/4</span>
+                </div>
+                <div class="hud-capsule" style="border-color: #ADFF2F;">
+                    <span>🏆</span> <span class="hud-label">Toplam:</span>
+                    <span class="hud-v-glow {success_class}" style="color: #ADFF2F;">{display_total} XP</span>
+                </div>
             </div>
         </div>
     ''', unsafe_allow_html=True)
@@ -157,33 +174,27 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
 
         elif st.session_state.cevap_dogru:
             st.success(f"✅ Harika iş! (+{p_xp} XP)")
-            
-            # --- TERMİNAL ÇIKTISI (DOĞRU CEVAP) ---
             raw_output = kod_calistir_cikti_al(st.session_state.current_code)
             final_output = raw_output if raw_output else "Bu kod çıktı vermez."
             st.markdown(f'<div class="terminal-label">🖥️ SİBER-ÇIKTI</div><div class="cyber-terminal">{final_output}</div>', unsafe_allow_html=True)
-            
             if st.button("SIRADAKİ GÖREVE GEÇ ➡️", type="primary", use_container_width=True):
                 s_idx = modul['egzersizler'].index(egz) + 1
                 n_id, n_m = (modul['egzersizler'][s_idx]['id'], u['mevcut_modul']) if s_idx < len(modul['egzersizler']) else (f"{int(u['mevcut_modul'])+1}.1", int(u['mevcut_modul']) + 1)
                 ilerleme_fonksiyonu(p_xp, st.session_state.current_code, egz['id'], n_id, n_m)
 
         elif e_count >= 4:
-            st.warning("🚨 Bu egzersizden puan alamadın, çözümü incele:")
+            st.warning("🚨 Çözümü incele ve devam et:")
             st.code(egz['cozum'], language="python")
-            
-            # --- TERMİNAL ÇIKTISI (ÇÖZÜM) ---
             raw_output = kod_calistir_cikti_al(egz['cozum'])
             final_output = raw_output if raw_output else "Bu kod çıktı vermez."
             st.markdown(f'<div class="terminal-label">🖥️ SİBER-ÇIKTI (PİTO\'NUN ÇÖZÜMÜ)</div><div class="cyber-terminal">{final_output}</div>', unsafe_allow_html=True)
-            
             if st.button("DEVAM ET ➡️", type="primary", use_container_width=True):
                 s_idx = modul['egzersizler'].index(egz) + 1
                 n_id, n_m = (modul['egzersizler'][s_idx]['id'], u['mevcut_modul']) if s_idx < len(modul['egzersizler']) else (f"{int(u['mevcut_modul'])+1}.1", int(u['mevcut_modul']) + 1)
                 ilerleme_fonksiyonu(0, "Çözüm İncelendi", egz['id'], n_id, n_m)
 
     with cr:
-        rn, rc = ranks_module.rütbe_ata(u['toplam_puan'])
+        # İSTATİSTİK KARTI
         st.markdown(f'''
             <div class="my-stats-card">
                 <div style="font-size:0.75rem; color:#00E5FF; font-weight:bold;">📊 DURUM RAPORUN</div>
@@ -191,7 +202,6 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
                     <div class="my-stat-box"><div class="my-stat-label">SINIFIM</div><div class="my-stat-val">#{sinif_sira}</div></div>
                     <div class="my-stat-box"><div class="my-stat-label">OKULUM</div><div class="my-stat-val">#{okul_sira}</div></div>
                 </div>
-                <div style="margin-top:10px; font-size:0.85rem; color:#ADFF2F; font-weight:bold;">🎖️ {rn}</div>
             </div>
         ''', unsafe_allow_html=True)
         ranks_module.liderlik_tablosu_goster(supabase, current_user=u)
