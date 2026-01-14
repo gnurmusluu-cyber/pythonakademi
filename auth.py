@@ -4,7 +4,7 @@ import os
 import base64
 
 def login_ekrani(supabase, msgs, load_pito, liderlik_tablosu_fonksiyonu):
-    # --- 0. SİBER-GÖRSEL TASARIM (MOBILE RESPONSIVE & UX) ---
+    # --- 0. SİBER-GÖRSEL TASARIM (120PX PİTO & SPACING MÜHRÜ) ---
     st.markdown('''
         <style>
         header[data-testid="stHeader"], [data-testid="stDecoration"], footer { display: none !important; }
@@ -24,7 +24,7 @@ def login_ekrani(supabase, msgs, load_pito, liderlik_tablosu_fonksiyonu):
             margin-bottom: 5px;
         }
 
-        /* --- SİBER KONUŞMA BALONU --- */
+        /* --- SİBER KONUŞMA BALONU (KUYRUKLU & FERAH) --- */
         .pito-bubble {
             position: relative;
             background: #161b22;
@@ -33,6 +33,7 @@ def login_ekrani(supabase, msgs, load_pito, liderlik_tablosu_fonksiyonu):
             padding: 20px;
             border-radius: 20px;
             margin-left: 25px;
+            margin-bottom: 30px !important; /* Altındaki bileşenlerle mesafe */
             font-family: 'Fira Code', monospace;
             font-size: 1.1rem;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
@@ -50,7 +51,7 @@ def login_ekrani(supabase, msgs, load_pito, liderlik_tablosu_fonksiyonu):
             border-bottom: 15px solid transparent;
         }
 
-        /* 120PX GÖRKEMLİ PİTO (DESKTOP) */
+        /* 120PX GÖRKEMLİ PİTO */
         .pito-login-img img {
             width: 120px !important;
             height: 120px !important;
@@ -59,7 +60,11 @@ def login_ekrani(supabase, msgs, load_pito, liderlik_tablosu_fonksiyonu):
             box-shadow: 0 0 25px rgba(0, 229, 255, 0.5);
         }
 
-        /* INPUT UX (Placeholder Rengi ve Odak) */
+        /* INPUT VE BUTON ARALARI */
+        .auth-spacer {
+            margin-bottom: 25px;
+        }
+
         div[data-testid="stTextInput"] input {
             background-color: #000 !important;
             color: #ADFF2F !important;
@@ -68,43 +73,22 @@ def login_ekrani(supabase, msgs, load_pito, liderlik_tablosu_fonksiyonu):
             font-size: 1.1rem !important;
         }
         
-        /* BUTONLAR (SİYAH METİN) */
         div.stButton > button { background-color: #00E5FF !important; border: none !important; transition: 0.3s; width: 100%; }
         div.stButton > button p, div.stButton > button span { color: #000000 !important; font-weight: 900 !important; }
 
-        /* --- MOBİL UYUMLULUK MÜHRÜ --- */
+        /* MOBİL DÜZENLEME */
         @media (max-width: 768px) {
             .academy-title { font-size: 1.6rem !important; }
-            
             .pito-login-header { 
                 flex-direction: row !important; 
                 display: flex !important; 
                 align-items: center !important; 
                 gap: 12px !important;
-                margin-bottom: 25px !important;
-                justify-content: center !important;
+                margin-bottom: 30px !important;
             }
-            
-            .pito-login-img img { 
-                width: 85px !important; 
-                height: 85px !important; 
-            }
-            
-            .pito-bubble { 
-                font-size: 0.85rem !important; 
-                padding: 12px !important; 
-                margin-left: 10px !important; 
-                border-radius: 15px !important;
-            }
-            
-            .pito-bubble:after { 
-                top: 25px !important; 
-                left: -15px !important; 
-                border-right-width: 15px !important; 
-                border-top-width: 10px !important;
-                border-bottom-width: 10px !important;
-            }
-            
+            .pito-login-img img { width: 85px !important; height: 85px !important; }
+            .pito-bubble { font-size: 0.85rem !important; padding: 15px !important; margin-left: 10px !important; }
+            .pito-bubble:after { top: 25px !important; left: -15px !important; }
             [data-testid="stMainViewContainer"] { padding-top: 30px !important; }
         }
         </style>
@@ -129,9 +113,9 @@ def login_ekrani(supabase, msgs, load_pito, liderlik_tablosu_fonksiyonu):
                 st.markdown(f"<div class='pito-bubble'>💬 <b>Pito:</b> {msg}</div>", unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
             
-            # UX GÜNCELLEMESİ: Placeholder eklendi
             num_input = st.text_input("Okul Numaran:", placeholder="Sayı giriniz...", help="Numaranı yazınca siber-geçit açılacak!")
             
+            st.markdown('<div class="auth-spacer"></div>', unsafe_allow_html=True)
             if st.button("AKADEMİYE BAĞLAN 🚀"):
                 if num_input.isdigit():
                     num = int(num_input)
@@ -146,10 +130,16 @@ def login_ekrani(supabase, msgs, load_pito, liderlik_tablosu_fonksiyonu):
 
         # --- B. KAYIT DÖNGÜSÜ ---
         elif st.session_state.show_reg:
-            st.markdown(f"<div class='pito-bubble'>✨ <b>Hoş geldin!</b> <br> {st.session_state.user_num} numaralı siber-yolcu, hadi kaydını yapalım!</div>", unsafe_allow_html=True)
+            st.markdown('<div class="pito-login-header">', unsafe_allow_html=True)
+            c1, c2 = st.columns([1.2, 3])
+            with c1: load_pito("dusunuyor")
+            with c2: st.markdown(f"<div class='pito-bubble'>✨ <b>Yeni bir yetenek!</b> <br> {st.session_state.user_num} numarasını ilk kez görüyorum. Kaydını yapalım!</div>", unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+            
             name = st.text_input("Adın ve Soyadın:", placeholder="Örn: Ali Yılmaz")
             sinif = st.selectbox("Sınıfın:", ["9-A", "9-B", "10-A", "10-B", "11-A", "11-B", "12-A", "12-B"])
             
+            st.markdown('<div class="auth-spacer"></div>', unsafe_allow_html=True)
             c_reg1, c_reg2 = st.columns(2)
             if c_reg1.button("✨ KAYDI TAMAMLA"):
                 if name and len(name.split()) >= 2:
@@ -163,7 +153,14 @@ def login_ekrani(supabase, msgs, load_pito, liderlik_tablosu_fonksiyonu):
         # --- C. ONAY DÖNGÜSÜ ---
         elif st.session_state.temp_user:
             ad_k = st.session_state.temp_user['ad_soyad'].split()[0]
-            st.markdown(f"<div class='pito-bubble'>👋 <b>Selam {ad_k}!</b> <br> Sistem seni tanıdı. Bu siber-kimlik senin mi?</div>", unsafe_allow_html=True)
+            st.markdown('<div class="pito-login-header">', unsafe_allow_html=True)
+            c1, c2 = st.columns([1.2, 3])
+            with c1: load_pito("basari")
+            with c2: st.markdown(f"<div class='pito-bubble'>👋 <b>Selam {ad_k}!</b> <br> Hafızam seni tanıdı. Bu sen misin?</div>", unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+            # Balon ile butonlar arasına boşluk mühürlendi
+            st.markdown('<div class="auth-spacer"></div>', unsafe_allow_html=True)
             c_on1, c_on2 = st.columns(2)
             if c_on1.button("✅ EVET, BENİM!"):
                 st.session_state.user = st.session_state.temp_user
