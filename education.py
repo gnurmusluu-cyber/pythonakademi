@@ -134,7 +134,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         with st.expander(f"📖 {modul['modul_adi']}", expanded=True):
             st.markdown(f"<div style='background:rgba(0,229,255,0.03); padding:15px; border-radius:10px;'>{modul['pito_anlatimi']}</div>", unsafe_allow_html=True)
             st.markdown(f"### 🎯 GÖREV {egz['id']}", unsafe_allow_html=True)
-            st.info(egz['yonerge'])
+            st.info(egz['yonerge', unsafe_allow_html=True])
 
         # --- EDİTÖR VE MANTIK ---
         if not st.session_state.cevap_dogru and e_count < 4:
