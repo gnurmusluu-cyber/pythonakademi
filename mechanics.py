@@ -130,7 +130,7 @@ def inceleme_modu_paneli(u, mufredat, pito_goster, supabase):
                 if modulun_bitenleri:
                     with st.expander(f"📦 {m['modul_adi']}", expanded=False):
                         for egz in modulun_bitenleri:
-                            st.markdown(f"📍 **Görev {egz['id']}:** {egz.get('yonerge')}")
+                            st.markdown(f"📍 **Görev {egz['id']}:** {egz.get('yonerge')}", unsafe_allow_html=True )
                             st.markdown("🤖 **Pito'nun İdeal Çözümü:**")
                             st.code(egz.get('cozum', '# Çözüm hazırlanıyor...'), language='python')
                             st.markdown(f"<div class='console-box'>{egz.get('beklenen_cikti', '...')}</div>", unsafe_allow_html=True)
