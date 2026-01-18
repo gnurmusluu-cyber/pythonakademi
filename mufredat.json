@@ -72,7 +72,7 @@
         { "id": "6.5", "yonerge": "Döngüyle toplam hesaplayalım! 1'den 3'e kadar olan sayıları <b><em>toplam</b></em> değişkeninde biriktirmek için boşluğa <b><em>toplam + i</b></em> yazarak hafızayı güncelle.", "sablon": "toplam=0\nfor i in range(1,4): \n
     toplam = ___\nprint(toplam) ", "dogru_cevap_kodu": " toplam=0\nfor i in range(1,4): \n
     toplam = toplam+i\nprint(toplam) ", "beklenen_cikti": "3", "ipucu": "toplam + i yazmalısın.", "cozum": " toplam=0\nfor i in range(1,4): \n
-    toplam = toplam+i\nprint(toplam) " }
+    toplam = toplam+i\nprint(toplam) " },
       ]
     },
     {
