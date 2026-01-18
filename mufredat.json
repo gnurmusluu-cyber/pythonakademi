@@ -90,9 +90,9 @@
       "modul_adi": "Fonksiyonlar: Kodu Paketlemek ve Güçlendirmek",
       "pito_anlatimi": "Selam Genç Yazılımcı! Bugün kod yazarken kendimizi tekrar etmemeyi öğreneceğiz. Fonksiyonlar, belirli bir işi yapan <b>kod paketleri</b> gibidir. Bir kez hazırlar, istediğin her yerde bin kez kullanırsın! \n\nKural 1: Fonksiyon tanımlamak için <b>def</b> (define - tanımla) kelimesini kullanırız. \nKural 2: Fonksiyonun çalışması için onu adı ve parantezleriyle <b>çağırman</b> gerekir. \nKural 3: <b>return</b> komutu, fonksiyonun yaptığı işin sonucunu bize paketleyip geri vermesini sağlar. \n\nHadi, kendi özel komutlarımızı yaratmaya başlayalım!",
       "egzersizler": [
-        { "id": "8.1", "yonerge": "İlk fonksiyonumuzu tanımlayalım! Bir fonksiyonu başlatmak için en başa <b><em>def</em> </b>komutunu yazmalısın.", "sablon": "____ s():\n    print('Ok')", "dogru_cevap_kodu": "def s():\n    print('Ok')", "beklenen_cikti": "", "ipucu": "Başlatma kelimesi def.", "cozum": "def s():" },
+        { "id": "8.1", "yonerge": "İlk fonksiyonumuzu tanımlayalım! Bir fonksiyonu başlatmak için en başa <b><em>def</em> </b>komutunu yazmalısın.", "sablon": "____ s():\n    print('Ok')", "dogru_cevap_kodu": "def s():\n    print('Ok')", "beklenen_cikti": "", "ipucu": "Başlatma kelimesi def.", "cozum": " def s():\n    print('Ok')" },
         { "id": "8.2", "yonerge": "Fonksiyonlara bilgi gönderebiliriz (Parametreler). Boşluğa <b><em>isim</em> </b>değişkenini yazarak fonksiyonun dışarıdan isim almasını sağla.", "sablon": "def m(____):", "dogru_cevap_kodu": "def m(isim):", "beklenen_cikti": "", "ipucu": "Paranteze isim yaz.", "cozum": "def m(isim):" },
-        { "id": "8.3", "yonerge": "Fonksiyonun sonucu bize geri vermesi çok önemlidir. Boşluğa <b><em>return</em> </b>komutunu yazarak çarpma işleminin sonucunu dışarıya gönder.", "sablon": "def c(a, b):\n    ____ a * b", "dogru_cevap_kodu": "def c(a, b):\n    return a * b", "beklenen_cikti": "", "ipucu": "Döndürme kelimesi return.", "cozum": "return a * b" },
+        { "id": "8.3", "yonerge": "Fonksiyonun sonucu bize geri vermesi çok önemlidir. Boşluğa <b><em>return</em> </b>komutunu yazarak çarpma işleminin sonucunu dışarıya gönder.", "sablon": "def c(a, b):\n    ____ a * b\nprint(c(5,6))", "dogru_cevap_kodu": "def c(a, b):\n    return a * b\nprint(c(5,6))", "beklenen_cikti": "30", "ipucu": "Döndürme kelimesi return.", "cozum": " def c(a, b):\n    return a * b\nprint(c(5,6))" },
         { "id": "8.4", "yonerge": "Bazen başkalarının yazdığı güçlü kütüphanelere ihtiyaç duyarız. Matematik kütüphanesini içeri çekmek için boşluğa <b><em>import</em> </b>yaz.", "sablon": "____ math", "dogru_cevap_kodu": "import math", "beklenen_cikti": "", "ipucu": "Ekleme kelimesi import.", "cozum": "import math" },
         { "id": "8.5", "yonerge": "Fonksiyonu uyandırma (çağırma) zamanı! Tanımladığımız 'selamla()' fonksiyonunu çalıştırmak için boşluğa sadece adını ve parantezlerini yaz.", "sablon": "def s():\n    p('Ok')\n____", "dogru_cevap_kodu": "def s():\n    p('Ok')\nselamla()", "beklenen_cikti": "Ok", "ipucu": "selamla() yazmalısın.", "cozum": "selamla()" }
       ]
@@ -123,6 +123,7 @@
     }
   ]
 }
+
 
 
 
