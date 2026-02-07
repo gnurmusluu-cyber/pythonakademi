@@ -9,7 +9,7 @@ def rütbe_ata(xp):
     return "🥚 Çömez", "badge-comez"
 
 def liderlik_tablosu_goster(supabase, current_user=None):
-    # --- 0. LİDERLER PANELİ CSS (MAKSİMUM KONTRAST) ---
+    # --- 0. LİDERLER PANELİ CSS (MAKSİMUM KONTRAST & OKUNABİLİRLİK) ---
     st.markdown('''
         <style>
         .top-class-card {
@@ -72,44 +72,53 @@ def liderlik_tablosu_goster(supabase, current_user=None):
     ''', unsafe_allow_html=True)
 
     try:
-        # Tüm kullanıcı verilerini çek
         res = supabase.table("kullanicilar").select("*").execute()
         df = pd.DataFrame(res.data) if res.data else pd.DataFrame()
 
         if not df.empty:
-            # 1. ZİRVEDEKİ ŞUBE PANOSU
-            class_stats = df.groupby('sinif')['toplam_puan'].mean().sort_values(ascending=False).reset_index()
-            winner = class_stats.iloc[0]
-            st.markdown(f'''
-                <div class="top-class-card">
-                    <div class="top-class-title">👑 ZİRVEDEKİ ŞUBE</div>
-                    <div class="top-class-name">{winner['sinif']}</div>
-                    <div style="color: #ADFF2F; font-size: 0.75rem; font-weight:bold;">AVG: {int(winner['toplam_puan'])} XP</div>
-                </div>
-            ''', unsafe_allow_html=True)
+            # --- 1. ZİRVEDEKİ ŞUBE PANOSU (HAYALET ŞUBE FIX) ---
+            # Sadece puanı 0'dan büyük olan (aktif) öğrencileri filtreliyoruz
+            aktif_df = df[df['toplam_puan'] > 0]
 
-            # 2. SEKMELER
+            if not aktif_df.empty:
+                class_stats = aktif_df.groupby('sinif')['toplam_puan'].mean().sort_values(ascending=False).reset_index()
+                winner = class_stats.iloc[0]
+                st.markdown(f'''
+                    <div class="top-class-card">
+                        <div class="top-class-title">👑 ZİRVEDEKİ ŞUBE</div>
+                        <div class="top-class-name">{winner['sinif']}</div>
+                        <div style="color: #ADFF2F; font-size: 0.75rem; font-weight:bold;">AVG: {int(winner['toplam_puan'])} XP</div>
+                    </div>
+                ''', unsafe_allow_html=True)
+            else:
+                # Henüz kimse puan kazanmamışsa gösterilecek placeholder
+                st.markdown(f'''
+                    <div class="top-class-card">
+                        <div class="top-class-title">👑 ZİRVEDEKİ ŞUBE</div>
+                        <div class="top-class-name">BAŞLIYOR...</div>
+                        <div style="color: #AAAAAA; font-size: 0.75rem; font-weight:bold;">İlk XP bekleniyor</div>
+                    </div>
+                ''', unsafe_allow_html=True)
+
+            # --- 2. SEKMELER VE SIRALAMA MANTIĞI ---
             t_sinif, t_okul = st.tabs(["📍 SINIF LİDERLERİ", "🌍 OKUL LİDERLERİ"])
+
+            # Ortak sıralama sütunları: Önce puan (Azalan), sonra tarih (Azalan - En yeni üste)
+            sort_cols = ["toplam_puan", "tarih"] if "tarih" in df.columns else ["toplam_puan", "ad_soyad"]
+            sort_orders = [False, False] if "tarih" in df.columns else [False, True]
 
             with t_sinif:
                 if current_user:
-                    # KRİTİK SIRALAMA: 
-                    # 1. Puan (Azalan)
-                    # 2. Tarih (Azalan - En son puan kazanan en üstte)
-                    # Tarih sütunu yoksa alfabetik (ad_soyad) devam eder.
-                    sort_cols = ["toplam_puan", "tarih"] if "tarih" in df.columns else ["toplam_puan", "ad_soyad"]
-                    sort_order = [False, False] if "tarih" in df.columns else [False, True]
-
-                    sinif_df = df[
+                    sinif_list = df[
                         (df['sinif'] == current_user['sinif']) & 
-                        (df['toplam_puan'] > 0) # Sadece egzersiz yapanları göster
-                    ].sort_values(by=sort_cols, ascending=sort_order)
+                        (df['toplam_puan'] > 0)
+                    ].sort_values(by=sort_cols, ascending=sort_orders)
                     
-                    if sinif_df.empty:
+                    if sinif_list.empty:
                         st.info("Bu sınıfta henüz siber-hareketlilik başlamadı! İlk görevini yap ve buraya adını yazdır.")
                     else:
                         st.markdown('<div class="list-scroll-vfinal">', unsafe_allow_html=True)
-                        for i, r in enumerate(sinif_df.itertuples(), 1):
+                        for i, r in enumerate(sinif_list.itertuples(), 1):
                             rn, rc = rütbe_ata(r.toplam_puan)
                             me_cls = "row-me" if r.ogrenci_no == current_user['ogrenci_no'] else ""
                             st.markdown(f'''
@@ -129,19 +138,16 @@ def liderlik_tablosu_goster(supabase, current_user=None):
                     st.info("Siber-geçiş bekleniyor...")
 
             with t_okul:
-                sort_cols = ["toplam_puan", "tarih"] if "tarih" in df.columns else ["toplam_puan", "ad_soyad"]
-                sort_order = [False, False] if "tarih" in df.columns else [False, True]
-
-                okul_df = df[df['toplam_puan'] > 0].sort_values(
+                okul_list = df[df['toplam_puan'] > 0].sort_values(
                     by=sort_cols, 
-                    ascending=sort_order
+                    ascending=sort_orders
                 ).head(30)
                 
-                if okul_df.empty:
+                if okul_list.empty:
                     st.info("Henüz okul genelinde bir lider belirlenmedi.")
                 else:
                     st.markdown('<div class="list-scroll-vfinal">', unsafe_allow_html=True)
-                    for i, r in enumerate(okul_df.itertuples(), 1):
+                    for i, r in enumerate(okul_list.itertuples(), 1):
                         rn, rc = rütbe_ata(r.toplam_puan)
                         icon = "🥇" if i == 1 else "🥈" if i == 2 else "🥉" if i == 3 else f"{i:02d}"
                         st.markdown(f'''
@@ -159,4 +165,4 @@ def liderlik_tablosu_goster(supabase, current_user=None):
                     st.markdown('</div>', unsafe_allow_html=True)
 
     except Exception as e:
-        st.error(f"Liderlik tablosu güncellenirken hata oluştu: {e}")
+        st.error(f"Liderlik tablosu güncellenirken siber-hata: {e}")
