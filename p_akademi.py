@@ -19,8 +19,10 @@ st.set_page_config(
 
 def load_resources():
     try:
+        # style.json dosyasından CSS zırhını yükle
         with open('style.json', 'r', encoding='utf-8') as f:
             st.markdown(json.load(f)['siber_buz_armor'], unsafe_allow_html=True)
+        # Pito'nun ses bankasını session state'e al
         with open('messages.json', 'r', encoding='utf-8') as f:
             st.session_state.pito_messages = json.load(f)
     except Exception as e:
@@ -32,6 +34,7 @@ load_resources()
 @st.cache_resource
 def init_supabase():
     try:
+        # secrets üzerinden Supabase bağlantısını kur
         return create_client(st.secrets["supabase"]["url"], st.secrets["supabase"]["key"])
     except:
         st.error("⚠️ Supabase bağlantısı kurulamadı!"); st.stop()
@@ -39,27 +42,47 @@ def init_supabase():
 supabase: Client = init_supabase()
 
 def normalize(k): 
+    # Kod kıyaslaması için boşlukları temizle ve küçült
     return re.sub(r'\s+', '', str(k)).strip().lower()
 
-# --- 3. İLERLEME VE VERİ KAYIT SİSTEMİ ---
+# --- 3. İLERLEME VE VERİ KAYIT SİSTEMİ (MODÜL KİLİTLİ SÜRÜM) ---
 def ilerleme_kaydet(puan, kod, egz_id, n_id, n_m):
-    yeni_xp = int(st.session_state.user['toplam_puan']) + puan
-    r_ad, _ = ranks.rütbe_ata(yeni_xp)
+    u = st.session_state.user
+    mevcut_m = int(u['mevcut_modul'])
     
+    # 🚨 MODÜL GEÇİŞ KONTROLÜ: Öğrenci yeni bir modüle mi geçiyor?
+    if int(n_m) > mevcut_m:
+        # Öğretmenin bu sınıf için verdiği en güncel izni sorgula
+        iz_res = supabase.table("ayarlar").select("deger").eq("anahtar", f"izin_{u['sinif']}").execute()
+        izin_verilen = int(iz_res.data[0]['deger']) if iz_res.data else 1
+        
+        # Eğer geçilmek istenen modül izin verilenin üzerindeyse barikatı kur
+        if int(n_m) > izin_verilen:
+            st.warning(f"🚨 DUR GENÇ YAZILIMCI! Modül {mevcut_m} bitti ama Modül {n_m} için öğretmeninden onay almalısın.")
+            return # İlerleme mühürlenmez, fonksiyon burada durur.
+
+    # --- VERİTABANI GÜNCELLEME ---
+    yeni_xp = int(u['toplam_puan']) + puan
+    r_ad, _ = ranks.rütbe_ata(yeni_xp) # Rütbeyi hesapla
+    
+    # Kullanıcı verilerini ve tarih bilgisini güncelle
     supabase.table("kullanicilar").update({
         "toplam_puan": yeni_xp, 
         "mevcut_egzersiz": str(n_id), 
         "mevcut_modul": int(n_m), 
-        "rutbe": r_ad
-    }).eq("ogrenci_no", int(st.session_state.user['ogrenci_no'])).execute()
+        "rutbe": r_ad,
+        "tarih": "now()" # Liderlik tablosu eşitlik bozucu için zaman damgası
+    }).eq("ogrenci_no", int(u['ogrenci_no'])).execute()
     
+    # Başarılı kod kaydını siber-arşive ekle
     supabase.table("egzersiz_kayitlari").insert({
-        "ogrenci_no": int(st.session_state.user['ogrenci_no']), 
+        "ogrenci_no": int(u['ogrenci_no']), 
         "egz_id": str(egz_id), 
         "alinan_puan": int(puan), 
         "basarili_kod": str(kod)
     }).execute()
     
+    # Session state'i tazele ve sayfayı yenile
     st.session_state.user.update({
         "toplam_puan": yeni_xp, 
         "mevcut_egzersiz": str(n_id), 
@@ -70,30 +93,37 @@ def ilerleme_kaydet(puan, kod, egz_id, n_id, n_m):
     st.rerun()
 
 # --- 4. SESSION STATE (HATA ÖNLEYİCİ) ---
-keys = ["user", "temp_user", "show_reg", "error_count", "cevap_dogru", "current_code", "user_num", "in_review"]
+keys = ["user", "temp_user", "show_reg", "error_count", "cevap_dogru", "current_code", "user_num", "in_review", "login_step", "temp_num"]
 for k in keys:
     if k not in st.session_state:
-        if k in ["user", "temp_user"]: st.session_state[k] = None
+        if k in ["user", "temp_user", "temp_num"]: st.session_state[k] = None
         elif k in ["error_count", "user_num"]: st.session_state[k] = 0
         elif k in ["show_reg", "cevap_dogru", "in_review"]: st.session_state[k] = False
+        elif k in ["login_step"]: st.session_state[k] = "numara_girisi"
         else: st.session_state[k] = ""
 
 # --- 5. ANA PROGRAM AKIŞI ---
 try:
+    # Müfredatı yükle
     with open('mufredat.json', 'r', encoding='utf-8') as f:
         mufredat = json.load(f)['pito_akademi_mufredat']
 except: 
     st.error("mufredat.json bulunamadı!"); st.stop()
 
+# Giriş Kontrolü
 if st.session_state.user is None:
+    # Login ekranına liderlik tablosunu callback olarak gönder
     auth.login_ekrani(supabase, st.session_state.pito_messages, emotions.pito_goster, lambda: ranks.liderlik_tablosu_goster(supabase))
 else:
     u = st.session_state.user
     m_idx = int(u['mevcut_modul']) - 1
     
     if st.session_state.in_review:
+        # Başarıdan sonra zorunlu inceleme modu veya serbest arşiv
         mechanics.inceleme_modu_paneli(u, mufredat, emotions.pito_goster, supabase)
     elif m_idx >= len(mufredat):
+        # Tüm modüller bitince mezuniyet töreni
         mechanics.mezuniyet_ekrani(u, st.session_state.pito_messages, emotions.pito_goster, supabase, ranks)
     else:
+        # Aktif eğitim ekranı
         education.egitim_ekrani(u, mufredat, st.session_state.pito_messages, emotions, ranks, ilerleme_kaydet, normalize, supabase)
