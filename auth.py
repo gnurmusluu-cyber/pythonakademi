@@ -40,17 +40,15 @@ def login_ekrani(supabase, msgs, load_pito, liderlik_tablosu_fonksiyonu):
         </style>
     ''', unsafe_allow_html=True)
 
-    # --- 1. DASHBOARD YAPISI ---
     col_in, col_tab = st.columns([1.8, 1.2], gap="large")
     
     with col_in:
         st.markdown('<div class="academy-title">🎓 PİTO PYTHON AKADEMİ</div>', unsafe_allow_html=True)
-        st.markdown('<p style="text-align:center; color:#888; margin-bottom:40px;">Nusaybin Süleyman Bölünmez Anadolu Lisesi</p>', unsafe_allow_html=True)
         
         if "login_step" not in st.session_state: st.session_state.login_step = "numara_girisi"
         if "temp_num" not in st.session_state: st.session_state.temp_num = None
 
-        # --- ADIM 1: OKUL NUMARASI VE GİZLİ GEÇİT SORGULAMA ---
+        # --- ADIM 1: GİRİŞ VE GİZLİ GEÇİT (5520161990) ---
         if st.session_state.login_step == "numara_girisi":
             st.markdown('<div class="pito-login-header">', unsafe_allow_html=True)
             c1, c2 = st.columns([1.2, 3])
@@ -65,77 +63,86 @@ def login_ekrani(supabase, msgs, load_pito, liderlik_tablosu_fonksiyonu):
                 submit = st.form_submit_button("SİBER-GEÇİDİ SORGULA 🔍")
                 
                 if submit:
-                    # GİZLİ ÖĞRETMEN PANELİ ANAHTARI
                     if num_input == "5520161990":
                         st.session_state.login_step = "ogretmen_paneli"
                         st.rerun()
-                    
                     elif num_input.isdigit():
-                        num = int(num_input)
-                        res = supabase.table("kullanicilar").select("*").eq("ogrenci_no", num).execute()
-                        
+                        res = supabase.table("kullanicilar").select("*").eq("ogrenci_no", int(num_input)).execute()
                         if res.data:
                             user = res.data[0]
-                            # SINIF KİLİT KONTROLÜ
+                            # Sınıf Kilidi Kontrolü
                             kilit_res = supabase.table("ayarlar").select("deger").eq("anahtar", "aktif_sinif").execute()
                             aktif_sinif = kilit_res.data[0]['deger'] if kilit_res.data else "KAPALI"
                             
                             if aktif_sinif != "KAPALI" and user['sinif'] == aktif_sinif:
-                                st.session_state.temp_num = num
-                                if not user.get("sifre"):
-                                    st.session_state.login_step = "sifre_olustur"
-                                else:
-                                    st.session_state.login_step = "sifre_giris"
+                                st.session_state.temp_num = int(num_input)
+                                st.session_state.login_step = "sifre_olustur" if not user.get("sifre") else "sifre_giris"
                                 st.rerun()
                             else:
-                                st.error(f"🚫 ERİŞİM ENGELLENDİ: Şu an sadece {aktif_sinif} sınıfı derstedir.")
-                        else:
-                            st.error("🚨 Bu numara siber arşivde kayıtlı değil!")
+                                st.error(f"🚫 ERİŞİM ENGELLENDİ: Şu an sadece {aktif_sinif} derstedir.")
+                        else: st.error("🚨 Numara siber arşivde bulunamadı!")
 
-        # --- ADIM 2: ÖĞRETMEN YÖNETİM PANELİ ---
+        # --- ADIM 2: ÖĞRETMEN YÖNETİM PANELİ (GÜNCELLENMİŞ SINIFLAR) ---
         elif st.session_state.login_step == "ogretmen_paneli":
-            st.markdown("### 🔐 SİBER-GEÇİT YÖNETİMİ")
-            res = supabase.table("ayarlar").select("deger").eq("anahtar", "aktif_sinif").execute()
-            su_anki = res.data[0]['deger'] if res.data else "KAPALI"
+            st.markdown("### 🔐 ÖĞRETMEN YÖNETİM MERKEZİ")
             
-            st.info(f"Şu an erişim açık olan grup: **{su_anki}**")
+            # Sınıf Listesi
+            siniflar = ["9-A", "9-B", "9-C", "9-D", "9-E", "10-A", "10-B", "10-C", "10-D", "10-E", "11-G", "11-E", "11-F"]
+            secili_sinif = st.selectbox("Yönetilecek Şubeyi Seç:", siniflar)
             
-            siniflar = ["KAPALI", "9-A", "9-B", "10-A", "10-B", "11-A", "11-B", "12-A", "12-B"]
-            yeni_sinif = st.selectbox("Erişimi açılacak sınıfı seç:", siniflar)
+            # 1. Giriş Kilidi
+            res_k = supabase.table("ayarlar").select("deger").eq("anahtar", "aktif_sinif").execute()
+            su_anki_k = res_k.data[0]['deger'] if res_k.data else "KAPALI"
+            st.info(f"📢 Şu an erişimi açık olan: **{su_anki_k}**")
             
-            if st.button("KİLİDİ GÜNCELLE 🔑"):
-                supabase.table("ayarlar").update({"deger": yeni_sinif}).eq("anahtar", "aktif_sinif").execute()
-                st.success(f"Erişim {yeni_sinif} için mühürlendi!")
-                st.rerun()
-                
-            if st.button("⬅️ GİRİŞ EKRANINA DÖN"):
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button(f"{secili_sinif} Girişini Aç"):
+                    supabase.table("ayarlar").update({"deger": secili_sinif}).eq("anahtar", "aktif_sinif").execute()
+                    st.rerun()
+            with col2:
+                if st.button("Tüm Girişleri Kapat"):
+                    supabase.table("ayarlar").update({"deger": "KAPALI"}).eq("anahtar", "aktif_sinif").execute()
+                    st.rerun()
+
+            st.divider()
+
+            # 2. Modül İzni
+            res_m = supabase.table("ayarlar").select("deger").eq("anahtar", f"izin_{secili_sinif}").execute()
+            su_anki_m = res_m.data[0]['deger'] if res_m.data else "1"
+            st.warning(f"📖 {secili_sinif} şu an Modül {su_anki_m} seviyesinde.")
+            
+            yeni_m = st.number_input("Yeni Modül İzni:", 1, 10, int(su_anki_m))
+            if st.button(f"{secili_sinif} İçin Modül {yeni_m} İznini Kaydet"):
+                supabase.table("ayarlar").update({"deger": str(yeni_m)}).eq("anahtar", f"izin_{secili_sinif}").execute()
+                st.success("Modül kilidi güncellendi!")
+            
+            if st.button("⬅️ ÇIKIŞ YAP"):
                 st.session_state.login_step = "numara_girisi"
                 st.rerun()
 
-        # --- ADIM 3: İLK GİRİŞ - ŞİFRE OLUŞTURMA ---
+        # --- ADIM 3 & 4: ŞİFRE SİSTEMİ ---
         elif st.session_state.login_step == "sifre_olustur":
-            with st.form("sifre_ol_form"):
-                st.info("✨ İlk girişin! Kendine 4 haneli bir siber-anahtar belirle.")
-                yeni = st.text_input("Yeni Şifre:", type="password")
-                if st.form_submit_button("ANAHTARI MÜHÜRLE 🔐"):
+            with st.form("s_ol"):
+                st.info("✨ İlk girişin! 4 haneli siber-anahtarını mühürle.")
+                yeni = st.text_input("Şifre Belirle:", type="password")
+                if st.form_submit_button("KAYDET"):
                     if len(yeni) >= 2:
                         supabase.table("kullanicilar").update({"sifre": yeni}).eq("ogrenci_no", st.session_state.temp_num).execute()
                         st.session_state.login_step = "sifre_giris"
                         st.rerun()
 
-        # --- ADIM 4: ŞİFRE DOĞRULAMA ---
         elif st.session_state.login_step == "sifre_giris":
-            with st.form("sifre_gir_form"):
-                st.markdown("🔐 **Siber-Anahtar Gerekli**")
+            with st.form("s_gir"):
+                st.markdown("🔐 **Siber-Anahtarını Yaz**")
                 girilen = st.text_input("Şifre:", type="password")
-                if st.form_submit_button("BAĞLAN 🚀"):
+                if st.form_submit_button("BAĞLAN"):
                     res = supabase.table("kullanicilar").select("*").eq("ogrenci_no", st.session_state.temp_num).execute()
                     if res.data and str(res.data[0]["sifre"]) == str(girilen):
                         st.session_state.user = res.data[0]
                         st.rerun()
-                    else: st.error("🚨 Yanlış anahtar!")
-            
-            if st.button("⬅️ NUMARAYI DEĞİŞTİR"):
+                    else: st.error("Hatalı anahtar!")
+            if st.button("⬅️ Geri"):
                 st.session_state.login_step = "numara_girisi"
                 st.rerun()
 
