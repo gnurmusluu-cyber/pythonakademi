@@ -20,7 +20,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         modul = m_list[m_idx]
         egz = next((e for e in modul['egzersizler'] if e['id'] == str(u['mevcut_egzersiz'])), modul['egzersizler'][0]) [cite: 2026-02-07]
     except Exception:
-        st.error("🚨 Veri Okuma Hatası! Sistem kilitlendi.")
+        st.error("🚨 Veri Okuma Hatası! Müfredat senkronizasyonu kilitlendi.")
         return
 
     e_count = st.session_state.get('error_count', 0) [cite: 2026-02-07]
@@ -37,6 +37,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         try:
             exec(kod, exec_scope)
             res = buffer.getvalue().strip()
+            # 🚨 ÇIKTI DENETİMİ: Çıktı boşsa bilgilendir
             if not res:
                 return "ℹ️ Bu kod herhangi bir çıktı üretmedi." [cite: 2026-02-07]
             return res 
