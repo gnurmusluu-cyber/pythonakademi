@@ -37,7 +37,6 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         try:
             exec(kod, exec_scope)
             res = buffer.getvalue().strip()
-            # 🚨 ÇIKTI DENETİMİ: Çıktı boşsa öğrenciyi bilgilendir
             if not res:
                 return "ℹ️ Bu kod herhangi bir çıktı üretmedi." [cite: 2026-02-07]
             return res 
@@ -111,7 +110,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             if st.button("🚪 Çıkış", key="btn_exit"):
                 st.session_state.user = None; st.rerun()
 
-        # 🚨 AKILLI INPUT DENETİMİ (Sadece Gerekliyse)
+        # 🚨 AKILLI INPUT DENETİMİ
         has_input = "input(" in egz['dogru_cevap_kodu'] or "input(" in egz['sablon'] [cite: 2026-02-07]
         user_input_val = st.session_state.get('user_input_val', '').strip()
 
@@ -148,7 +147,6 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             out = kod_calistir_cikti_al(u_code, st.session_state.get('user_input_val', '0'))
             st.markdown(f'<div class="cyber-terminal"><b>SİBER-ÇIKTI:</b><br>{out}</div>', unsafe_allow_html=True)
             
-            # 🚨 VALUEERROR KESİN ÇÖZÜMÜ
             if st.button("SIRADAKİ GÖREVE GEÇ ➡️"):
                 st.session_state.cevap_dogru = False
                 st.session_state.error_count = 0
