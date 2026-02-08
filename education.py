@@ -13,7 +13,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         m_list = mufredat
 
     try:
-        # Mevcut modül ve egzersizi güvenli şekilde çek
+        # u sözlüğünden verileri güvenli çek (SyntaxError engellemek için .get kullanımı)
         m_idx = int(u.get("mevcut_modul", 1)) - 1
         modul = m_list[m_idx]
         egz_id = str(u.get("mevcut_egzersiz", "1.1"))
@@ -45,7 +45,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
     # --- 0. SİBER-GÖRSEL TASARIM (STATİK HUD) ---
     st.markdown("""
         <style>
-        header[data-testid="stHeader"], [data-testid="stDecoration"], footer { display: none !important; }
+        header[data-testid='stHeader'], [data-testid='stDecoration'], footer { display: none !important; }
         .stApp { background-color: #0e1117 !important; }
         .cyber-hud {
             width: 100%; min-height: 125px;
@@ -70,28 +70,30 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         </style>
     """, unsafe_allow_html=True)
 
-    # --- 1. RUH HALİ VE HUD ---
+    # --- 1. RUH HALİ (EMOTIONS.PY) VE HUD ---
+    # emotions.py dosyasındaki pito_durum_belirle fonksiyonunu kullanıyoruz
     p_mod = emotions_module.pito_durum_belirle(e_count, cevap_durumu)
     rn, rc = ranks_module.rütbe_ata(u.get("toplam_puan", 0)) [cite: 2026-02-07]
     
     def get_gif_b64(mod):
+        # Assets klasöründen GIF'i güvenli çekiyoruz
         path = os.path.join(os.path.dirname(__file__), "assets", f"pito_{mod}.gif")
         if os.path.exists(path):
             with open(path, "rb") as f:
                 return f"data:image/gif;base64,{base64.b64encode(f.read()).decode()}"
         return ""
 
-    # HUD'ı bas (Tırnak çakışmasını önlemek için f-string içinde çift tırnak kullanıldı)
+    # HUD render (Tırnak çakışmasını önlemek için f-string izolasyonu yapıldı)
     st.markdown(f"""
-        <div class="cyber-hud">
-            <div style="display: flex; align-items: center;">
-                <div class="hud-pito-gif"><img src="{get_gif_b64(p_mod)}" style="width:70px; border-radius:50%; border:2px solid #ADFF2F;"></div>
-                <div style="color: #E0E0E0; font-family: monospace; margin-left:15px; font-size: 0.9rem;">
-                    👤 <b>{u.get("ad_soyad", "Genç Yazılımcı")[:15]}</b><br>
-                    <span style="color:#ADFF2F;">🎖️ {rn}</span>
+        <div class='cyber-hud'>
+            <div style='display: flex; align-items: center;'>
+                <div class='hud-pito-gif'><img src='{get_gif_b64(p_mod)}' style='width:70px; border-radius:50%; border:2px solid #ADFF2F;'></div>
+                <div style='color: #E0E0E0; font-family: monospace; margin-left:15px; font-size: 0.9rem;'>
+                    👤 <b>{u.get("ad_soyad", "Arkadaşım")[:15]}</b><br>
+                    <span style='color:#ADFF2F;'>🎖️ {rn}</span>
                 </div>
             </div>
-            <div style="color:#00E5FF; font-family:monospace; font-size:1.1rem;">
+            <div style='color:#00E5FF; font-family:monospace; font-size:1.1rem;'>
                 💎 XP: {max(0, 20-(e_count*5))} | ⚠️ HATA: {e_count}/4 | 🏆 TOPLAM: {u.get("toplam_puan", 0)}
             </div>
         </div>
@@ -101,7 +103,8 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
     cl, cr = st.columns([7.2, 2.8])
     with cl:
         n1, n2, n3 = st.columns([0.4, 0.4, 0.2])
-        with n1: st.markdown(f"💬 *{msgs.get('welcome', 'Hoş geldin!').format(u.get('ad_soyad', 'Arkadaşım').split()[0])}*") [cite: 2026-02-07]
+        # Pito'nun selamlaması
+        with n1: st.markdown(f"💬 *{msgs.get('welcome', 'Merhaba!').format(u.get('ad_soyad', 'Arkadaşım').split()[0])}*") [cite: 2026-02-07]
         with n2: 
             if st.button("🔍 Geçmiş Egzersizler", key="btn_review"):
                 st.session_state.in_review = True; st.rerun()
@@ -109,13 +112,13 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             if st.button("🚪 Çıkış", key="btn_exit"):
                 st.session_state.user = None; st.rerun()
 
-        # AKILLI INPUT DENETİMİ
-        has_input = "input(" in egz["dogru_cevap_kodu"] or "input(" in egz["sablon"] [cite: 2026-02-07]
+        # AKILLI INPUT DENETİMİ (SADECE GEREKLİYSE GÖRÜNÜR) [cite: 2026-02-07]
+        has_input = "input(" in egz["dogru_cevap_kodu"] or "input(" in egz["sablon"]
         user_input_val = st.session_state.get("user_input_val", "").strip()
 
         if has_input:
             if not user_input_val:
-                st.markdown('<div class="input-warning-box">🚨 SİBER-BARİKAT: Kodun bir veri bekliyor! Lütfen aşağıdaki kutuyu doldur.</div>', unsafe_allow_html=True)
+                st.markdown("<div class='input-warning-box'>🚨 SİBER-BARİKAT: Kodun bir veri bekliyor! Lütfen aşağıdaki kutuyu doldur.</div>", unsafe_allow_html=True)
             with st.popover("⌨️ VERİ GİRİŞİ YAP (Mecburi)", use_container_width=True):
                 st.session_state.user_input_val = st.text_input("Giriş yapın:", key=f"inp_{egz['id']}")
         else:
@@ -124,6 +127,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         with st.expander(f"📖 {modul['modul_adi']}", expanded=True):
             st.markdown(f"**Yönerge:** {egz['yonerge']}")
 
+        # EDİTÖR
         u_code = st.text_area("Editor", value=egz["sablon"], height=200, key=f"ed_{egz['id']}", label_visibility="collapsed") [cite: 2026-02-07]
         
         if st.button("KODU KONTROL ET 🚀", type="primary", use_container_width=True):
@@ -144,8 +148,9 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
 
         if st.session_state.get("cevap_dogru"):
             out = kod_calistir_cikti_al(u_code, st.session_state.get("user_input_val", "0"))
-            st.markdown(f'<div class="cyber-terminal"><b>SİBER-ÇIKTI:</b><br>{out}</div>', unsafe_allow_html=True)
+            st.markdown(f"<div class='cyber-terminal'><b>SİBER-ÇIKTI:</b><br>{out}</div>", unsafe_allow_html=True)
             
+            # VALUEERROR ENGELLEYİCİ GEÇİŞ MANTIĞI [cite: 2026-02-07]
             if st.button("SIRADAKİ GÖREVE GEÇ ➡️"):
                 st.session_state.cevap_dogru = False
                 st.session_state.error_count = 0
