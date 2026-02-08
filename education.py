@@ -28,6 +28,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
 
     # --- KOD ÇIKTISINI YAKALAMA MOTORU (DONMA KORUMALI) ---
     def kod_calistir_cikti_al(kod, giris_verisi=''):
+        # 🚨 DONMA ENGELLEYİCİ: Giriş boşsa sistemi kilitleme, güvenli değer ata
         safe_input = str(giris_verisi) if (giris_verisi and str(giris_verisi).strip() != "") else "0"
         buffer = io.StringIO()
         old_stdout = system_sys.stdout
@@ -43,7 +44,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         finally:
             system_sys.stdout = old_stdout
 
-    # --- 0. SİBER-GÖRSEL TASARIM (KESİN ÇÖZÜM: STATİK HUD) ---
+    # --- 0. SİBER-GÖRSEL TASARIM (STATİK HUD) ---
     st.markdown(f'''
         <style>
         header[data-testid="stHeader"], [data-testid="stDecoration"], footer {{ display: none !important; }}
@@ -110,7 +111,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             if not user_input_val:
                 st.markdown('<div class="input-warning-box">🚨 SİBER-BARİKAT: Kodun bir veri bekliyor! Lütfen aşağıdaki kutuyu doldur.</div>', unsafe_allow_html=True)
             with st.popover("⌨️ VERİ GİRİŞİ YAP (Mecburi)", use_container_width=True):
-                st.session_state.user_input_val = st.text_input("Giriş yapın:", key=f"inp_{egz['id']}")
+                st.session_state.user_input_val = st.text_input("Veri girişi yapın:", key=f"inp_{egz['id']}")
 
         with st.expander(f"📖 {modul['modul_adi']}", expanded=True):
             st.markdown(f"**Yönerge:** {egz['yonerge']}")
