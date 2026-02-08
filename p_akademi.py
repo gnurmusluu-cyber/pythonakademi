@@ -46,35 +46,35 @@ def normalize(k):
     # Kod kıyaslaması için boşlukları temizle ve küçült
     return re.sub(r'\s+', '', str(k)).strip().lower()
 
-# --- 3. İLERLEME VE VERİ KAYIT SİSTEMİ (MODÜL KİLİTLİ VE TARİH GÜNCELLEMELİ) ---
+# --- 3. İLERLEME VE VERİ KAYIT SİSTEMİ (MODÜL KİLİTLİ VE SENKRONİZE) ---
 def ilerleme_kaydet(puan, kod, egz_id, n_id, n_m):
     u = st.session_state.user
     mevcut_m = int(u['mevcut_modul'])
     
-    # 🚨 MODÜL GEÇİŞ KONTROLÜ: Öğrenci yeni bir modüle mi geçiyor?
+    # 🚨 MODÜL GEÇİŞ KONTROLÜ
     if int(n_m) > mevcut_m:
         # Öğretmenin bu sınıf için verdiği en güncel izni sorgula
         iz_res = supabase.table("ayarlar").select("deger").eq("anahtar", f"izin_{u['sinif']}").execute()
         izin_verilen = int(iz_res.data[0]['deger']) if iz_res.data else 1
         
-        # Eğer geçilmek istenen modül izin verilenin üzerindeyse barikatı kur
         if int(n_m) > izin_verilen:
             st.warning(f"🚨 DUR GENÇ YAZILIMCI! Modül {mevcut_m} bitti ama Modül {n_m} henüz öğretmen tarafından açılmadı.")
-            return # İlerleme mühürlenmez, fonksiyon burada durur.
+            return
 
     # --- VERİTABANI GÜNCELLEME ---
-    yeni_xp = int(u['toplam_puan']) + puan
-    r_ad, _ = ranks.rütbe_ata(yeni_xp) # Rütbeyi hesapla
-    su_an = datetime.datetime.now().isoformat() # ISO formatında güncel zaman damgası
+    # Not: Puan zaten education.py içinde st.session_state.user['toplam_puan']'a eklendi
+    yeni_xp = int(u['toplam_puan']) 
+    r_ad, _ = ranks.rütbe_ata(yeni_xp)
+    su_an = datetime.datetime.now().isoformat()
     
     try:
-        # Kullanıcı verilerini ve tarih bilgisini güncelle (APIError Fix)
+        # Kullanıcı verilerini ve tarih bilgisini güncelle
         supabase.table("kullanicilar").update({
             "toplam_puan": yeni_xp, 
             "mevcut_egzersiz": str(n_id), 
             "mevcut_modul": int(n_m), 
             "rutbe": r_ad,
-            "tarih": su_an # Liderlik tablosunda en son işlem yapanı üste taşır
+            "tarih": su_an
         }).eq("ogrenci_no", int(u['ogrenci_no'])).execute()
         
         # Başarılı kod kaydını siber-arşive ekle
@@ -85,28 +85,23 @@ def ilerleme_kaydet(puan, kod, egz_id, n_id, n_m):
             "basarili_kod": str(kod)
         }).execute()
         
-        # 🚀 LİDERLİK TABLOSU SENKRONİZASYONU: Session state'i anında tazele
+        # Session state senkronizasyonu
         st.session_state.user.update({
-            "toplam_puan": yeni_xp, 
             "mevcut_egzersiz": str(n_id), 
             "mevcut_modul": int(n_m), 
             "rutbe": r_ad,
             "tarih": su_an
         })
         
-        # Eğitim durumu temizliği
         st.session_state.error_count = 0
         st.session_state.cevap_dogru = False
         st.session_state.current_code = ""
-        st.session_state.user_input_val = ""
-        
-        # Sayfayı yenileyerek liderlik tablosunun güncel veriyi çekmesini sağla
         st.rerun()
         
     except Exception as e:
         st.error(f"⚠️ İlerleme Kaydedilemedi: {e}")
 
-# --- 4. SESSION STATE (HATA ÖNLEYİCİ VE YENİ GİRİŞ SİSTEMİ DESTEĞİ) ---
+# --- 4. SESSION STATE (HATA ÖNLEYİCİ) ---
 keys = ["user", "temp_user", "show_reg", "error_count", "cevap_dogru", "current_code", "user_num", "in_review", "login_step", "temp_num", "reset_trigger"]
 for k in keys:
     if k not in st.session_state:
@@ -118,26 +113,20 @@ for k in keys:
 
 # --- 5. ANA PROGRAM AKIŞI ---
 try:
-    # Müfredatı yükle
     with open('mufredat.json', 'r', encoding='utf-8') as f:
         mufredat = json.load(f)['pito_akademi_mufredat']
 except: 
     st.error("mufredat.json bulunamadı!"); st.stop()
 
-# Giriş Kontrolü
 if st.session_state.user is None:
-    # Login ekranına liderlik tablosunu callback olarak gönder
     auth.login_ekrani(supabase, st.session_state.pito_messages, emotions.pito_goster, lambda: ranks.liderlik_tablosu_goster(supabase))
 else:
     u = st.session_state.user
     m_idx = int(u['mevcut_modul']) - 1
     
-    # Navigasyon Mantığı
     if st.session_state.get('in_review', False):
         mechanics.inceleme_modu_paneli(u, mufredat, emotions.pito_goster, supabase)
     elif m_idx >= len(mufredat):
-        # Tüm modüller bittiğinde mezuniyet töreni
         mechanics.mezuniyet_ekrani(u, st.session_state.pito_messages, emotions.pito_goster, supabase, ranks)
     else:
-        # Aktif eğitim ekranı
         education.egitim_ekrani(u, mufredat, st.session_state.pito_messages, emotions, ranks, ilerleme_kaydet, normalize, supabase)
