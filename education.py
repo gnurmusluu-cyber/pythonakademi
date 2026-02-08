@@ -9,7 +9,7 @@ import html
 import datetime
 
 def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fonksiyonu, normalize_fonksiyonu, supabase):
-    # --- 1. VERİ YAPISI VE GÜVENLİK ---
+    # --- 1. VERİ YAPISI VE DURUM ---
     if isinstance(mufredat, dict) and "pito_akademi_mufredat" in mufredat:
         m_list = mufredat["pito_akademi_mufredat"]
     else:
@@ -26,10 +26,10 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
     e_count = st.session_state.get('error_count', 0)
     if "anim_nonce" not in st.session_state: st.session_state.anim_nonce = 0
 
-    # --- KOD ÇIKTISINI YAKALAMA MOTORU (GÜVENLİ) ---
+    # --- KOD ÇIKTISINI YAKALAMA MOTORU (SİBER-KALKANLI) ---
     def kod_calistir_cikti_al(kod, giris_verisi=''):
-        # 🚨 DONMA ENGELLEYİCİ: Veri girişi boşsa varsayılan boş string ata
-        safe_input = str(giris_verisi) if giris_verisi is not None else ""
+        # 🚨 DONMA ENGELLEYİCİ: Veri girişi boşsa sistemi kilitleme, varsayılan değer ata
+        safe_input = str(giris_verisi) if (giris_verisi and str(giris_verisi).strip() != "") else "0"
         buffer = io.StringIO()
         old_stdout = system_sys.stdout
         system_sys.stdout = buffer
@@ -44,44 +44,43 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         finally:
             system_sys.stdout = old_stdout
 
-    # --- 0. SİBER-GÖRSEL TASARIM (STATIC HUD) ---
+    # --- 0. SİBER-GÖRSEL TASARIM ---
     st.markdown(f'''
         <style>
         header[data-testid="stHeader"], [data-testid="stDecoration"], footer {{ display: none !important; }}
         .stApp {{ background-color: #0e1117 !important; }}
         
+        /* HUD TASARIMI (SABİT YERLEŞİM) */
         .cyber-hud {{
             width: 100%; min-height: 120px;
             background-color: #0e1117 !important; border-bottom: 3px solid #00E5FF;
             padding: 20px 40px; display: flex;
             justify-content: space-between; align-items: center; 
-            box-shadow: 0 10px 40px #000;
-            margin-bottom: 30px;
+            box-shadow: 0 10px 40px #000; margin-bottom: 30px;
         }}
-
-        .hud-pito-gif img {{ width: 70px !important; height: 70px !important; border-radius: 50%; border: 2px solid #00E5FF; object-fit: cover; }}
-        .hud-progress-container {{ flex-grow: 1; margin: 0 40px; max-width: 450px; }}
-        .progress-label {{ color: #00E5FF; font-size: 0.7rem; font-family: monospace; text-transform: uppercase; margin-bottom: 5px; display: block; }}
         
-        @keyframes cyber-shake {{ 0% {{ transform: translate(1px, 1px); }} 50% {{ transform: translate(-2px, -1px); }} 100% {{ transform: translate(0, 0); }} }}
-        .hud-shake {{ animation: cyber-shake 0.3s ease-in-out; }}
+        /* 🚨 TİTREYEN GİRİŞ UYARISI */
+        .input-warning-box {{
+            padding: 12px; border-radius: 8px; border: 2px solid #FF4B4B;
+            background-color: rgba(255, 75, 75, 0.15); color: #FF4B4B;
+            font-weight: bold; text-align: center; margin-bottom: 10px;
+            animation: shake 0.5s infinite;
+        }}
+        @keyframes shake {{
+            0% {{ transform: translate(1px, 1px) rotate(0deg); }}
+            25% {{ transform: translate(-2px, -1px) rotate(-1deg); }}
+            50% {{ transform: translate(2px, 1px) rotate(1deg); }}
+            100% {{ transform: translate(0, 0) rotate(0deg); }}
+        }}
         
-        .hud-capsule {{ background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(0, 229, 255, 0.3); padding: 8px 15px; border-radius: 50px; display: flex; align-items: center; gap: 10px; font-family: monospace; font-size: 0.9rem; }}
         .cyber-terminal {{ background-color: #000; color: #ADFF2F; padding: 15px; border-radius: 8px; border: 1px solid #30363d; margin-bottom: 20px; font-family: monospace; }}
         </style>
     ''', unsafe_allow_html=True)
 
     # --- 1. HUD RENDER ---
     rn, rc = ranks_module.rütbe_ata(u['toplam_puan'])
-    p_xp = max(0, 20 - (e_count * 5))
     p_mod = emotions_module.pito_durum_belirle(e_count, st.session_state.cevap_dogru)
-    total_m = len(m_list)
-    total_e = len(modul['egzersizler'])
-    curr_e_idx = modul['egzersizler'].index(egz) + 1
     
-    shake_class = "hud-shake" if st.session_state.anim_nonce > 0 else ""
-    error_color = "#FF4B4B" if e_count > 0 else "#00E5FF"
-
     def get_gif_b64(mod):
         path = os.path.join(os.path.dirname(__file__), 'assets', f'pito_{mod}.gif')
         return f'data:image/gif;base64,{base64.b64encode(open(path, "rb").read()).decode()}' if os.path.exists(path) else ''
@@ -89,63 +88,53 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
     st.markdown(f'''
         <div class="cyber-hud">
             <div style="display: flex; align-items: center;">
-                <div class="hud-pito-gif"><img src="{get_gif_b64(p_mod)}"></div>
-                <div style="color: #E0E0E0; font-family: monospace; margin-left:15px; font-size: 0.9rem;">👤 <b>{u['ad_soyad'][:15]}</b><br><span style="color:#ADFF2F;">{rn}</span></div>
+                <div class="hud-pito-gif"><img src="{get_gif_b64(p_mod)}" style="width:70px; border-radius:50%; border:2px solid #00E5FF;"></div>
+                <div style="color: #E0E0E0; font-family: monospace; margin-left:15px; font-size: 0.9rem;">👤 <b>{u['ad_soyad']}</b><br><span style="color:#ADFF2F;">🎖️ {rn}</span></div>
             </div>
-            <div class="hud-progress-container">
-                <span class="progress-label">AKADEMİ YOLCULUĞU: {u['mevcut_modul']}/{total_m}</span>
-                <div style="width:100%; background:rgba(255,255,255,0.1); height:6px; border-radius:3px; margin-bottom:12px;">
-                    <div style="width:{(int(u['mevcut_modul'])/total_m)*100}%; background:#00E5FF; height:100%; border-radius:3px;"></div>
-                </div>
-                <span class="progress-label">MODÜL GÖREVLERİ: {curr_e_idx}/{total_e}</span>
-                <div style="width:100%; background:rgba(255,255,255,0.1); height:6px; border-radius:3px;">
-                    <div style="width:{(curr_e_idx/total_e)*100}%; background:#ADFF2F; height:100%; border-radius:3px;"></div>
-                </div>
-            </div>
-            <div class="hud-stats-container" style="display:flex; gap:12px;">
-                <div class="hud-capsule" style="color:#00E5FF;">💎 <span class="{shake_class}">{p_xp}</span></div>
-                <div class="hud-capsule" style="color:{error_color};">⚠️ <span class="{shake_class}">{e_count}/4</span></div>
-                <div class="hud-capsule" style="color:#ADFF2F; border-color:#ADFF2F;">🏆 <span>{u['toplam_puan']}</span></div>
-            </div>
+            <div style="color:#00E5FF; font-family:monospace; font-size:1.1rem;">💎 XP: {max(0, 20-(e_count*5))} | ⚠️ HATA: {e_count}/4 | 🏆 TOPLAM: {u['toplam_puan']}</div>
         </div>
     ''', unsafe_allow_html=True)
 
-    # --- 3. ANA PANEL ---
+    # --- 2. ANA PANEL ---
     cl, cr = st.columns([7.2, 2.8])
     with cl:
-        nav1, nav2, nav3 = st.columns([0.4, 0.4, 0.2])
-        with nav1: st.markdown(f"💬 *{msgs['welcome'].format(u['ad_soyad'].split()[0])}*")
-        with nav2: 
-            if st.button("🔍 Geçmiş Egzersizler", key="btn_review"): 
-                st.session_state.in_review = True; st.rerun()
-        with nav3:
-            if st.button("🚪 Çıkış", key="btn_exit"): 
-                st.session_state.user = None; st.rerun()
+        # Navigasyon
+        n1, n2, n3 = st.columns([0.4, 0.4, 0.2])
+        with n1: st.markdown(f"💬 *{msgs['welcome'].format(u['ad_soyad'].split()[0])}*")
+        with n2: 
+            if st.button("🔍 Geçmiş Egzersizler"): st.session_state.in_review = True; st.rerun()
+        with n3:
+            if st.button("🚪 Çıkış"): st.session_state.user = None; st.rerun()
 
-        with st.expander(f"📖 {modul['modul_adi']}", expanded=True):
-            st.markdown(f"<div style='background: rgba(0, 229, 255, 0.05); border-left: 5px solid #00E5FF; padding: 15px; border-radius: 8px;'>{modul['pito_anlatimi']}</div>", unsafe_allow_html=True)
-
-        # 🚨 DONMA ENGELLEYİCİ INPUT DENETİMİ
+        # 🚨 INPUT DENETİMİ (Kararma Koruması)
         has_input = "input(" in egz['dogru_cevap_kodu'] or "input(" in egz['sablon']
+        user_input_val = st.session_state.get('user_input_val', '').strip()
+
         if has_input:
-            with st.popover("⌨️ VERİ GİRİŞİ YAP", use_container_width=True):
-                # Boşluğu engellemek için varsayılan "0" değeri mühürlendi
-                st.session_state.user_input_val = st.text_input("Giriş:", value="0", key=f"inp_{egz['id']}")
+            # Giriş yapılmadığında kutunun hemen üzerinde uyarı göster
+            if not user_input_val:
+                st.markdown('<div class="input-warning-box">🚨 SİBER-BARİKAT: Kodun bir veri bekliyor! Lütfen aşağıdaki kutuyu doldur.</div>', unsafe_allow_html=True)
+            
+            with st.popover("⌨️ VERİ GİRİŞİ YAP (Mecburi)", use_container_width=True):
+                st.session_state.user_input_val = st.text_input("Sayı veya Metin Girin:", key=f"inp_{egz['id']}")
+
+        # EDİTÖR
+        with st.expander(f"📖 {modul['modul_adi']}", expanded=True):
+            st.markdown(f"**Yönerge:** {egz['yonerge']}")
 
         u_code = st.text_area('Editor', value=egz['sablon'], height=200, key=f"ed_{egz['id']}", label_visibility='collapsed')
         
         if st.button("KODU KONTROL ET 🚀", type="primary", use_container_width=True):
-            # Siber-Kilit: Veri girişi boşsa kodun çalışmasını engelle
-            input_val = st.session_state.get('user_input_val', '').strip()
-            if has_input and not input_val:
-                st.error("🚨 SİBER-KİLİT: Lütfen bir veri girin! Boş giriş donmaya sebep olabilir.")
+            # 🚨 SİBER-KİLİT: Giriş yoksa motoru çalıştırma, böylece ekran kararmaz
+            if has_input and not st.session_state.get('user_input_val', '').strip():
+                st.error("🚨 HATA: Veri girişi yapmadan kontrol edilemez. Sistem donmasını önlemek için motor durduruldu!")
             elif u_code.strip() == egz['sablon'].strip():
-                st.warning("🚨 HATA: Egzersize dokunulmadı!")
+                st.warning("🚨 HATA: Önce kodu tamamlamalısın!")
             else:
                 st.session_state.anim_nonce += 1
                 if normalize_fonksiyonu(u_code) == normalize_fonksiyonu(egz['dogru_cevap_kodu']):
-                    yeni_xp = int(u['toplam_puan']) + p_xp
-                    supabase.table("kullanicilar").update({"toplam_puan": yeni_xp, "tarih": "now()"}).eq("ogrenci_no", int(u['ogrenci_no'])).execute()
+                    yeni_xp = int(u['toplam_puan']) + max(0, 20-(e_count*5))
+                    supabase.table("kullanicilar").update({"toplam_puan": yeni_xp}).eq("ogrenci_no", int(u['ogrenci_no'])).execute()
                     st.session_state.user['toplam_puan'] = yeni_xp
                     st.session_state.cevap_dogru = True
                     st.balloons(); st.rerun()
@@ -154,12 +143,9 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
 
         if st.session_state.cevap_dogru:
             out = kod_calistir_cikti_al(u_code, st.session_state.get('user_input_val', '0'))
-            st.markdown(f'<div class="cyber-terminal">{out if out else egz.get("beklenen_cikti", "Başarılı!")}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="cyber-terminal"><b>SİBER-ÇIKTI:</b><br>{out}</div>', unsafe_allow_html=True)
             if st.button("SIRADAKİ GÖREVE GEÇ ➡️"):
-                st.session_state.anim_nonce = 0
-                s_i = modul['egzersizler'].index(egz) + 1
-                n_id, n_m = (modul['egzersizler'][s_i]['id'], u['mevcut_modul']) if s_i < len(modul['egzersizler']) else (f"{int(u['mevcut_modul'])+1}.1", int(u['mevcut_modul']) + 1)
-                ilerleme_fonksiyonu(0, u_code, egz['id'], n_id, n_m)
+                ilerleme_fonksiyonu(0, u_code, egz['id'], "next", "next")
 
     with cr:
         ranks_module.liderlik_tablosu_goster(supabase, current_user=u)
