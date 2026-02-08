@@ -13,7 +13,6 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
 
     # --- DURUM KONTROLÜ ---
     e_count = st.session_state.get('error_count', 0)
-    # Çift kanal toggle: Hata sayısı değiştikçe animasyonu her seferinde yeniden tetikler.
     anim_toggle = 'A' if e_count % 2 == 0 else 'B'
     
     # --- KOD ÇIKTISINI YAKALAMA MOTORU ---
@@ -32,14 +31,13 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         finally:
             system_sys.stdout = old_stdout
 
-    # --- 0. SİBER-GÖRSEL ZIRH (GELİŞMİŞ STATS TASARIMI) ---
+    # --- 0. SİBER-GÖRSEL ZIRH ---
     st.markdown(f'''
         <style>
         header[data-testid="stHeader"], [data-testid="stDecoration"], footer {{ display: none !important; }}
         .stApp {{ background-color: #0e1117 !important; }}
         [data-testid="stMainViewContainer"] {{ padding-top: 185px !important; }}
 
-        /* HUD ANA PANEL */
         .cyber-hud {{
             position: fixed; top: 0; left: 0; right: 0; height: 120px;
             background-color: #0e1117 !important; border-bottom: 3px solid #00E5FF;
@@ -49,14 +47,12 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         .hud-pito-gif img {{ width: 75px !important; height: 75px !important; border-radius: 50%; border: 3px solid #00E5FF; object-fit: cover; }}
         .rank-badge {{ background: #ADFF2F; color: black; padding: 2px 8px; border-radius: 4px; font-weight: 900; font-size: 0.75rem; margin-left: 10px; text-transform: uppercase; }}
         
-        /* HUD STATS */
         .hud-stats-container {{ display: flex; gap: 12px; align-items: center; }}
         .hud-capsule {{
             background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(0, 229, 255, 0.3);
             padding: 6px 14px; border-radius: 50px; display: flex; align-items: center; gap: 8px; font-family: monospace; font-size: 0.85rem;
         }}
 
-        /* SİBER-SIDEBAR STATS KARTI (FIXED) */
         .sidebar-stats-card {{
             background: rgba(0, 229, 255, 0.05); border: 2px solid rgba(0, 229, 255, 0.2);
             border-radius: 15px; padding: 15px; margin-bottom: 20px; text-align: center;
@@ -66,11 +62,9 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         .sidebar-stat-label {{ font-size: 0.65rem; color: #888; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }}
         .sidebar-stat-val {{ font-size: 1.2rem; color: #ADFF2F; font-weight: 950; font-family: 'Courier New', monospace; }}
 
-        /* TERMİNAL VE GÖREV */
         .gorev-box-html {{ background: rgba(0, 229, 255, 0.05); border-left: 5px solid #00E5FF; padding: 15px; border-radius: 8px; color: #E0E0E0; margin-bottom: 20px; }}
         .cyber-terminal {{ background-color: #000; color: #ADFF2F; font-family: 'Courier New', monospace; padding: 15px; border-radius: 8px; border: 1px solid #30363d; margin: 10px 0; font-size: 0.9rem; }}
 
-        /* ÇİFT KANALLI ANİMASYON */
         @keyframes pulseA {{ 0%, 100% {{ transform: scale(1); }} 50% {{ transform: scale(1.3); color: #FF0000; }} }}
         @keyframes pulseB {{ 0%, 100% {{ transform: scale(1); }} 50% {{ transform: scale(1.3); color: #FF0000; }} }}
         .anim-A {{ animation: pulseA 0.6s ease-in-out; display: inline-block; }}
@@ -97,7 +91,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
 
     active_anim = f'anim-{anim_toggle}' if e_count > 0 else ''
     success_c = 'success-pulse' if st.session_state.cevap_dogru else ''
-    display_total = int(u['toplam_puan']) + (p_xp if st.session_state.cevap_dogru else 0)
+    display_total = int(u['toplam_puan'])
 
     # HUD RENDER
     st.markdown(f'''
@@ -136,13 +130,11 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             st.markdown(f'''<div class="gorev-box-html">💡 <b>YÖNERGE:</b> {egz['yonerge']}</div>''', unsafe_allow_html=True)
 
         if not st.session_state.cevap_dogru and e_count < 4:
-            # HATA FIRÇALARI
             if e_count > 0:
                 p_msg = random.choice(msgs['errors'][f'level_{min(e_count, 4)}']).format(u['ad_soyad'].split()[0])
                 st.error(f"🚨 **Pito:** {p_msg}")
                 if e_count >= 3: st.warning(f"💡 **İpucu:** {egz['ipucu']}")
 
-            # INPUT KONTROLÜ
             has_in = 'input' in egz['dogru_cevap_kodu'] or 'input' in egz['sablon']
             has_out = 'print' in egz['dogru_cevap_kodu'] or egz.get('beklenen_cikti', '') != ''
             s_input = ''
@@ -156,7 +148,6 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             b1, b2 = st.columns([4, 1.2])
             with b1:
                 if st.button("KODU KONTROL ET 🚀", type="primary", use_container_width=True):
-                    # 🚨 BOŞLUK / DEĞİŞİKLİK KONTROLÜ (FIXED)
                     if u_code.strip() == egz['sablon'].strip():
                         st.warning("⚠️ Lütfen önce boşluğu doldur veya kodda değişiklik yap!")
                     elif (has_in and has_out) and not s_input.strip():
@@ -165,7 +156,11 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
                         st.session_state.current_code = u_code
                         st.session_state.user_input_val = s_input
                         if normalize_fonksiyonu(u_code) == normalize_fonksiyonu(egz['dogru_cevap_kodu']):
-                            st.session_state.cevap_dogru = True; st.balloons(); st.rerun()
+                            # 🚨 SANAL PUAN SENKRONİZASYONU (LİDERLİK TABLOSU İÇİN)
+                            st.session_state.user['toplam_puan'] += p_xp
+                            st.session_state.cevap_dogru = True
+                            st.balloons()
+                            st.rerun()
                         else:
                             st.session_state.error_count += 1; st.rerun()
             with b2:
@@ -178,7 +173,8 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             if st.button("SIRADAKİ GÖREVE GEÇ ➡️", type="primary", use_container_width=True):
                 s_i = modul['egzersizler'].index(egz) + 1
                 n_id, n_m = (modul['egzersizler'][s_i]['id'], u['mevcut_modul']) if s_i < len(modul['egzersizler']) else (f'{int(u["mevcut_modul"])+1}.1', int(u['mevcut_modul']) + 1)
-                ilerleme_fonksiyonu(p_xp, st.session_state.current_code, egz['id'], n_id, n_m)
+                # Not: Puan zaten eklendiği için ilerleme_fonksiyonu bunu veritabanına mühürleyecek
+                ilerleme_fonksiyonu(0, st.session_state.current_code, egz['id'], n_id, n_m)
 
         elif e_count >= 4:
             st.warning("🚨 Pes etme yok, çözümü incele:")
@@ -191,7 +187,6 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
                 ilerleme_fonksiyonu(0, "Çözüm İncelendi", egz['id'], n_id, n_m)
 
     with cr:
-        # SİBER-SIDEBAR STATS KARTI (NİHAİ MÜHÜR)
         st.markdown(f'''
             <div class="sidebar-stats-card">
                 <div style="font-size:0.8rem; color:#00E5FF; font-weight:bold; letter-spacing:1px;">📊 SİBER DURUM</div>
