@@ -11,24 +11,23 @@ import datetime
 def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fonksiyonu, normalize_fonksiyonu, supabase):
     # --- 1. VERİ YAPISI VE GÜVENLİK ---
     if isinstance(mufredat, dict) and "pito_akademi_mufredat" in mufredat:
-        m_list = mufredat["pito_akademi_mufredat"]
+        m_list = mufredat["pito_akademi_mufredat"] [cite: 2026-02-07]
     else:
         m_list = mufredat
 
     try:
         m_idx = int(u['mevcut_modul']) - 1
         modul = m_list[m_idx]
-        egz = next((e for e in modul['egzersizler'] if e['id'] == str(u['mevcut_egzersiz'])), modul['egzersizler'][0])
+        egz = next((e for e in modul['egzersizler'] if e['id'] == str(u['mevcut_egzersiz'])), modul['egzersizler'][0]) [cite: 2026-02-07]
     except Exception:
         st.error("🚨 Veri Okuma Hatası! Müfredat mühürlenemedi.")
         return
 
-    e_count = st.session_state.get('error_count', 0)
+    e_count = st.session_state.get('error_count', 0) [cite: 2026-02-07]
     if "anim_nonce" not in st.session_state: st.session_state.anim_nonce = 0
 
-    # --- KOD ÇIKTISINI YAKALAMA MOTORU (DONMA KORUMALI) ---
+    # --- KOD ÇIKTISINI YAKALAMA MOTORU ---
     def kod_calistir_cikti_al(kod, giris_verisi=''):
-        # Donmayı engellemek için boş girişe güvenli değer ata
         safe_input = str(giris_verisi) if (giris_verisi and str(giris_verisi).strip() != "") else "0"
         buffer = io.StringIO()
         old_stdout = system_sys.stdout
@@ -44,7 +43,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         finally:
             system_sys.stdout = old_stdout
 
-    # --- 0. SİBER-GÖRSEL TASARIM (STATİK YERLEŞİM) ---
+    # --- 0. SİBER-GÖRSEL TASARIM (STATİK HUD) ---
     st.markdown(f'''
         <style>
         header[data-testid="stHeader"], [data-testid="stDecoration"], footer {{ display: none !important; }}
@@ -75,9 +74,12 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         </style>
     ''', unsafe_allow_html=True)
 
-    # --- 1. HUD RENDER ---
-    rn, rc = ranks_module.rütbe_ata(u['toplam_puan'])
-    p_mod = emotions_module.pito_durum_belirle(e_count, st.session_state.get('cevap_dogru', False))
+    # --- 1. RUH HALİ BELİRLEME (EMOTIONS.PY ENTEGRASYONU) ---
+    # st.session_state içindeki başarı durumuna ve hata sayısına göre modu çekiyoruz
+    cevap_durumu = st.session_state.get('cevap_dogru', False) [cite: 2026-02-07]
+    p_mod = emotions_module.pito_durum_belirle(e_count, cevap_durumu)
+    
+    rn, rc = ranks_module.rütbe_ata(u['toplam_puan']) [cite: 2026-02-07]
     
     def get_gif_b64(mod):
         path = os.path.join(os.path.dirname(__file__), 'assets', f'pito_{mod}.gif')
@@ -89,10 +91,16 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
     st.markdown(f'''
         <div class="cyber-hud">
             <div style="display: flex; align-items: center;">
-                <div class="hud-pito-gif"><img src="{get_gif_b64(p_mod)}" style="width:70px; border-radius:50%; border:2px solid #00E5FF;"></div>
-                <div style="color: #E0E0E0; font-family: monospace; margin-left:15px; font-size: 0.9rem;">👤 <b>{u['ad_soyad'][:15]}</b><br><span style="color:#ADFF2F;">🎖️ {rn}</span></div>
+                <div class="hud-pito-gif">
+                    <img src="{get_gif_b64(p_mod)}" style="width:70px; border-radius:50%; border:2px solid #ADFF2F;">
+                </div>
+                <div style="color: #E0E0E0; font-family: monospace; margin-left:15px; font-size: 0.9rem;">
+                    👤 <b>{u['ad_soyad'][:15]}</b><br><span style="color:#ADFF2F;">🎖️ {rn}</span>
+                </div>
             </div>
-            <div style="color:#00E5FF; font-family:monospace; font-size:1.1rem;">💎 XP: {max(0, 20-(e_count*5))} | ⚠️ HATA: {e_count}/4 | 🏆 TOPLAM: {u['toplam_puan']}</div>
+            <div style="color:#00E5FF; font-family:monospace; font-size:1.1rem;">
+                💎 XP: {max(0, 20-(e_count*5))} | ⚠️ HATA: {e_count}/4 | 🏆 TOPLAM: {u['toplam_puan']}
+            </div>
         </div>
     ''', unsafe_allow_html=True)
 
@@ -100,18 +108,16 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
     cl, cr = st.columns([7.2, 2.8])
     with cl:
         n1, n2, n3 = st.columns([0.4, 0.4, 0.2])
-        with n1: st.markdown(f"💬 *{msgs['welcome'].format(u['ad_soyad'].split()[0])}*")
+        with n1: st.markdown(f"💬 *{msgs['welcome'].format(u['ad_soyad'].split()[0])}*") [cite: 2026-02-07]
         with n2: 
             if st.button("🔍 Geçmiş Egzersizler", key="btn_review"):
-                st.session_state.in_review = True
-                st.rerun()
+                st.session_state.in_review = True; st.rerun()
         with n3:
             if st.button("🚪 Çıkış", key="btn_exit"):
-                st.session_state.user = None
-                st.rerun()
+                st.session_state.user = None; st.rerun()
 
-        # 🚨 INPUT DENETİMİ
-        has_input = "input(" in egz['dogru_cevap_kodu'] or "input(" in egz['sablon']
+        # 🚨 AKILLI INPUT DENETİMİ
+        has_input = "input(" in egz['dogru_cevap_kodu'] or "input(" in egz['sablon'] [cite: 2026-02-07]
         user_input_val = st.session_state.get('user_input_val', '').strip()
 
         if has_input:
@@ -119,28 +125,28 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
                 st.markdown('<div class="input-warning-box">🚨 SİBER-BARİKAT: Kodun bir veri bekliyor! Lütfen aşağıdaki kutuyu doldur.</div>', unsafe_allow_html=True)
             with st.popover("⌨️ VERİ GİRİŞİ YAP (Mecburi)", use_container_width=True):
                 st.session_state.user_input_val = st.text_input("Giriş yapın:", key=f"inp_{egz['id']}")
+        else:
+            st.session_state.user_input_val = ""
 
         with st.expander(f"📖 {modul['modul_adi']}", expanded=True):
             st.markdown(f"**Yönerge:** {egz['yonerge']}")
 
-        u_code = st.text_area('Editor', value=egz['sablon'], height=200, key=f"ed_{egz['id']}", label_visibility='collapsed')
+        u_code = st.text_area('Editor', value=egz['sablon'], height=200, key=f"ed_{egz['id']}", label_visibility='collapsed') [cite: 2026-02-07]
         
         if st.button("KODU KONTROL ET 🚀", type="primary", use_container_width=True):
             if has_input and not st.session_state.get('user_input_val', '').strip():
-                st.error("🚨 HATA: Veri girişi yapmadan kontrol edilemez. Sistem donmasını önlemek için motor durduruldu!")
+                st.error("🚨 HATA: Veri girişi yapmadan kontrol edilemez!")
             elif u_code.strip() == egz['sablon'].strip():
                 st.warning("🚨 HATA: Önce kodu tamamlamalısın!")
             else:
-                st.session_state.anim_nonce += 1
                 if normalize_fonksiyonu(u_code) == normalize_fonksiyonu(egz['dogru_cevap_kodu']):
-                    yeni_xp = int(u['toplam_puan']) + max(0, 20-(e_count*5))
+                    yeni_xp = int(u['toplam_puan']) + max(0, 20-(e_count*5)) [cite: 2026-02-07]
                     supabase.table("kullanicilar").update({"toplam_puan": yeni_xp}).eq("ogrenci_no", int(u['ogrenci_no'])).execute()
                     st.session_state.user['toplam_puan'] = yeni_xp
                     st.session_state.cevap_dogru = True
-                    st.balloons()
-                    st.rerun()
+                    st.balloons(); st.rerun()
                 else:
-                    st.session_state.error_count = st.session_state.get('error_count', 0) + 1
+                    st.session_state.error_count = st.session_state.get('error_count', 0) + 1 [cite: 2026-02-07]
                     st.rerun()
 
         if st.session_state.get('cevap_dogru'):
@@ -150,7 +156,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
                 st.session_state.cevap_dogru = False
                 st.session_state.error_count = 0
                 st.session_state.user_input_val = ""
-                ilerleme_fonksiyonu(0, u_code, egz['id'], "next", "next")
+                ilerleme_fonksiyonu(0, u_code, egz['id'], "next", "next") [cite: 2026-02-07]
 
     with cr:
-        ranks_module.liderlik_tablosu_goster(supabase, current_user=u)
+        ranks_module.liderlik_tablosu_goster(supabase, current_user=u) [cite: 2026-02-07]
