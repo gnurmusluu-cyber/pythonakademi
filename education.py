@@ -20,7 +20,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         modul = m_list[m_idx]
         egz = next((e for e in modul['egzersizler'] if e['id'] == str(u['mevcut_egzersiz'])), modul['egzersizler'][0]) [cite: 2026-02-07]
     except Exception:
-        st.error("🚨 Veri Okuma Hatası! Müfredat veya kullanıcı verisi mühürlenemedi.")
+        st.error("🚨 Veri Okuma Hatası! Müfredat mühürlenemedi.")
         return
 
     e_count = st.session_state.get('error_count', 0) [cite: 2026-02-07]
@@ -28,7 +28,6 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
 
     # --- KOD ÇIKTISINI YAKALAMA MOTORU (DONMA KORUMALI) ---
     def kod_calistir_cikti_al(kod, giris_verisi=''):
-        # 🚨 DONMA ENGELLEYİCİ: Boş girişte sistemi kilitletme, "0" ata
         safe_input = str(giris_verisi) if (giris_verisi and str(giris_verisi).strip() != "") else "0"
         buffer = io.StringIO()
         old_stdout = system_sys.stdout
@@ -44,13 +43,12 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         finally:
             system_sys.stdout = old_stdout
 
-    # --- 0. SİBER-GÖRSEL TASARIM (STATİK HUD) ---
+    # --- 0. SİBER-GÖRSEL TASARIM (KESİN ÇÖZÜM: STATİK HUD) ---
     st.markdown(f'''
         <style>
         header[data-testid="stHeader"], [data-testid="stDecoration"], footer {{ display: none !important; }}
         .stApp {{ background-color: #0e1117 !important; }}
         
-        /* HUD MİMARİSİ: Sayfa akışına dahil, hiçbir şey arkasına kaçamaz */
         .cyber-hud {{
             width: 100%; min-height: 125px;
             background-color: #0e1117 !important; border-bottom: 3px solid #00E5FF;
@@ -59,7 +57,6 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             box-shadow: 0 10px 40px #000; margin-bottom: 30px;
         }}
         
-        /* 🚨 TİTREYEN GİRİŞ UYARISI */
         .input-warning-box {{
             padding: 12px; border-radius: 8px; border: 2px solid #FF4B4B;
             background-color: rgba(255, 75, 75, 0.15); color: #FF4B4B;
@@ -113,9 +110,8 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             if not user_input_val:
                 st.markdown('<div class="input-warning-box">🚨 SİBER-BARİKAT: Kodun bir veri bekliyor! Lütfen aşağıdaki kutuyu doldur.</div>', unsafe_allow_html=True)
             with st.popover("⌨️ VERİ GİRİŞİ YAP (Mecburi)", use_container_width=True):
-                st.session_state.user_input_val = st.text_input("Sayı veya Metin Girin:", key=f"inp_{egz['id']}")
+                st.session_state.user_input_val = st.text_input("Giriş yapın:", key=f"inp_{egz['id']}")
 
-        # EDİTÖR
         with st.expander(f"📖 {modul['modul_adi']}", expanded=True):
             st.markdown(f"**Yönerge:** {egz['yonerge']}")
 
