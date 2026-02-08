@@ -77,7 +77,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
 
     # --- 1. HUD RENDER ---
     rn, rc = ranks_module.rütbe_ata(u['toplam_puan']) [cite: 2026-02-07]
-    p_mod = emotions_module.pito_durum_belirle(e_count, st.session_state.cevap_dogru) [cite: 2026-02-07]
+    p_mod = emotions_module.pito_durum_belirle(e_count, st.session_state.get('cevap_dogru', False)) [cite: 2026-02-07]
     
     def get_gif_b64(mod):
         path = os.path.join(os.path.dirname(__file__), 'assets', f'pito_{mod}.gif')
@@ -133,7 +133,8 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
                     st.session_state.cevap_dogru = True
                     st.balloons(); st.rerun()
                 else:
-                    st.session_state.error_count += 1; st.rerun() [cite: 2026-02-07]
+                    st.session_state.error_count = st.session_state.get('error_count', 0) + 1 [cite: 2026-02-07]
+                    st.rerun()
 
         if st.session_state.get('cevap_dogru'):
             out = kod_calistir_cikti_al(u_code, st.session_state.get('user_input_val', '0'))
