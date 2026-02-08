@@ -42,26 +42,31 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         finally:
             system_sys.stdout = old_stdout
 
-    # --- 0. SİBER-GÖRSEL TASARIM (YERLEŞİM MÜHÜRLERİ) ---
+    # --- 0. SİBER-GÖRSEL TASARIM (RADİKAL YERLEŞİM DÜZELTME) ---
     st.markdown(f'''
         <style>
         header[data-testid="stHeader"], [data-testid="stDecoration"], footer {{ display: none !important; }}
         .stApp {{ background-color: #0e1117 !important; }}
         
-        /* 🚨 KRİTİK DÜZELTME: İçeriği HUD panelinin tamamen altına, görünür bölgeye iter */
+        /* 🚨 KRİTİK DÜZELTME: İçeriği HUD panelinin çok daha altına iter (280px) */
         [data-testid="stMainViewContainer"] {{ 
-            padding-top: 220px !important; 
+            padding-top: 280px !important; 
+        }}
+        
+        /* Alternatif olarak tüm blokları aşağı iten siber-zorlama */
+        .block-container {{
+            padding-top: 2rem !important;
         }}
 
         /* HUD PANELİ */
         .cyber-hud {{
-            position: fixed; top: 0; left: 0; right: 0; height: 140px;
+            position: fixed; top: 0; left: 0; right: 0; height: 130px;
             background-color: #0e1117 !important; border-bottom: 3px solid #00E5FF;
-            z-index: 1000 !important; padding: 0 40px; display: flex;
+            z-index: 999999 !important; padding: 0 40px; display: flex;
             justify-content: space-between; align-items: center; box-shadow: 0 10px 40px #000;
         }}
 
-        .hud-pito-gif img {{ width: 70px !important; height: 70px !important; border-radius: 50%; border: 2px solid #00E5FF; object-fit: cover; }}
+        .hud-pito-gif img {{ width: 65px !important; height: 65px !important; border-radius: 50%; border: 2px solid #00E5FF; object-fit: cover; }}
         .hud-progress-container {{ flex-grow: 1; margin: 0 40px; max-width: 400px; }}
         .progress-label {{ color: #00E5FF; font-size: 0.65rem; font-family: monospace; text-transform: uppercase; margin-bottom: 2px; display: block; }}
         
@@ -71,8 +76,8 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         .gorev-box-html {{ background: rgba(0, 229, 255, 0.05); border-left: 5px solid #00E5FF; padding: 15px; border-radius: 8px; color: #E0E0E0; margin-bottom: 10px; }}
         .cyber-terminal {{ background-color: #000; color: #ADFF2F; padding: 15px; border-radius: 8px; border: 1px solid #30363d; margin-bottom: 20px; font-family: monospace; }}
         
-        /* 🚨 BUTONLARIN PANELİN ALTINDA KALMASINI ENGELLER */
-        .stButton button {{ z-index: 10 !important; }}
+        /* Butonların üst panelin arkasında kalsa bile tıklanabilir olmasını sağlar */
+        .stButton button {{ position: relative; z-index: 10 !important; }}
         </style>
     ''', unsafe_allow_html=True)
 
@@ -111,21 +116,25 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             <div class="hud-stats-container" style="display:flex; gap:10px;">
                 <div class="hud-capsule" style="color:#00E5FF;">💎 <span class="{shake_class}">{p_xp}</span></div>
                 <div class="hud-capsule" style="color:{error_color};">⚠️ <span class="{shake_class}">{e_count}/4</span></div>
-                <div class="hud-capsule" style="color:#ADFF2F; border-color:#ADFF2F;">🏆 <span class="{'success-pulse' if st.session_state.cevap_dogru else ''}">{u['toplam_puan']}</span></div>
+                <div class="hud-capsule" style="color:#ADFF2F; border-color:#ADFF2F;">🏆 <span>{u['toplam_puan']}</span></div>
             </div>
         </div>
     ''', unsafe_allow_html=True)
 
-    # --- 2. ANA PANEL (NAVİGASYON VE İÇERİK) ---
+    # --- 2. ANA PANEL (İÇERİK ALANI) ---
     cl, cr = st.columns([7.2, 2.8])
     with cl:
-        # NAVİGASYON (Görünürlüğü mühürlendi!)
+        # NAVİGASYON (Görünürlüğü garanti altına alındı!)
         nav1, nav2, nav3 = st.columns([0.4, 0.4, 0.2])
         with nav1: st.markdown(f"💬 *{msgs['welcome'].format(u['ad_soyad'].split()[0])}*")
         with nav2: 
-            if st.button("🔍 Geçmiş Egzersizler", key="btn_review"): st.session_state.in_review = True; st.rerun()
+            if st.button("🔍 Geçmiş Egzersizler", key="btn_review"):
+                st.session_state.in_review = True
+                st.rerun()
         with nav3:
-            if st.button("🚪 Çıkış", key="btn_exit"): st.session_state.user = None; st.rerun()
+            if st.button("🚪 Çıkış", key="btn_exit"):
+                st.session_state.user = None
+                st.rerun()
 
         # KONU VE GÖREV
         with st.expander(f"📖 {modul['modul_adi']}", expanded=True):
@@ -151,9 +160,11 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
                     supabase.table("kullanicilar").update({"toplam_puan": yeni_xp, "tarih": "now()"}).eq("ogrenci_no", int(u['ogrenci_no'])).execute()
                     st.session_state.user['toplam_puan'] = yeni_xp
                     st.session_state.cevap_dogru = True
-                    st.balloons(); st.rerun()
+                    st.balloons()
+                    st.rerun()
                 else:
-                    st.session_state.error_count += 1; st.rerun()
+                    st.session_state.error_count += 1
+                    st.rerun()
 
         if st.session_state.cevap_dogru:
             out = kod_calistir_cikti_al(u_code, st.session_state.get('user_input_val', ''))
