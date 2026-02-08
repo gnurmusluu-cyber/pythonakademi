@@ -42,33 +42,40 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         finally:
             system_sys.stdout = old_stdout
 
-    # --- 0. SİBER-GÖRSEL TASARIM (YERLEŞİM GARANTİSİ) ---
+    # --- 0. SİBER-GÖRSEL TASARIM (KESİN DÜZELTME) ---
     st.markdown(f'''
         <style>
         header[data-testid="stHeader"], [data-testid="stDecoration"], footer {{ display: none !important; }}
         .stApp {{ background-color: #0e1117 !important; }}
         
-        /* 🚨 İÇERİĞİ HUD ALTINA İTEN GÜVENLİ PADDING */
+        /* 🚨 GÖRSEL DÜZELTME: İçeriği HUD'ın tamamen altına iter */
         [data-testid="stMainViewContainer"] {{ 
-            padding-top: 170px !important; 
+            padding-top: 180px !important; 
         }}
 
         .cyber-hud {{
-            position: fixed; top: 0; left: 0; right: 0; height: 140px;
+            position: fixed; top: 0; left: 0; right: 0; height: 130px;
             background-color: #0e1117 !important; border-bottom: 3px solid #00E5FF;
-            z-index: 999999 !important; padding: 0 40px; display: flex;
+            z-index: 1000 !important; padding: 0 40px; display: flex;
             justify-content: space-between; align-items: center; box-shadow: 0 10px 40px #000;
         }}
+
         .hud-pito-gif img {{ width: 70px !important; height: 70px !important; border-radius: 50%; border: 2px solid #00E5FF; object-fit: cover; }}
         .hud-progress-container {{ flex-grow: 1; margin: 0 40px; max-width: 400px; }}
         .progress-label {{ color: #00E5FF; font-size: 0.65rem; font-family: monospace; text-transform: uppercase; margin-bottom: 2px; display: block; }}
-        .hud-capsule {{ background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(0, 229, 255, 0.3); padding: 5px 12px; border-radius: 50px; display: flex; align-items: center; gap: 8px; font-family: monospace; font-size: 0.8rem; }}
         
         @keyframes cyber-shake {{ 0% {{ transform: translate(1px, 1px); }} 50% {{ transform: translate(-2px, -1px); }} 100% {{ transform: translate(0, 0); }} }}
         .hud-shake {{ animation: cyber-shake 0.3s ease-in-out; }}
         
         .gorev-box-html {{ background: rgba(0, 229, 255, 0.05); border-left: 5px solid #00E5FF; padding: 15px; border-radius: 8px; color: #E0E0E0; margin-bottom: 10px; }}
         .cyber-terminal {{ background-color: #000; color: #ADFF2F; padding: 15px; border-radius: 8px; border: 1px solid #30363d; margin-bottom: 20px; font-family: monospace; }}
+        
+        .input-alert {{
+            border: 2px solid #FF4B4B; background: rgba(255, 75, 75, 0.1);
+            padding: 10px; border-radius: 8px; margin-bottom: 10px;
+            color: #FF4B4B; font-weight: bold; text-align: center;
+            animation: cyber-shake 0.4s infinite;
+        }}
         </style>
     ''', unsafe_allow_html=True)
 
@@ -107,15 +114,15 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             <div class="hud-stats-container" style="display:flex; gap:10px;">
                 <div class="hud-capsule" style="color:#00E5FF;">💎 <span class="{shake_class}">{p_xp}</span></div>
                 <div class="hud-capsule" style="color:{error_color};">⚠️ <span class="{shake_class}">{e_count}/4</span></div>
-                <div class="hud-capsule" style="color:#ADFF2F; border-color:#ADFF2F;">🏆 <span>{u['toplam_puan']}</span></div>
+                <div class="hud-capsule" style="color:#ADFF2F; border-color:#ADFF2F;">🏆 <span class="{'success-pulse' if st.session_state.cevap_dogru else ''}">{u['toplam_puan']}</span></div>
             </div>
         </div>
     ''', unsafe_allow_html=True)
 
-    # --- 2. ANA PANEL (İÇERİK BURADA) ---
+    # --- 2. ANA PANEL ---
     cl, cr = st.columns([7.2, 2.8])
     with cl:
-        # NAVİGASYON BUTONLARI
+        # NAVİGASYON (Artık Görünür!)
         nav1, nav2, nav3 = st.columns([0.4, 0.4, 0.2])
         with nav1: st.markdown(f"💬 *{msgs['welcome'].format(u['ad_soyad'].split()[0])}*")
         with nav2: 
@@ -123,30 +130,36 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         with nav3:
             if st.button("🚪 Çıkış", key="btn_exit"): st.session_state.user = None; st.rerun()
 
-        # KONU VE GÖREV PANELİ
+        # KONU ANLATIMI (Artık Görünür!)
         with st.expander(f"📖 {modul['modul_adi']}", expanded=True):
             st.markdown(f"<div class='gorev-box-html'>{modul['pito_anlatimi']}</div>", unsafe_allow_html=True)
             st.markdown(f"### 🎯 GÖREV {egz['id']}")
             st.markdown(f"<div class='gorev-box-html'>💡 <b>YÖNERGE:</b> {egz['yonerge']}</div>", unsafe_allow_html=True)
 
-        # EDİTÖR VE DENETİMLER
+        # 🚨 INPUT DENETİMİ (Artık Görünür ve Titrer!)
         has_input = "input(" in egz['dogru_cevap_kodu'] or "input(" in egz['sablon']
+        user_input = st.session_state.get('user_input_val', '').strip()
+        
         if has_input:
+            if not user_input:
+                st.markdown('<div class="input-alert">🚨 VERİ GİRİŞİ YAPILMADI! Aşağıdaki butonu kullan.</div>', unsafe_allow_html=True)
             with st.popover("⌨️ VERİ GİRİŞİ YAP", use_container_width=True):
                 st.session_state.user_input_val = st.text_input("Girdi:", key=f"inp_{egz['id']}")
 
+        # EDİTÖR
         if not st.session_state.cevap_dogru and e_count < 4:
             u_code = st.text_area('Editor', value=egz['sablon'], height=200, key=f"ed_{egz['id']}", label_visibility='collapsed')
             
             b1, b2 = st.columns([4, 1.2])
             with b1:
                 if st.button("KODU KONTROL ET 🚀", type="primary", use_container_width=True):
+                    # Siber-Denetimler
                     if has_input and not st.session_state.get('user_input_val', '').strip():
-                        st.error("🚨 Veri girişi yapmalısın!")
+                        st.error("🚨 HATA: Veri girişi yapmalısın!")
                     elif u_code.strip() == egz['sablon'].strip():
-                        st.warning("🚨 Değişiklik yapmadın!")
+                        st.warning("🚨 HATA: Egzersize henüz dokunmadın!")
                     else:
-                        st.session_state.anim_nonce += 1
+                        st.session_state.anim_nonce += 1 # Animasyonu tetikle
                         if normalize_fonksiyonu(u_code) == normalize_fonksiyonu(egz['dogru_cevap_kodu']):
                             yeni_xp = int(u['toplam_puan']) + p_xp
                             supabase.table("kullanicilar").update({"toplam_puan": yeni_xp, "tarih": "now()"}).eq("ogrenci_no", int(u['ogrenci_no'])).execute()
@@ -159,22 +172,14 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
                 if st.button("🔄 SIFIRLA", use_container_width=True): st.session_state.error_count = 0; st.rerun()
 
         elif st.session_state.cevap_dogru:
-            st.success(f"✅ Harika!")
+            st.success(f"✅ Harika iş!")
             out = kod_calistir_cikti_al(u_code, st.session_state.get('user_input_val', ''))
             st.markdown(f'<div class="cyber-terminal">{out if out else egz.get("beklenen_cikti", "Başarılı!")}</div>', unsafe_allow_html=True)
-            if st.button("SIRADAKİ GÖREVE GEÇ ➡️", type="primary", use_container_width=True):
+            if st.button("SIRADAKİ GÖREVE GEÇ ➡️", type="primary"):
                 st.session_state.anim_nonce = 0
                 s_i = modul['egzersizler'].index(egz) + 1
                 n_id, n_m = (modul['egzersizler'][s_i]['id'], u['mevcut_modul']) if s_i < len(modul['egzersizler']) else (f"{int(u['mevcut_modul'])+1}.1", int(u['mevcut_modul']) + 1)
                 ilerleme_fonksiyonu(0, u_code, egz['id'], n_id, n_m)
-
-        elif e_count >= 4:
-            st.warning("🚨 Pito kesin çözümü gösteriyor:")
-            st.code(egz['cozum'], language="python")
-            if st.button("DEVAM ET ➡️", type="primary", use_container_width=True):
-                s_i = modul['egzersizler'].index(egz) + 1
-                n_id, n_m = (modul['egzersizler'][s_i]['id'], u['mevcut_modul']) if s_i < len(modul['egzersizler']) else (f"{int(u['mevcut_modul'])+1}.1", int(u['mevcut_modul']) + 1)
-                ilerleme_fonksiyonu(0, "Çözüm İncelendi", egz['id'], n_id, n_m)
 
     with cr:
         ranks_module.liderlik_tablosu_goster(supabase, current_user=u)
