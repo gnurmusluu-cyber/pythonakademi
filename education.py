@@ -48,11 +48,6 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(0, 229, 255, 0.3);
             padding: 6px 14px; border-radius: 50px; display: flex; align-items: center; gap: 8px; font-family: monospace; font-size: 0.85rem;
         }}
-        @keyframes pulseA {{ 0%, 100% {{ transform: scale(1); }} 50% {{ transform: scale(1.2); }} }}
-        @keyframes pulseB {{ 0%, 100% {{ transform: scale(1); }} 50% {{ transform: scale(1.2); }} }}
-        .anim-A {{ animation: pulseA 0.4s ease-in-out; display: inline-block; }}
-        .anim-B {{ animation: pulseB 0.4s ease-in-out; display: inline-block; }}
-        .success-pulse {{ animation: pulseA 0.7s ease-in-out; color: #ADFF2F !important; display: inline-block; }}
         .gorev-box-html {{ background: rgba(0, 229, 255, 0.05); border-left: 5px solid #00E5FF; padding: 15px; border-radius: 8px; color: #E0E0E0; margin-bottom: 20px; }}
         .terminal-label {{ color: #00E5FF; font-size: 0.7rem; font-weight: bold; margin-bottom: 5px; margin-top: 15px; }}
         .cyber-terminal {{ 
@@ -104,13 +99,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
     
     cl, cr = st.columns([7.5, 2.5])
     with cl:
-        cn1, cn2, cn3 = st.columns([0.4, 0.4, 0.2])
-        with cn1: st.markdown(f"💬 *{msgs['welcome'].format(u['ad_soyad'].split()[0])}*")
-        with cn2: 
-            if st.button("🔍 Geçmiş Egzersizler", key="btn_review"): st.session_state.in_review = True; st.rerun()
-        with cn3:
-            if st.button("🚪 Çıkış", key="btn_exit"): st.session_state.user = None; st.rerun()
-
+        # Navigasyon ve Expander...
         with st.expander(f"📖 {modul['modul_adi']}", expanded=True):
             st.markdown(f"<div class='gorev-box-html'>{modul['pito_anlatimi']}</div>", unsafe_allow_html=True)
             st.markdown(f"### 🎯 GÖREV {egz['id']}")
@@ -118,56 +107,62 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
 
         # --- DURUM 1: EĞİTİM DEVAM EDİYOR ---
         if not st.session_state.cevap_dogru and e_count < 4:
-            if e_count > 0:
-                p_msg = random.choice(msgs['errors'][f'level_{min(e_count, 4)}']).format(u['ad_soyad'].split()[0])
-                st.error(f"🚨 **Pito:** {p_msg}")
-                if e_count >= 3: st.warning(f"💡 **İpucu:** {egz['ipucu']}")
-            
+            # Girdi Alanı (Popover)
+            has_input_call = "input(" in egz['dogru_cevap_kodu'] or "input(" in egz['sablon']
+            s_input = ""
+            if has_input_call:
+                with st.popover("⌨️ VERİ GİRİŞİ YAP", use_container_width=True):
+                    s_input = st.text_input("Giriş (Sayı/Metin):", value="0", key=f"in_{egz['id']}")
+                    st.session_state.user_input_val = s_input
+
             u_code = st.text_area('Editor', value=egz['sablon'], height=180, key=f"ed_{egz['id']}", label_visibility='collapsed')
             
-            b1, b2 = st.columns([4, 1.2])
-            with b1:
-                if st.button("KODU KONTROL ET 🚀", type="primary", use_container_width=True):
+            if st.button("KODU KONTROL ET 🚀", type="primary", use_container_width=True):
+                if u_code.strip() == egz['sablon'].strip():
+                    st.warning("⚠️ Lütfen kodda değişiklik yap!")
+                elif has_input_call and not st.session_state.get('user_input_val', '').strip():
+                    st.warning("🚨 Bu görev için veri girişi yapmalısın!")
+                else:
+                    st.session_state.current_code = u_code
                     if normalize_fonksiyonu(u_code) == normalize_fonksiyonu(egz['dogru_cevap_kodu']):
                         yeni_xp = int(u['toplam_puan']) + p_xp
-                        r_yeni, _ = ranks_module.rütbe_ata(yeni_xp)
-                        supabase.table("kullanicilar").update({"toplam_puan": yeni_xp, "rutbe": r_yeni, "tarih": "now()"}).eq("ogrenci_no", int(u['ogrenci_no'])).execute()
-                        st.session_state.user.update({"toplam_puan": yeni_xp, "rutbe": r_yeni})
-                        st.session_state.current_code = u_code
+                        supabase.table("kullanicilar").update({"toplam_puan": yeni_xp, "tarih": "now()"}).eq("ogrenci_no", int(u['ogrenci_no'])).execute()
+                        st.session_state.user.update({"toplam_puan": yeni_xp})
                         st.session_state.cevap_dogru = True
                         st.balloons(); st.rerun()
                     else:
                         st.session_state.error_count += 1; st.rerun()
-            with b2:
-                if st.button("🔄 SIFIRLA", use_container_width=True): st.session_state.error_count = 0; st.rerun()
 
         # --- DURUM 2: BAŞARI ANI ---
         elif st.session_state.cevap_dogru:
-            st.success(f"✅ Harika iş {u['ad_soyad'].split()[0]}!")
-            out = kod_calistir_cikti_al(st.session_state.current_code)
-            st.markdown('<div class="terminal-label">🖥️ SİBER-ÇIKTI (BAŞARILI KOD)</div>', unsafe_allow_html=True)
-            st.markdown(f'<div class="cyber-terminal">{out if out else "Kod başarıyla çalıştı."}</div>', unsafe_allow_html=True)
+            st.success(f"✅ Harika iş!")
+            # 🚨 ÇIKTI: Önce koda bak, boşsa JSON'daki 'beklenen_cikti'yi getir
+            out = kod_calistir_cikti_al(st.session_state.current_code, st.session_state.get('user_input_val', ''))
+            if not out or "SİSTEM HATASI" in out:
+                out = egz.get('beklenen_cikti', 'Kod başarıyla çalıştırıldı.')
+            
+            st.markdown('<div class="terminal-label">🖥️ SİBER-ÇIKTI</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="cyber-terminal">{out}</div>', unsafe_allow_html=True)
             
             if st.button("SIRADAKİ GÖREVE GEÇ ➡️", type="primary", use_container_width=True):
                 s_i = modul['egzersizler'].index(egz) + 1
                 n_id, n_m = (modul['egzersizler'][s_i]['id'], u['mevcut_modul']) if s_i < len(modul['egzersizler']) else (f"{int(u['mevcut_modul'])+1}.1", int(u['mevcut_modul']) + 1)
                 ilerleme_fonksiyonu(0, st.session_state.current_code, egz['id'], n_id, n_m)
 
-        # --- DURUM 3: 4. HATA VE KESİN ÇÖZÜM ---
+        # --- DURUM 3: 4. HATA ---
         elif e_count >= 4:
-            st.warning("🚨 Siber-Barikat aşılamadı. Pito kesin çözümü gösteriyor:")
+            st.warning("🚨 Çözümü incele:")
             st.code(egz['cozum'], language="python")
             
-            # 🚨 ÇÖZÜMÜN ÇIKTISINI DA GÖRÜNTÜLE
-            sol_out = kod_calistir_cikti_al(egz['cozum'])
+            # 🚨 ÇÖZÜM ÇIKTISI: JSON'dan çekilir
+            sol_out = egz.get('beklenen_cikti', 'Çözüm kodu başarıyla simüle edildi.')
             st.markdown('<div class="terminal-label">🖥️ SİBER-ÇIKTI (İDEAL ÇÖZÜM)</div>', unsafe_allow_html=True)
-            st.markdown(f'<div class="cyber-terminal">{sol_out if sol_out else "Çözüm kodu başarıyla simüle edildi."}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="cyber-terminal">{sol_out}</div>', unsafe_allow_html=True)
             
-            if st.button("ANLADIM, DEVAM ET ➡️", type="primary", use_container_width=True):
+            if st.button("DEVAM ET ➡️", type="primary", use_container_width=True):
                 s_i = modul['egzersizler'].index(egz) + 1
                 n_id, n_m = (modul['egzersizler'][s_i]['id'], u['mevcut_modul']) if s_i < len(modul['egzersizler']) else (f"{int(u['mevcut_modul'])+1}.1", int(u['mevcut_modul']) + 1)
-                ilerleme_fonksiyonu(0, "Kesin Çözüm İncelendi", egz['id'], n_id, n_m)
+                ilerleme_fonksiyonu(0, "Çözüm İncelendi", egz['id'], n_id, n_m)
 
     with cr:
-        st.markdown('<div class="sidebar-stats-card"><div style="color:#00E5FF; font-weight:bold;">📊 LİDERLİK</div></div>', unsafe_allow_html=True)
         ranks_module.liderlik_tablosu_goster(supabase, current_user=u)
