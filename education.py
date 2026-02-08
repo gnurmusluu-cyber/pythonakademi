@@ -43,12 +43,13 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         finally:
             system_sys.stdout = old_stdout
 
-    # --- 0. SİBER-GÖRSEL TASARIM (STATİK HUD) ---
+    # --- 0. SİBER-GÖRSEL TASARIM (KESİN ÇÖZÜM: STATİK HUD) ---
     st.markdown(f'''
         <style>
         header[data-testid="stHeader"], [data-testid="stDecoration"], footer {{ display: none !important; }}
         .stApp {{ background-color: #0e1117 !important; }}
         
+        /* HUD MİMARİSİ: Sabit değil, sayfa akışında yer kaplar */
         .cyber-hud {{
             width: 100%; min-height: 125px;
             background-color: #0e1117 !important; border-bottom: 3px solid #00E5FF;
@@ -97,6 +98,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
     # --- 2. ANA PANEL ---
     cl, cr = st.columns([7.2, 2.8])
     with cl:
+        # NAVİGASYON: HUD artık statik olduğu için her şey görünebilir
         n1, n2, n3 = st.columns([0.4, 0.4, 0.2])
         with n1: st.markdown(f"💬 *{msgs['welcome'].format(u['ad_soyad'].split()[0])}*") [cite: 2026-02-07]
         with n2: 
@@ -104,7 +106,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         with n3:
             if st.button("🚪 Çıkış", key="btn_exit"): st.session_state.user = None; st.rerun()
 
-        # 🚨 INPUT DENETİMİ (Kararma Koruması)
+        # 🚨 INPUT DENETİMİ
         has_input = "input(" in egz['dogru_cevap_kodu'] or "input(" in egz['sablon'] [cite: 2026-02-07]
         user_input_val = st.session_state.get('user_input_val', '').strip()
 
