@@ -20,7 +20,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         modul = m_list[m_idx]
         egz = next((e for e in modul['egzersizler'] if e['id'] == str(u['mevcut_egzersiz'])), modul['egzersizler'][0]) [cite: 2026-02-07]
     except Exception:
-        st.error("🚨 Veri Okuma Hatası!")
+        st.error("🚨 Veri Okuma Hatası! Müfredat mühürlenemedi.")
         return
 
     e_count = st.session_state.get('error_count', 0) [cite: 2026-02-07]
@@ -37,7 +37,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         try:
             exec(kod, exec_scope)
             res = buffer.getvalue().strip()
-            # 🚨 ÇIKTI DENETİMİ: Eğer çıktı boşsa kullanıcıyı bilgilendir
+            # 🚨 ÇIKTI DENETİMİ: Eğer çıktı boşsa bilgilendir
             if not res:
                 return "ℹ️ Bu kod herhangi bir çıktı üretmedi." [cite: 2026-02-07]
             return res 
@@ -51,6 +51,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         <style>
         header[data-testid="stHeader"], [data-testid="stDecoration"], footer {{ display: none !important; }}
         .stApp {{ background-color: #0e1117 !important; }}
+        
         .cyber-hud {{
             width: 100%; min-height: 125px;
             background-color: #0e1117 !important; border-bottom: 3px solid #00E5FF;
@@ -58,6 +59,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             justify-content: space-between; align-items: center; 
             box-shadow: 0 10px 40px #000; margin-bottom: 30px;
         }}
+        
         .input-warning-box {{
             padding: 12px; border-radius: 8px; border: 2px solid #FF4B4B;
             background-color: rgba(255, 75, 75, 0.15); color: #FF4B4B;
@@ -70,12 +72,13 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             50% {{ transform: translate(2px, 1px) rotate(1deg); }}
             100% {{ transform: translate(0, 0) rotate(0deg); }}
         }}
-        .cyber-terminal {{ background-color: #000; color: #ADFF2F; padding: 15px; border-radius: 8px; border: 1px solid #30363d; margin-bottom: 20px; font-family: monospace; min-height: 50px; }}
+        
+        .cyber-terminal {{ background-color: #000; color: #ADFF2F; padding: 15px; border-radius: 8px; border: 1px solid #30363d; margin-bottom: 20px; font-family: monospace; }}
         </style>
     ''', unsafe_allow_html=True)
 
     # --- 1. RUH HALİ VE HUD ---
-    cevap_durumu = st.session_state.get('cevap_dogru', False)
+    cevap_durumu = st.session_state.get('cevap_dogru', False) [cite: 2026-02-07]
     p_mod = emotions_module.pito_durum_belirle(e_count, cevap_durumu)
     rn, rc = ranks_module.rütbe_ata(u['toplam_puan']) [cite: 2026-02-07]
     
@@ -108,7 +111,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             if st.button("🚪 Çıkış", key="btn_exit"):
                 st.session_state.user = None; st.rerun()
 
-        # 🚨 AKILLI INPUT DENETİMİ
+        # 🚨 AKILLI INPUT DENETİMİ (Kararma Koruması)
         has_input = "input(" in egz['dogru_cevap_kodu'] or "input(" in egz['sablon'] [cite: 2026-02-07]
         user_input_val = st.session_state.get('user_input_val', '').strip()
 
@@ -127,7 +130,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         
         if st.button("KODU KONTROL ET 🚀", type="primary", use_container_width=True):
             if has_input and not st.session_state.get('user_input_val', '').strip():
-                st.error("🚨 HATA: Veri girişi yapmadan kontrol edilemez!")
+                st.error("🚨 HATA: Veri girişi yapmadan kontrol edilemez! Sistem donmasını önlemek için motor durduruldu!") [cite: 2026-02-07]
             elif u_code.strip() == egz['sablon'].strip():
                 st.warning("🚨 HATA: Önce kodu tamamlamalısın!")
             else:
@@ -142,7 +145,6 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
                     st.rerun()
 
         if st.session_state.get('cevap_dogru'):
-            # Çıktı alma fonksiyonunu çağırıyoruz
             out = kod_calistir_cikti_al(u_code, st.session_state.get('user_input_val', '0'))
             st.markdown(f'<div class="cyber-terminal"><b>SİBER-ÇIKTI:</b><br>{out}</div>', unsafe_allow_html=True)
             
