@@ -13,7 +13,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
     m_list = mufredat["pito_akademi_mufredat"] if isinstance(mufredat, dict) else mufredat
     e_count = st.session_state.get('error_count', 0)
     
-    # 🚨 ANİMASYON SENSÖRÜ: Her hatada farklı bir değer üreterek animasyonu zorla oynatır
+    # 🚨 ANİMASYON SENSÖRÜ: Her hatada state'i zorla günceller
     if "anim_nonce" not in st.session_state: st.session_state.anim_nonce = 0
 
     # --- KOD ÇIKTISINI YAKALAMA MOTORU ---
@@ -32,13 +32,14 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         finally:
             system_sys.stdout = old_stdout
 
-    # --- 0. SİBER-GÖRSEL TASARIM (ANİMASYON MÜHÜRLERİ) ---
+    # --- 0. SİBER-GÖRSEL TASARIM (ANİMASYON VE HUD MÜHÜRLERİ) ---
     st.markdown(f'''
         <style>
         header[data-testid="stHeader"], [data-testid="stDecoration"], footer {{ display: none !important; }}
         .stApp {{ background-color: #0e1117 !important; }}
         [data-testid="stMainViewContainer"] {{ padding-top: 185px !important; }}
         
+        /* HUD TASARIMI */
         .cyber-hud {{
             position: fixed; top: 0; left: 0; right: 0; height: 120px;
             background-color: #0e1117 !important; border-bottom: 3px solid #00E5FF;
@@ -106,27 +107,27 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
     
     cl, cr = st.columns([7.5, 2.5])
     with cl:
-        # 🚨 INPUT DENETİMİ
+        # 🚨 GİRDİ (INPUT) DENETİMİ
         has_input = "input(" in egz['dogru_cevap_kodu'] or "input(" in egz['sablon']
         user_input = st.session_state.get('user_input_val', '').strip()
         
         if has_input:
             if not user_input:
-                st.markdown('<div class="input-alert">🚨 VERİ GİRİŞİ YAPILMADI! Aşağıdaki butonu kullan.</div>', unsafe_allow_html=True)
+                st.markdown('<div class="input-alert">🚨 VERİ GİRİŞİ YAPILMADI! Lütfen aşağıdaki kutuyu kullan.</div>', unsafe_allow_html=True)
             with st.popover("⌨️ VERİ GİRİŞİ YAP", use_container_width=True):
-                st.session_state.user_input_val = st.text_input("Girdi:", key=f"inp_{egz['id']}")
+                st.session_state.user_input_val = st.text_input("Değer Gir:", key=f"inp_{egz['id']}")
 
         u_code = st.text_area('Editor', value=egz['sablon'], height=180, key=f"ed_{egz['id']}", label_visibility='collapsed')
         
         if st.button("KODU KONTROL ET 🚀", type="primary", use_container_width=True):
-            # 🚨 SİBER-BARİKATLAR (UYARILAR)
+            # 🚨 SİBER-DENETİMLER
             if has_input and not user_input:
-                st.error("🚨 HATA: Kodun bir veri bekliyor! Giriş yapmadan devam edemezsin.")
+                st.error("🚨 HATA: Kodun veri bekliyor! Popover alanından giriş yapmalısın.")
             elif u_code.strip() == egz['sablon'].strip():
-                st.warning("🚨 HATA: Egzersize henüz dokunmadın! Boşlukları doldurmalısın.")
+                st.warning("🚨 HATA: Egzersize henüz dokunmadın! Boşlukları doldur veya kodu değiştir.")
             else:
-                # Doğruluk Kontrolü
-                st.session_state.anim_nonce += 1 # Animasyonu tetikle
+                # Başarı ve Hata Senkronizasyonu
+                st.session_state.anim_nonce += 1 # Animasyonu zorla oynat
                 if normalize_fonksiyonu(u_code) == normalize_fonksiyonu(egz['dogru_cevap_kodu']):
                     yeni_xp = int(u['toplam_puan']) + p_xp
                     supabase.table("kullanicilar").update({"toplam_puan": yeni_xp, "tarih": "now()"}).eq("ogrenci_no", int(u['ogrenci_no'])).execute()
@@ -136,12 +137,12 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
                 else:
                     st.session_state.error_count += 1; st.rerun()
 
+        # Çıktı ve Sıradaki Görev Akışı
         if st.session_state.cevap_dogru:
             out = kod_calistir_cikti_al(u_code, user_input)
             st.markdown(f'<div class="cyber-terminal">{out if out else egz.get("beklenen_cikti", "Başarılı!")}</div>', unsafe_allow_html=True)
-            if st.button("SIRADAKİ GÖREVE GEÇ ➡️"):
+            if st.button("SIRADAKİ GÖREVE GEÇ ➡️", key="btn_next"):
                 st.session_state.anim_nonce = 0 # Sıfırla
-                # İlerleme fonksiyonu çağrısı...
                 s_i = modul['egzersizler'].index(egz) + 1
                 n_id, n_m = (modul['egzersizler'][s_i]['id'], u['mevcut_modul']) if s_i < len(modul['egzersizler']) else (f"{int(u['mevcut_modul'])+1}.1", int(u['mevcut_modul']) + 1)
                 ilerleme_fonksiyonu(0, u_code, egz['id'], n_id, n_m)
