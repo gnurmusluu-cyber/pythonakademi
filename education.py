@@ -19,8 +19,8 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         m_idx = int(u['mevcut_modul']) - 1
         modul = m_list[m_idx]
         egz = next((e for e in modul['egzersizler'] if e['id'] == str(u['mevcut_egzersiz'])), modul['egzersizler'][0]) [cite: 2026-02-07]
-    except:
-        st.error("🚨 Veri Okuma Hatası!")
+    except Exception:
+        st.error("🚨 Veri Okuma Hatası! Müfredat veya kullanıcı verisi mühürlenemedi.")
         return
 
     e_count = st.session_state.get('error_count', 0) [cite: 2026-02-07]
@@ -44,12 +44,13 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         finally:
             system_sys.stdout = old_stdout
 
-    # --- 0. SİBER-GÖRSEL TASARIM ---
+    # --- 0. SİBER-GÖRSEL TASARIM (STATİK HUD) ---
     st.markdown(f'''
         <style>
         header[data-testid="stHeader"], [data-testid="stDecoration"], footer {{ display: none !important; }}
         .stApp {{ background-color: #0e1117 !important; }}
         
+        /* HUD MİMARİSİ: Sayfa akışına dahil, hiçbir şey arkasına kaçamaz */
         .cyber-hud {{
             width: 100%; min-height: 125px;
             background-color: #0e1117 !important; border-bottom: 3px solid #00E5FF;
@@ -58,6 +59,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             box-shadow: 0 10px 40px #000; margin-bottom: 30px;
         }}
         
+        /* 🚨 TİTREYEN GİRİŞ UYARISI */
         .input-warning-box {{
             padding: 12px; border-radius: 8px; border: 2px solid #FF4B4B;
             background-color: rgba(255, 75, 75, 0.15); color: #FF4B4B;
@@ -140,7 +142,10 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             out = kod_calistir_cikti_al(u_code, st.session_state.get('user_input_val', '0'))
             st.markdown(f'<div class="cyber-terminal"><b>SİBER-ÇIKTI:</b><br>{out}</div>', unsafe_allow_html=True)
             if st.button("SIRADAKİ GÖREVE GEÇ ➡️"):
-                ilerleme_fonksiyonu(0, u_code, egz['id'], "next", "next")
+                st.session_state.cevap_dogru = False
+                st.session_state.error_count = 0
+                st.session_state.user_input_val = ""
+                ilerleme_fonksiyonu(0, u_code, egz['id'], "next", "next") [cite: 2026-02-07]
 
     with cr:
         ranks_module.liderlik_tablosu_goster(supabase, current_user=u) [cite: 2026-02-07]
