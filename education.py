@@ -31,21 +31,21 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         finally:
             system_sys.stdout = old_stdout
 
-    # --- 0. SİBER-GÖRSEL TASARIM (YERLEŞİM DÜZELTME) ---
+    # --- 0. SİBER-GÖRSEL TASARIM (KESİN YERLEŞİM DÜZELTME) ---
     st.markdown(f'''
         <style>
         header[data-testid="stHeader"], [data-testid="stDecoration"], footer {{ display: none !important; }}
         .stApp {{ background-color: #0e1117 !important; }}
         
-        /* 🚨 KRİTİK DÜZELTME: İçeriği HUD'ın altına itiyoruz (200px güvenli bölge) */
+        /* 🚨 KRİTİK SİBER-DÜZELTME: İçeriği HUD'ın tamamen altına iter (250px Boşluk) */
         [data-testid="stMainViewContainer"] {{ 
-            padding-top: 200px !important; 
+            padding-top: 250px !important; 
         }}
 
         .cyber-hud {{
-            position: fixed; top: 0; left: 0; right: 0; height: 125px;
+            position: fixed; top: 0; left: 0; right: 0; height: 130px;
             background-color: #0e1117 !important; border-bottom: 3px solid #00E5FF;
-            z-index: 99999 !important; padding: 0 40px; display: flex;
+            z-index: 999999 !important; padding: 0 40px; display: flex;
             justify-content: space-between; align-items: center; box-shadow: 0 10px 40px #000;
         }}
 
@@ -74,7 +74,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         
         .input-alert {{
             border: 2px solid #FF4B4B; background: rgba(255, 75, 75, 0.1);
-            padding: 10px; border-radius: 8px; margin-top: 10px; margin-bottom: 10px;
+            padding: 10px; border-radius: 8px; margin-bottom: 15px;
             color: #FF4B4B; font-weight: bold; text-align: center;
             animation: cyber-shake 0.4s infinite;
         }}
@@ -82,7 +82,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         </style>
     ''', unsafe_allow_html=True)
 
-    # --- 1. HUD HESAPLAMA ---
+    # --- 1. HUD VE DURUM GÜNCELLEMESİ ---
     rn, rc = ranks_module.rütbe_ata(u['toplam_puan'])
     p_xp = max(0, 20 - (e_count * 5))
     p_mod = emotions_module.pito_durum_belirle(e_count, st.session_state.cevap_dogru)
@@ -109,20 +109,20 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         </div>
     ''', unsafe_allow_html=True)
 
-    # --- 2. ANA İÇERİK VE İLERLEME ÇUBUKLARI ---
+    # --- 2. İLERLEME ÇUBUKLARI VE ANA İÇERİK ---
     m_idx = int(u['mevcut_modul']) - 1
     modul = m_list[m_idx]
     egz = next((e for e in modul['egzersizler'] if e['id'] == str(u['mevcut_egzersiz'])), modul['egzersizler'][0])
     
-    # İlerleme Çubukları Artık HUD'ın Altında Görünür Olacak
-    total_modules = len(m_list)
-    total_egz = len(modul['egzersizler'])
-    current_egz_idx = modul['egzersizler'].index(egz) + 1
+    # İlerleme Çubukları (HUD'ın tamamen altında görünür)
+    total_m = len(m_list)
+    total_e = len(modul['egzersizler'])
+    curr_e_idx = modul['egzersizler'].index(egz) + 1
     
-    st.markdown(f"**Modül İlerlemesi:** {u['mevcut_modul']}/{total_modules}")
-    st.progress(int(u['mevcut_modul']) / total_modules)
-    st.markdown(f"**Görev İlerlemesi:** {current_egz_idx}/{total_egz}")
-    st.progress(current_egz_idx / total_egz)
+    st.markdown(f"📊 **Akademi İlerlemesi:** {u['mevcut_modul']}/{total_m}")
+    st.progress(int(u['mevcut_modul']) / total_m)
+    st.markdown(f"🎯 **Görev:** {curr_e_idx}/{total_e} - {egz['id']}")
+    st.progress(curr_e_idx / total_e)
 
     cl, cr = st.columns([7.2, 2.8])
     with cl:
@@ -132,17 +132,17 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         
         if has_input:
             if not user_input:
-                st.markdown('<div class="input-alert">🚨 VERİ GİRİŞİ YAPILMADI! Lütfen girişi mühürleyin.</div>', unsafe_allow_html=True)
+                st.markdown('<div class="input-alert">🚨 SİBER-UYARI: Lütfen aşağıdaki kutudan giriş mühürleyin!</div>', unsafe_allow_html=True)
             with st.popover("⌨️ VERİ GİRİŞİ YAP", use_container_width=True):
-                st.session_state.user_input_val = st.text_input("Siber-Değer:", key=f"inp_{egz['id']}")
+                st.session_state.user_input_val = st.text_input("Girdi:", key=f"inp_{egz['id']}")
 
-        u_code = st.text_area('Editor', value=egz['sablon'], height=180, key=f"ed_{egz['id']}", label_visibility='collapsed')
+        u_code = st.text_area('Editor', value=egz['sablon'], height=200, key=f"ed_{egz['id']}", label_visibility='collapsed')
         
         if st.button("KODU KONTROL ET 🚀", type="primary", use_container_width=True):
             if has_input and not user_input:
-                st.error("🚨 SİBER-BARİKAT: Giriş yapmadan devam edemezsin!")
+                st.error("🚨 HATA: Veri girişi yapılmadan kontrol sağlanamaz!")
             elif u_code.strip() == egz['sablon'].strip():
-                st.warning("🚨 HATA: Egzersize dokunulmadı!")
+                st.warning("🚨 HATA: Henüz hiçbir değişiklik yapmadın!")
             else:
                 st.session_state.anim_nonce += 1
                 if normalize_fonksiyonu(u_code) == normalize_fonksiyonu(egz['dogru_cevap_kodu']):
@@ -156,7 +156,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
 
         if st.session_state.cevap_dogru:
             out = kod_calistir_cikti_al(u_code, user_input)
-            st.markdown(f'<div class="cyber-terminal">{out if out else egz.get("beklenen_cikti", "Başarılı!")}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="cyber-terminal">{out if out else egz.get("beklenen_cikti", "Mühür Başarılı!")}</div>', unsafe_allow_html=True)
             if st.button("SIRADAKİ GÖREVE GEÇ ➡️"):
                 st.session_state.anim_nonce = 0
                 s_i = modul['egzersizler'].index(egz) + 1
