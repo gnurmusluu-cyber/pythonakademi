@@ -23,12 +23,12 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         st.error("🚨 Veri Okuma Hatası!")
         return
 
-    e_count = st.session_state.get('error_count', 0)
+    e_count = st.session_state.get('error_count', 0) [cite: 2026-02-07]
     if "anim_nonce" not in st.session_state: st.session_state.anim_nonce = 0
 
     # --- KOD ÇIKTISINI YAKALAMA MOTORU (DONMA KORUMALI) ---
     def kod_calistir_cikti_al(kod, giris_verisi=''):
-        # 🚨 DONMA ENGELLEYİCİ: Veri girişi boşsa sistemi kilitleme, varsayılan değer ata
+        # 🚨 DONMA ENGELLEYİCİ: Boş girişte sistemi kilitletme, "0" ata
         safe_input = str(giris_verisi) if (giris_verisi and str(giris_verisi).strip() != "") else "0"
         buffer = io.StringIO()
         old_stdout = system_sys.stdout
@@ -44,21 +44,20 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         finally:
             system_sys.stdout = old_stdout
 
-    # --- 0. SİBER-GÖRSEL TASARIM (STATİK YERLEŞİM) ---
+    # --- 0. SİBER-GÖRSEL TASARIM ---
     st.markdown(f'''
         <style>
         header[data-testid="stHeader"], [data-testid="stDecoration"], footer {{ display: none !important; }}
         .stApp {{ background-color: #0e1117 !important; }}
         
         .cyber-hud {{
-            width: 100%; min-height: 120px;
+            width: 100%; min-height: 125px;
             background-color: #0e1117 !important; border-bottom: 3px solid #00E5FF;
             padding: 20px 40px; display: flex;
             justify-content: space-between; align-items: center; 
             box-shadow: 0 10px 40px #000; margin-bottom: 30px;
         }}
         
-        /* 🚨 TİTREYEN GİRİŞ UYARISI */
         .input-warning-box {{
             padding: 12px; border-radius: 8px; border: 2px solid #FF4B4B;
             background-color: rgba(255, 75, 75, 0.15); color: #FF4B4B;
@@ -76,7 +75,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         </style>
     ''', unsafe_allow_html=True)
 
-    # --- 1. HUD RENDER (SAYFA AKIŞINDA) ---
+    # --- 1. HUD RENDER ---
     rn, rc = ranks_module.rütbe_ata(u['toplam_puan']) [cite: 2026-02-07]
     p_mod = emotions_module.pito_durum_belirle(e_count, st.session_state.cevap_dogru) [cite: 2026-02-07]
     
@@ -88,7 +87,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         <div class="cyber-hud">
             <div style="display: flex; align-items: center;">
                 <div class="hud-pito-gif"><img src="{get_gif_b64(p_mod)}" style="width:70px; border-radius:50%; border:2px solid #00E5FF;"></div>
-                <div style="color: #E0E0E0; font-family: monospace; margin-left:15px; font-size: 0.9rem;">👤 <b>{u['ad_soyad']}</b><br><span style="color:#ADFF2F;">🎖️ {rn}</span></div>
+                <div style="color: #E0E0E0; font-family: monospace; margin-left:15px; font-size: 0.9rem;">👤 <b>{u['ad_soyad'][:15]}</b><br><span style="color:#ADFF2F;">🎖️ {rn}</span></div>
             </div>
             <div style="color:#00E5FF; font-family:monospace; font-size:1.1rem;">💎 XP: {max(0, 20-(e_count*5))} | ⚠️ HATA: {e_count}/4 | 🏆 TOPLAM: {u['toplam_puan']}</div>
         </div>
@@ -97,23 +96,20 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
     # --- 2. ANA PANEL ---
     cl, cr = st.columns([7.2, 2.8])
     with cl:
-        # Navigasyon
         n1, n2, n3 = st.columns([0.4, 0.4, 0.2])
         with n1: st.markdown(f"💬 *{msgs['welcome'].format(u['ad_soyad'].split()[0])}*") [cite: 2026-02-07]
         with n2: 
-            if st.button("🔍 Geçmiş Egzersizler"): st.session_state.in_review = True; st.rerun()
+            if st.button("🔍 Geçmiş Egzersizler", key="btn_review"): st.session_state.in_review = True; st.rerun()
         with n3:
-            if st.button("🚪 Çıkış"): st.session_state.user = None; st.rerun()
+            if st.button("🚪 Çıkış", key="btn_exit"): st.session_state.user = None; st.rerun()
 
-        # 🚨 INPUT DENETİMİ (KARARMA KORUMASI)
+        # 🚨 INPUT DENETİMİ (Kararma Koruması)
         has_input = "input(" in egz['dogru_cevap_kodu'] or "input(" in egz['sablon'] [cite: 2026-02-07]
         user_input_val = st.session_state.get('user_input_val', '').strip()
 
         if has_input:
-            # Giriş yapılmadığında kutunun tam üzerinde uyarı göster
             if not user_input_val:
                 st.markdown('<div class="input-warning-box">🚨 SİBER-BARİKAT: Kodun bir veri bekliyor! Lütfen aşağıdaki kutuyu doldur.</div>', unsafe_allow_html=True)
-            
             with st.popover("⌨️ VERİ GİRİŞİ YAP (Mecburi)", use_container_width=True):
                 st.session_state.user_input_val = st.text_input("Sayı veya Metin Girin:", key=f"inp_{egz['id']}")
 
@@ -124,7 +120,6 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         u_code = st.text_area('Editor', value=egz['sablon'], height=200, key=f"ed_{egz['id']}", label_visibility='collapsed') [cite: 2026-02-07]
         
         if st.button("KODU KONTROL ET 🚀", type="primary", use_container_width=True):
-            # 🚨 SİBER-KİLİT: Giriş yoksa motoru çalıştırma, böylece ekran kararmaz
             if has_input and not st.session_state.get('user_input_val', '').strip():
                 st.error("🚨 HATA: Veri girişi yapmadan kontrol edilemez. Sistem donmasını önlemek için motor durduruldu!")
             elif u_code.strip() == egz['sablon'].strip():
@@ -140,7 +135,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
                 else:
                     st.session_state.error_count += 1; st.rerun() [cite: 2026-02-07]
 
-        if st.session_state.cevap_dogru:
+        if st.session_state.get('cevap_dogru'):
             out = kod_calistir_cikti_al(u_code, st.session_state.get('user_input_val', '0'))
             st.markdown(f'<div class="cyber-terminal"><b>SİBER-ÇIKTI:</b><br>{out}</div>', unsafe_allow_html=True)
             if st.button("SIRADAKİ GÖREVE GEÇ ➡️"):
