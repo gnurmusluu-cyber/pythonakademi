@@ -32,7 +32,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         finally:
             system_sys.stdout = old_stdout
 
-    # --- 0. SİBER-GÖRSEL TASARIM (ANİMASYON VE HUD MÜHÜRLERİ) ---
+    # --- 0. SİBER-GÖRSEL TASARIM (PİTO BOYUT VE ANİMASYON MÜHÜRLERİ) ---
     st.markdown(f'''
         <style>
         header[data-testid="stHeader"], [data-testid="stDecoration"], footer {{ display: none !important; }}
@@ -45,6 +45,15 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
             background-color: #0e1117 !important; border-bottom: 3px solid #00E5FF;
             z-index: 99999 !important; padding: 0 40px; display: flex;
             justify-content: space-between; align-items: center; box-shadow: 0 10px 40px #000;
+        }}
+
+        /* 🚨 PİTO BOYUT SABİTLEME: Kocaman görünmesini engeller */
+        .hud-pito-gif img {{ 
+            width: 85px !important; 
+            height: 85px !important; 
+            border-radius: 50%; 
+            border: 3px solid #00E5FF; 
+            object-fit: cover; 
         }}
 
         @keyframes cyber-shake {{
@@ -105,7 +114,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
     modul = m_list[m_idx]
     egz = next((e for e in modul['egzersizler'] if e['id'] == str(u['mevcut_egzersiz'])), modul['egzersizler'][0])
     
-    cl, cr = st.columns([7.5, 2.5])
+    cl, cr = st.columns([7.2, 2.8]) # Görsel denge için sütun oranları güncellendi
     with cl:
         # 🚨 GİRDİ (INPUT) DENETİMİ
         has_input = "input(" in egz['dogru_cevap_kodu'] or "input(" in egz['sablon']
@@ -113,7 +122,7 @@ def egitim_ekrani(u, mufredat, msgs, emotions_module, ranks_module, ilerleme_fon
         
         if has_input:
             if not user_input:
-                st.markdown('<div class="input-alert">🚨 VERİ GİRİŞİ YAPILMADI! Lütfen aşağıdaki kutuyu kullan.</div>', unsafe_allow_html=True)
+                st.markdown('<div class="input-alert">🚨 VERİ GİRİŞİ YAPILMADI! Aşağıdaki kutuyu kullan.</div>', unsafe_allow_html=True)
             with st.popover("⌨️ VERİ GİRİŞİ YAP", use_container_width=True):
                 st.session_state.user_input_val = st.text_input("Değer Gir:", key=f"inp_{egz['id']}")
 
